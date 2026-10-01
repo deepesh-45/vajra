@@ -346,19 +346,19 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
                   padding: '7px 12px',
                   borderRadius: '8px',
                   backgroundColor: p.isStress
-                    ? (isSelected ? '#1D4ED8' : '#EFF6FF')
+                    ? (isSelected ? '#EA580C' : '#FFF7ED')
                     : (isSelected ? 'var(--primary)' : 'var(--surface-2)'),
                   color: p.isStress
-                    ? (isSelected ? '#FFFFFF' : 'var(--primary)')
+                    ? (isSelected ? '#FFFFFF' : '#EA580C')
                     : (isSelected ? '#FFFFFF' : 'var(--text)'),
                   border: p.isStress
-                    ? '1.5px solid var(--primary)'
+                    ? '1.5px solid #EA580C'
                     : (isSelected ? '1px solid var(--primary)' : '1px solid var(--border)'),
                   fontSize: '12px',
                   fontWeight: isSelected || p.isStress ? 700 : 500,
                   cursor: switchingDataset ? 'wait' : 'pointer',
                   transition: 'all 0.15s ease',
-                  boxShadow: p.isStress && !isSelected ? '0 1px 3px rgba(37,99,235,0.15)' : 'none'
+                  boxShadow: p.isStress && !isSelected ? '0 1px 3px rgba(234,88,12,0.15)' : 'none'
                 }}
               >
                 {p.isStress ? <Sparkles size={14} /> : <Layers size={14} />}

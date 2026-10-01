@@ -350,7 +350,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
 
       ctx.beginPath();
       if (isSelected) {
-        ctx.strokeStyle = '#2563EB';
+        ctx.strokeStyle = '#EA580C';
         ctx.lineWidth = 3 / Math.sqrt(zoom);
       } else if (isTainted) {
         ctx.strokeStyle = '#DC2626';
@@ -378,7 +378,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         const px = uu * u * p1.x + 3 * uu * t * cp1x + 3 * u * tt * cp2x + tt * t * p2.x;
         const py = uu * u * p1.y + 3 * uu * t * p1.y + 3 * u * tt * p2.y + tt * t * p2.y;
 
-        ctx.fillStyle = isSelected ? '#3B82F6' : '#EF4444';
+        ctx.fillStyle = isSelected ? '#EA580C' : '#DC2626';
         ctx.beginPath();
         ctx.arc(px, py, (displayNodes.length > 200 ? 2.5 : 3.5) / Math.sqrt(zoom), 0, Math.PI * 2);
         ctx.fill();
@@ -417,19 +417,19 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       const isSelected = selectedNode?.acct_no === node.acct_no;
       const isHovered = hoveredNode?.acct_no === node.acct_no;
 
-      let baseColor = '#2563EB'; // L1
-      if (node.isSupernode) baseColor = '#6366F1'; // Supernode
+      let baseColor = '#EA580C'; // L1
+      if (node.isSupernode) baseColor = '#EA580C'; // Supernode
       else if (node.hop === 0) baseColor = '#7C3AED'; // Victim
-      else if (node.hop === 1) baseColor = '#2563EB'; // L1 Smurfing Dispatch
-      else if (node.hop === 2) baseColor = '#D97706'; // L2 Layering Mule
-      else if (node.hop === 3) baseColor = '#9333EA'; // L3 Aggregator
+      else if (node.hop === 1) baseColor = '#EA580C'; // L1 Smurfing Dispatch
+      else if (node.hop === 2) baseColor = '#F59E0B'; // L2 Layering Mule
+      else if (node.hop === 3) baseColor = '#C2410C'; // L3 Aggregator
       else baseColor = '#16A34A'; // L4 Cashout Exit
 
       // Supernode Outer Dashed Ring
       if (node.isSupernode) {
         ctx.save();
         ctx.setLineDash([4, 4]);
-        ctx.strokeStyle = '#818CF8';
+        ctx.strokeStyle = '#F97316';
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.arc(pos.x, pos.y, pos.r + 7, 0, Math.PI * 2);
