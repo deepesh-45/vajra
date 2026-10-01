@@ -3,7 +3,7 @@
 **Event:** Void Hacks() 8.0 — Theme: Abhedya (Cyber Security & Digital Forensics)  
 **In Association With:** Indore Police Commissionerate  
 **Version:** 1.0 (Production Verified)  
-**Repository:** [https://github.com/deepesh-45/abhedya-chakra](https://github.com/deepesh-45/abhedya-chakra)  
+**Repository:** [https://github.com/Void-Hacks-8-0-2/paradox](https://github.com/Void-Hacks-8-0-2/paradox)  
 **Status:** 100% Operational, Fully Benchmarked, Offline Ready  
 
 ---
@@ -187,7 +187,7 @@ To rigorously test Operation Vajra beyond standard benchmarks, we implemented **
 ## 8. Current Project Status
 
 - **Codebase:** Clean, fully modular architecture across `backend/`, `frontend/`, `bench/`, `data/synthetic/`, and `config/`.
-- **Git Repository:** Synced and pushed to [https://github.com/deepesh-45/abhedya-chakra](https://github.com/deepesh-45/abhedya-chakra) on branch `main`.
+- **Git Repository:** Synced and pushed to [https://github.com/Void-Hacks-8-0-2/paradox](https://github.com/Void-Hacks-8-0-2/paradox) on branch `main`.
 - **Git LFS:** Tracking the 286 MB 2-million-row transaction dataset and model weights.
 - **Static Frontend Assets:** Pre-compiled into `frontend/dist/` and served directly by FastAPI for single-command startup.
 - **Terminology:** 100% converted to plain, intuitive law enforcement terminology.
@@ -200,8 +200,8 @@ To rigorously test Operation Vajra beyond standard benchmarks, we implemented **
 
 ### One-Command Launch:
 ```bash
-git clone https://github.com/deepesh-45/abhedya-chakra.git
-cd abhedya-chakra
+git clone https://github.com/Void-Hacks-8-0-2/paradox.git
+cd paradox
 chmod +x run.sh
 ./run.sh
 ```

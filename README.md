@@ -91,8 +91,8 @@ All models are trained offline and bundled under `ml/models/`:
 ### 1-Command Startup
 ```bash
 # Clone the repository
-git clone <repo-url>
-cd abhedya-chakra
+git clone https://github.com/Void-Hacks-8-0-2/paradox.git
+cd paradox
 
 # Start the full offline workbench (backend + static frontend)
 ./run.sh
