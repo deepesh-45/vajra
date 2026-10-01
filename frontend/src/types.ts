@@ -9,6 +9,9 @@ export interface NodeData {
   taint_out_paise: number;
   held_paise: number;
   first_seen_epoch: number;
+  clusterId?: string;
+  isSupernode?: boolean;
+  subNodeCount?: number;
 }
 
 export interface EdgeData {

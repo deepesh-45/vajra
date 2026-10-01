@@ -177,10 +177,44 @@ To rigorously test Operation Vajra beyond standard benchmarks, we implemented **
 | **Scenario 3: Cyclic Laundering** | Nature Scientific Reports (2025) | 263 accounts · 605 flows | `AXIS10007701` | Circular 3-hop churn loops and cross-bank FIFO dissipation |
 | **Scenario 4: Mega Capacity Limit Test** | **PRD Maximum Capacity Benchmark** | **511 accounts · 1,650 flows** | `SBIN10005001` | **₹5 Crore loss across 5 layers with 60 FPS zero-lag hardware-accelerated canvas** |
 
-### 1-Click Interactive Dataset Selection
-- **Header Selection Drawer:** Clicking *"Select Test Datasets & Scenarios"* opens a dedicated modal with cards for each scenario, showing victim account, loss amount, network size, and one-click *"Test Max Capacity"* button.
-- **Workbench Quick-Select Bar:** Inside the *"Victim Investigation & Trail"* tab, a prominent pill bar allows immediate switching between all 4 scenarios and the 2M production benchmark with one click.
-- **Zero-Lag 60 FPS Big Graph Canvas:** Features multi-column density distribution, auto-fit centering (`Fit View`), smooth cubic bezier curve routing, animated directional flow particles, dynamic node sizing by recoverable capital, and an expandable 780px high-resolution canvas view.
+### 7.5 Key Architectural Capabilities Built-In (Production Verified)
+
+1. **Scalability for 1,000s of Nodes (Collapsible Supernodes):**
+   - Automatically clusters dense downstream mule accounts into labeled **Supernodes** (e.g., `Mule Accounts Cluster: Hop 2 (28 Accounts)`) with dashed boundary circles and account count badges.
+   - Eliminates visual clutter ("hairball" effect) on 500+ to 1,000+ node graphs.
+   - Dynamic edge coalescing routes multiple in/out transactions through the parent Supernode.
+   - Investigators can expand or collapse mule rings with a single click or double-click.
+
+2. **Strict Flow Hierarchy (Sugiyama DAG Layout):**
+   - Positions accounts sequentially across 5 dedicated stage lanes:
+     - `Stage 0: Infiltration (Victim Breached Source)`
+     - `Stage 1: Smurfing Dispatch (Primary Splitters)`
+     - `Stage 2: Layering Mules (Multi-Ring Shuffling)`
+     - `Stage 3: Aggregator Funnels (Collector Hubs)`
+     - `Stage 4: Cash-Out Exits (ATMs / Crypto Bridges)`
+   - Each stage lane features rounded container bands, clean titles, and column-constrained node alignment.
+
+3. **Motif-Specific Pattern Filters:**
+   - Dedicated filter controls for specific money laundering structures:
+     - **All Trails:** Complete end-to-end network representation.
+     - **Fan-Out (Smurfing):** Highlights rapid dispersal of single large sums into structured < ₹50,000 transfers.
+     - **Fan-In (Consolidation):** Highlights disparate mule accounts feeding into a single collector pool.
+     - **Long Chain:** Isolates the complete linear 4+ hop end-to-end trail from source to cash-out.
+
+4. **Temporal Time-Scrubbing & Playback:**
+   - Interactive timeline scrubber with live animated playback controls (`Play / Pause`, `Step Prev ⏮ / Step Next ⏭`).
+   - Playback speed controls (`1x`, `2x`, `5x`).
+   - Dynamic transaction velocity readout (`X tx/hr`).
+   - Dual inspection modes: **Cumulative Flow** (cumulative history) vs. **Window Slice (±4h)** (isolated active time window).
+
+5. **High-Performance Canvas Rendering & Integrated Forensic Inspector Panel:**
+   - Powered by HTML5 Canvas with smooth cubic Bezier curve routing, fluid animated transfer particles, zoom/pan navigation, and auto-framing.
+   - Deep Forensic Trail Inspector side panel displaying:
+     - Selected account ID and Layer/Role badge
+     - Explainable Suspicion Risk Score
+     - Total Inflow, Total Outflow, Dwell Time, and Fan Degree
+     - One-click **"Isolate Multi-Hop Trail"** action that focuses upstream and downstream path while dimming unrelated nodes
+     - Real-time connected transaction log showing directional flow (IN/OUT), counterparty, timestamp, and amount.
 
 ---
 
@@ -192,7 +226,7 @@ To rigorously test Operation Vajra beyond standard benchmarks, we implemented **
 - **Static Frontend Assets:** Pre-compiled into `frontend/dist/` and served directly by FastAPI for single-command startup.
 - **Terminology:** 100% converted to plain, intuitive law enforcement terminology.
 - **Bilingual Legal Documents:** English and Hindi statutory freeze notices operational.
-- **Stress-Tested Graph Capacity:** Verified with 490+ nodes and 1,560+ flows at 60 FPS.
+- **Stress-Tested Graph Capacity:** Verified with 511 nodes and 1,650 flows at 60 FPS with Collapsible Supernodes and Sugiyama DAG layout.
 
 ---
 
