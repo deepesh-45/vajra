@@ -111,15 +111,22 @@ export const App: React.FC = () => {
         <main className={`app-content ${isInvestigate ? '' : 'animated-ambient-bg'}`} style={{
           flex: 1,
           minWidth: 0,
-          padding: isInvestigate ? 0 : '24px 28px',
-          overflowY: isInvestigate ? 'hidden' : 'auto',
+          padding: isInvestigate ? 0 : (activeTab === 'overview' ? '12px 20px' : '24px 28px'),
+          overflowY: (isInvestigate || activeTab === 'overview') ? 'hidden' : 'auto',
           overflowX: 'hidden',
           position: 'relative',
-          height: 'calc(100vh - 62px)'
+          height: 'calc(100vh - 64px)',
+          boxSizing: 'border-box'
         }}>
           {!isInvestigate && <div className="ambient-orb-1" />}
           {!isInvestigate && <div className="ambient-orb-2" />}
-          <div style={{ position: 'relative', zIndex: 1, height: isInvestigate ? '100%' : 'auto', width: '100%' }}>
+          <div style={{
+            position: 'relative',
+            zIndex: 1,
+            height: (isInvestigate || activeTab === 'overview') ? '100%' : 'auto',
+            width: '100%',
+            overflow: (isInvestigate || activeTab === 'overview') ? 'hidden' : 'visible'
+          }}>
           {activeTab === 'overview' && (
             <OverviewTab
               data={overviewData}
