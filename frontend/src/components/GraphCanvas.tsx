@@ -365,12 +365,12 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
     ctx.clearRect(0, 0, rect.width, rect.height);
 
     // 1. Draw Subtle Architectural Background Grid
-    ctx.fillStyle = '#FBF7F0';
+    ctx.fillStyle = '#F4F7FB';
     ctx.fillRect(0, 0, rect.width, rect.height);
 
     // Grid dots
     ctx.save();
-    ctx.fillStyle = 'rgba(210, 191, 168, 0.45)';
+    ctx.fillStyle = 'rgba(148, 163, 184, 0.35)';
     const gridSize = 32 * zoom;
     const offsetX = pan.x % gridSize;
     const offsetY = pan.y % gridSize;
@@ -388,20 +388,20 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
     // 2. Draw Stage Corridor Backgrounds
     stageLanes.forEach(lane => {
       const laneH = Math.max(700, (bounds.maxY - bounds.minY) + 260);
-      ctx.fillStyle = 'rgba(245, 238, 229, 0.55)';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
       roundRect(ctx, lane.x, 80, lane.width, laneH, 10);
       ctx.fill();
-      ctx.strokeStyle = '#E8D8C3';
+      ctx.strokeStyle = '#E2E8F0';
       ctx.lineWidth = 1;
       ctx.stroke();
 
       // Lane Header Title
-      ctx.fillStyle = '#34271E';
+      ctx.fillStyle = '#0F172A';
       ctx.font = '700 11.5px Inter, sans-serif';
       ctx.textAlign = 'left';
       ctx.fillText(lane.name, lane.x + 16, 106);
 
-      ctx.fillStyle = '#8C7764';
+      ctx.fillStyle = '#64748B';
       ctx.font = '500 9.5px Inter, sans-serif';
       ctx.fillText(`${lane.desc} (${lane.count} visible)`, lane.x + 16, 122);
     });
@@ -1045,10 +1045,10 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
           top: '80px',
           right: '20px',
           width: '320px',
-          backgroundColor: '#F5EEE5',
-          borderRadius: '8px',
-          border: '1px solid #D2BFA8',
-          boxShadow: '0 8px 24px rgba(52, 39, 30, 0.15)',
+          backgroundColor: '#FFFFFF',
+          borderRadius: '12px',
+          border: '1px solid #E2E8F0',
+          boxShadow: '0 8px 24px rgba(15, 23, 42, 0.1)',
           padding: '16px',
           display: 'flex',
           flexDirection: 'column',
@@ -1060,13 +1060,13 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
               <span style={{
                 fontSize: '0.6875rem',
                 fontWeight: 700,
-                color: '#5C4634',
+                color: '#64748B',
                 textTransform: 'uppercase',
                 letterSpacing: '0.04em'
               }}>
                 OSINT Forensic Entity
               </span>
-              <div style={{ fontSize: '1rem', fontWeight: 700, fontFamily: 'monospace', color: '#34271E' }}>
+              <div style={{ fontSize: '1rem', fontWeight: 700, fontFamily: 'monospace', color: '#0F172A' }}>
                 {selectedNode.acct_no}
               </div>
             </div>
@@ -1075,7 +1075,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
               style={{
                 border: 'none',
                 backgroundColor: 'transparent',
-                color: '#8C7764',
+                color: '#94A3B8',
                 cursor: 'pointer',
                 fontSize: '1rem',
                 padding: '2px 6px'
@@ -1090,28 +1090,28 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
             gridTemplateColumns: '1fr 1fr',
             gap: '8px',
             padding: '10px',
-            backgroundColor: '#FBF7F0',
-            borderRadius: '6px',
-            border: '1px solid #D2BFA8',
+            backgroundColor: '#F8FAFC',
+            borderRadius: '8px',
+            border: '1px solid #E2E8F0',
             fontSize: '0.75rem'
           }}>
             <div>
-              <span style={{ color: '#8C7764' }}>Primary Bank:</span>
-              <div style={{ fontWeight: 600, color: '#34271E' }}>{selectedNode.bank}</div>
+              <span style={{ color: '#64748B' }}>Primary Bank:</span>
+              <div style={{ fontWeight: 600, color: '#0F172A' }}>{selectedNode.bank}</div>
             </div>
             <div>
-              <span style={{ color: '#8C7764' }}>Stage Hop:</span>
-              <div style={{ fontWeight: 600, color: '#34271E' }}>Stage {selectedNode.hop}</div>
+              <span style={{ color: '#64748B' }}>Stage Hop:</span>
+              <div style={{ fontWeight: 600, color: '#0F172A' }}>Stage {selectedNode.hop}</div>
             </div>
             <div>
-              <span style={{ color: '#8C7764' }}>Tainted Inflow:</span>
-              <div style={{ fontWeight: 600, color: '#34271E' }}>
+              <span style={{ color: '#64748B' }}>Tainted Inflow:</span>
+              <div style={{ fontWeight: 600, color: '#0F172A' }}>
                 ₹{(selectedNode.taint_in_paise / 100).toLocaleString('en-IN')}
               </div>
             </div>
             <div>
-              <span style={{ color: '#8C7764' }}>Recoverable Lien:</span>
-              <div style={{ fontWeight: 700, color: selectedNode.held_paise > 0 ? '#059669' : '#8C7764' }}>
+              <span style={{ color: '#64748B' }}>Recoverable Lien:</span>
+              <div style={{ fontWeight: 700, color: selectedNode.held_paise > 0 ? '#16A34A' : '#64748B' }}>
                 ₹{(selectedNode.held_paise / 100).toLocaleString('en-IN')}
               </div>
             </div>
@@ -1121,18 +1121,18 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
           {nodeDetail?.shap_explanation?.top_drivers?.length > 0 && (
             <div style={{
               padding: '8px 10px',
-              backgroundColor: '#FBF7F0',
-              borderRadius: '6px',
-              border: '1px solid #D2BFA8',
+              backgroundColor: '#F8FAFC',
+              borderRadius: '8px',
+              border: '1px solid #E2E8F0',
               fontSize: '0.6875rem'
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
-                <span style={{ fontWeight: 700, color: '#34271E' }}>TreeSHAP Anomaly Driver:</span>
-                <span style={{ fontWeight: 700, color: '#B45309', fontFamily: 'monospace' }}>
+                <span style={{ fontWeight: 700, color: '#0F172A' }}>TreeSHAP Anomaly Driver:</span>
+                <span style={{ fontWeight: 700, color: '#D97706', fontFamily: 'monospace' }}>
                   SHAP +{nodeDetail.shap_explanation.top_drivers[0].shap_value}
                 </span>
               </div>
-              <p style={{ margin: 0, color: '#5C4634', lineHeight: 1.3 }}>
+              <p style={{ margin: 0, color: '#475569', lineHeight: 1.3 }}>
                 {nodeDetail.shap_explanation.top_drivers[0].evidence_text}
               </p>
             </div>
@@ -1153,10 +1153,10 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
                 style={{
                   flex: 1,
                   padding: '8px',
-                  borderRadius: '4px',
-                  backgroundColor: '#E8D8C3',
-                  border: '1px solid #D2BFA8',
-                  color: '#34271E',
+                  borderRadius: '6px',
+                  backgroundColor: '#EFF6FF',
+                  border: '1px solid #DBEAFE',
+                  color: '#1D4ED8',
                   fontSize: '0.75rem',
                   fontWeight: 600,
                   cursor: 'pointer'
@@ -1172,9 +1172,9 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
                 style={{
                   flex: 1,
                   padding: '8px',
-                  borderRadius: '4px',
-                  backgroundColor: '#34271E',
-                  color: '#FBF7F0',
+                  borderRadius: '6px',
+                  backgroundColor: '#2563EB',
+                  color: '#FFFFFF',
                   border: 'none',
                   fontSize: '0.75rem',
                   fontWeight: 600,
@@ -1196,13 +1196,13 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         display: 'flex',
         alignItems: 'center',
         gap: '8px',
-        backgroundColor: 'rgba(245, 238, 229, 0.94)',
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
         padding: '6px 14px',
-        borderRadius: '6px',
-        border: '1px solid #D2BFA8',
+        borderRadius: '8px',
+        border: '1px solid #E2E8F0',
         fontSize: '0.75rem',
-        color: '#5C4634',
-        boxShadow: '0 2px 8px rgba(52, 39, 30, 0.06)'
+        color: '#475569',
+        boxShadow: '0 2px 8px rgba(15, 23, 42, 0.06)'
       }}>
         <span>💡 <strong>Click card</strong> to toggle downstream branch expansion · <strong>Drag</strong> to pan canvas · <strong>Scroll</strong> to zoom</span>
       </div>

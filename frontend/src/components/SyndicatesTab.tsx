@@ -121,26 +121,24 @@ export const SyndicatesTab: React.FC<SyndicatesTabProps> = ({ data, onSelectVict
       flexDirection: 'column',
       gap: '24px',
       fontFamily: 'var(--font-sans)',
-      color: '#5C4634'
+      color: '#334155'
     }}>
       {/* Title & Info Bar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <h1 style={{
-            fontFamily: 'var(--font-serif)',
-            fontSize: '1.25rem',
-            fontWeight: 600,
+            fontSize: '1.5rem',
+            fontWeight: 700,
             letterSpacing: '-0.025em',
-            lineHeight: 1.4,
-            color: '#34271E',
+            color: '#0F172A',
             margin: 0
           }}>
             Syndicates
           </h1>
           <p style={{
             fontSize: '0.875rem',
-            lineHeight: 1.428,
-            color: '#8C7764',
+            lineHeight: 1.4,
+            color: '#64748B',
             margin: 0
           }}>
             Clusters grouped by shared transaction signals & coordinated money laundering patterns
@@ -151,18 +149,23 @@ export const SyndicatesTab: React.FC<SyndicatesTabProps> = ({ data, onSelectVict
           display: 'flex',
           alignItems: 'center',
           gap: '8px',
-          fontSize: '0.75rem',
-          color: '#8C7764'
+          fontSize: '0.8125rem',
+          color: '#64748B',
+          backgroundColor: '#FFFFFF',
+          padding: '8px 14px',
+          borderRadius: '8px',
+          border: '1px solid #E2E8F0',
+          boxShadow: '0 1px 2px rgba(15,23,42,0.04)'
         }}>
-          <span>Confidence is calibrated across multi-layer GNN graph embeddings</span>
-          <Info size={16} />
+          <Info size={16} color="#3B82F6" />
+          <span>Confidence calibrated across multi-layer graph topology & velocity clusters</span>
         </div>
       </div>
 
       {/* Filter and Controls Bar */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         <div style={{ position: 'relative', width: '420px' }}>
-          <Search size={16} color="#8C7764" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
+          <Search size={16} color="#94A3B8" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
           <input
             type="text"
             placeholder="Search cluster or shared signal..."
@@ -170,14 +173,14 @@ export const SyndicatesTab: React.FC<SyndicatesTabProps> = ({ data, onSelectVict
             onChange={e => setSearchQuery(e.target.value)}
             style={{
               width: '100%',
-              padding: '10px 12px 10px 36px',
-              borderRadius: '4px',
-              backgroundColor: '#F5EEE5',
-              border: '1px solid #D2BFA8',
-              color: '#5C4634',
+              padding: '9px 12px 9px 36px',
+              borderRadius: '8px',
+              backgroundColor: '#FFFFFF',
+              border: '1px solid #E2E8F0',
+              color: '#0F172A',
               fontSize: '0.875rem',
               outline: 'none',
-              fontFamily: 'var(--font-sans)'
+              boxShadow: '0 1px 2px rgba(15,23,42,0.04)'
             }}
           />
         </div>
@@ -186,14 +189,14 @@ export const SyndicatesTab: React.FC<SyndicatesTabProps> = ({ data, onSelectVict
           value={sortBy}
           onChange={e => setSortBy(e.target.value as any)}
           style={{
-            padding: '10px 16px',
-            borderRadius: '4px',
-            backgroundColor: '#F5EEE5',
-            border: '1px solid #D2BFA8',
-            color: '#5C4634',
+            padding: '9px 14px',
+            borderRadius: '8px',
+            backgroundColor: '#FFFFFF',
+            border: '1px solid #E2E8F0',
+            color: '#334155',
             fontSize: '0.875rem',
-            fontFamily: 'var(--font-sans)',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            boxShadow: '0 1px 2px rgba(15,23,42,0.04)'
           }}
         >
           <option value="traced">Sort by traced volume</option>
@@ -202,13 +205,13 @@ export const SyndicatesTab: React.FC<SyndicatesTabProps> = ({ data, onSelectVict
         </select>
 
         <div style={{
-          padding: '8px 16px',
-          borderRadius: '4px',
-          backgroundColor: '#E8D8C3',
-          border: '1px solid #D2BFA8',
-          fontSize: '0.75rem',
+          padding: '8px 14px',
+          borderRadius: '8px',
+          backgroundColor: '#EFF6FF',
+          border: '1px solid #DBEAFE',
+          fontSize: '0.8125rem',
           fontWeight: 600,
-          color: '#34271E'
+          color: '#1D4ED8'
         }}>
           Showing {filteredClusters.length} identified syndicates
         </div>
@@ -216,140 +219,165 @@ export const SyndicatesTab: React.FC<SyndicatesTabProps> = ({ data, onSelectVict
 
       {/* Syndicates 3-Column Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' }}>
-        {filteredClusters.map(cluster => (
-          <div
-            key={cluster.id}
-            style={{
-              backgroundColor: '#E8D8C3',
-              borderRadius: '8px',
-              border: '1px solid #D2BFA8',
-              padding: '24px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '20px'
-            }}
-          >
-            {/* Card Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div>
-                <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#34271E', margin: 0 }}>
-                  {cluster.name}
-                </h3>
-                <p style={{ fontSize: '0.8125rem', color: '#8C7764', margin: '4px 0 0 0' }}>
-                  {cluster.accountsCount} mule accounts
-                </p>
-              </div>
-
-              <span style={{
-                padding: '4px 8px',
-                borderRadius: '4px',
-                fontSize: '11px',
-                fontWeight: 600,
-                backgroundColor: cluster.tier === 'Critical' ? '#8F6B4F' : '#B28C68',
-                color: '#FBF7F0'
-              }}>
-                {cluster.tier} • {cluster.confidence}% conf
-              </span>
-            </div>
-
-            {/* Layer Badges */}
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <span style={{
-                padding: '3px 8px',
-                borderRadius: '4px',
-                backgroundColor: '#F5EEE5',
-                color: '#5C4634',
-                border: '1px solid #D2BFA8',
-                fontSize: '11px',
-                fontWeight: 600
-              }}>
-                L1 {cluster.layers.l1}
-              </span>
-              <span style={{
-                padding: '3px 8px',
-                borderRadius: '4px',
-                backgroundColor: '#F5EEE5',
-                color: '#5C4634',
-                border: '1px solid #D2BFA8',
-                fontSize: '11px',
-                fontWeight: 600
-              }}>
-                L2 {cluster.layers.l2}
-              </span>
-              <span style={{
-                padding: '3px 8px',
-                borderRadius: '4px',
-                backgroundColor: '#F5EEE5',
-                color: '#5C4634',
-                border: '1px solid #D2BFA8',
-                fontSize: '11px',
-                fontWeight: 600
-              }}>
-                L3 {cluster.layers.l3}
-              </span>
-            </div>
-
-            {/* Metrics */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
-              <div>
-                <p style={{ fontSize: '0.75rem', color: '#8C7764', margin: 0 }}>Victims</p>
-                <p style={{ fontSize: '0.875rem', fontWeight: 600, color: '#34271E', margin: '2px 0 0 0' }}>
-                  {cluster.victims}
-                </p>
-              </div>
-              <div>
-                <p style={{ fontSize: '0.75rem', color: '#8C7764', margin: 0 }}>Volume</p>
-                <p style={{
-                  fontFamily: 'var(--font-serif)',
-                  fontSize: '0.875rem',
-                  fontWeight: 600,
-                  color: '#34271E',
-                  margin: '2px 0 0 0'
-                }}>
-                  {cluster.volume}
-                </p>
-              </div>
-              <div>
-                <p style={{ fontSize: '0.75rem', color: '#8C7764', margin: 0 }}>Coverage</p>
-                <p style={{ fontSize: '0.875rem', fontWeight: 600, color: '#34271E', margin: '2px 0 0 0' }}>
-                  {cluster.coverage}
-                </p>
-              </div>
-            </div>
-
-            {/* Shared Signals */}
-            <div>
-              <p style={{ fontSize: '0.75rem', color: '#8C7764', margin: 0 }}>Shared signals</p>
-              <p style={{ fontSize: '0.8125rem', color: '#5C4634', margin: '4px 0 0 0', fontWeight: 500 }}>
-                {cluster.sharedSignals}
-              </p>
-            </div>
-
-            {/* Action */}
-            <button
-              onClick={() => onSelectVictim(cluster.seedVictim)}
+        {filteredClusters.map(cluster => {
+          const isCrit = cluster.tier === 'Critical';
+          const isHigh = cluster.tier === 'High';
+          return (
+            <div
+              key={cluster.id}
               style={{
+                backgroundColor: '#FFFFFF',
+                borderRadius: '12px',
+                border: '1px solid #E2E8F0',
+                padding: '24px',
                 display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                padding: '9px 14px',
-                borderRadius: '4px',
-                backgroundColor: '#34271E',
-                color: '#FBF7F0',
-                fontSize: '0.8125rem',
-                fontWeight: 600,
-                border: 'none',
-                cursor: 'pointer',
-                fontFamily: 'var(--font-sans)',
-                marginTop: 'auto'
+                flexDirection: 'column',
+                gap: '18px',
+                boxShadow: '0 1px 3px rgba(15,23,42,0.04)',
+                transition: 'border-color 0.2s, box-shadow 0.2s'
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.borderColor = '#CBD5E1';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(15,23,42,0.06)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.borderColor = '#E2E8F0';
+                e.currentTarget.style.boxShadow = '0 1px 3px rgba(15,23,42,0.04)';
               }}
             >
-              <span>Open in Investigate</span>
-              <ChevronRight size={16} />
-            </button>
-          </div>
-        ))}
+              {/* Card Header */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+                <div>
+                  <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#0F172A', margin: 0, lineHeight: 1.3 }}>
+                    {cluster.name}
+                  </h3>
+                  <p style={{ fontSize: '0.8125rem', color: '#64748B', margin: '4px 0 0 0' }}>
+                    {cluster.accountsCount} mule accounts identified
+                  </p>
+                </div>
+
+                <span style={{
+                  padding: '3px 8px',
+                  borderRadius: '6px',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  whiteSpace: 'nowrap',
+                  backgroundColor: isCrit ? '#FEF2F2' : isHigh ? '#FFFBEB' : '#ECFDF5',
+                  color: isCrit ? '#DC2626' : isHigh ? '#D97706' : '#059669',
+                  border: `1px solid ${isCrit ? '#FEE2E2' : isHigh ? '#FEF3C7' : '#D1FAE5'}`
+                }}>
+                  {cluster.tier} • {cluster.confidence}% conf
+                </span>
+              </div>
+
+              {/* Layer Badges */}
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <span style={{
+                  padding: '3px 8px',
+                  borderRadius: '6px',
+                  backgroundColor: '#F1F5F9',
+                  color: '#475569',
+                  border: '1px solid #E2E8F0',
+                  fontSize: '11px',
+                  fontWeight: 600
+                }}>
+                  Layer 1: {cluster.layers.l1}
+                </span>
+                <span style={{
+                  padding: '3px 8px',
+                  borderRadius: '6px',
+                  backgroundColor: '#F1F5F9',
+                  color: '#475569',
+                  border: '1px solid #E2E8F0',
+                  fontSize: '11px',
+                  fontWeight: 600
+                }}>
+                  Layer 2: {cluster.layers.l2}
+                </span>
+                <span style={{
+                  padding: '3px 8px',
+                  borderRadius: '6px',
+                  backgroundColor: '#F1F5F9',
+                  color: '#475569',
+                  border: '1px solid #E2E8F0',
+                  fontSize: '11px',
+                  fontWeight: 600
+                }}>
+                  Layer 3: {cluster.layers.l3}
+                </span>
+              </div>
+
+              {/* Metrics */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '12px',
+                padding: '12px',
+                backgroundColor: '#F8FAFC',
+                borderRadius: '8px',
+                border: '1px solid #E2E8F0'
+              }}>
+                <div>
+                  <p style={{ fontSize: '0.75rem', color: '#64748B', margin: 0 }}>Victims</p>
+                  <p style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#0F172A', margin: '2px 0 0 0' }}>
+                    {cluster.victims}
+                  </p>
+                </div>
+                <div>
+                  <p style={{ fontSize: '0.75rem', color: '#64748B', margin: 0 }}>Volume</p>
+                  <p style={{
+                    fontSize: '0.9375rem',
+                    fontWeight: 700,
+                    color: '#0F172A',
+                    margin: '2px 0 0 0'
+                  }}>
+                    {cluster.volume}
+                  </p>
+                </div>
+                <div>
+                  <p style={{ fontSize: '0.75rem', color: '#64748B', margin: 0 }}>Coverage</p>
+                  <p style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#16A34A', margin: '2px 0 0 0' }}>
+                    {cluster.coverage}
+                  </p>
+                </div>
+              </div>
+
+              {/* Shared Signals */}
+              <div style={{ flex: 1 }}>
+                <p style={{ fontSize: '0.75rem', color: '#64748B', margin: 0, fontWeight: 500 }}>Shared signals</p>
+                <p style={{ fontSize: '0.8125rem', color: '#334155', margin: '4px 0 0 0', lineHeight: 1.4 }}>
+                  {cluster.sharedSignals}
+                </p>
+              </div>
+
+              {/* Action */}
+              <button
+                onClick={() => onSelectVictim(cluster.seedVictim)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  padding: '10px 16px',
+                  borderRadius: '8px',
+                  backgroundColor: '#2563EB',
+                  color: '#FFFFFF',
+                  fontSize: '0.8125rem',
+                  fontWeight: 600,
+                  border: 'none',
+                  cursor: 'pointer',
+                  boxShadow: '0 1px 2px rgba(37,99,235,0.2)',
+                  transition: 'background-color 0.15s'
+                }}
+                onMouseEnter={e => e.currentTarget.style.backgroundColor = '#1D4ED8'}
+                onMouseLeave={e => e.currentTarget.style.backgroundColor = '#2563EB'}
+              >
+                <span>Open in Investigate</span>
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Save, RefreshCw, CheckCircle2 } from 'lucide-react';
+import { Save, RefreshCw, CheckCircle2, Sliders, Shield, Cpu } from 'lucide-react';
 
 export const SettingsTab: React.FC = () => {
   const [flaggedThreshold, setFlaggedThreshold] = useState(70);
@@ -39,30 +39,26 @@ export const SettingsTab: React.FC = () => {
       display: 'flex',
       flexDirection: 'column',
       gap: '24px',
-      fontFamily: 'var(--font-sans)',
-      color: '#5C4634'
+      color: '#0F172A'
     }}>
       {/* Title Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <h1 style={{
-            fontFamily: 'var(--font-serif)',
             fontSize: '1.25rem',
-            fontWeight: 600,
-            letterSpacing: '-0.025em',
-            lineHeight: 1.4,
-            color: '#34271E',
+            fontWeight: 700,
+            letterSpacing: '-0.02em',
+            color: '#0F172A',
             margin: 0
           }}>
-            Settings
+            Settings & Model Calibration
           </h1>
           <p style={{
             fontSize: '0.875rem',
-            lineHeight: 1.428,
-            color: '#8C7764',
+            color: '#64748B',
             margin: 0
           }}>
-            Local configuration & model calibration for this offline forensic workstation
+            Configure local forensic detection parameters, threshold sensitivities, and air-gapped runtime specs
           </p>
         </div>
 
@@ -70,16 +66,16 @@ export const SettingsTab: React.FC = () => {
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '6px',
-            padding: '6px 12px',
-            borderRadius: '4px',
-            backgroundColor: '#E8D8C3',
-            border: '1px solid #D2BFA8',
-            color: '#34271E',
+            gap: '8px',
+            padding: '6px 14px',
+            borderRadius: '6px',
+            backgroundColor: '#ECFDF5',
+            border: '1px solid #A7F3D0',
+            color: '#047857',
             fontSize: '0.8125rem',
             fontWeight: 600
           }}>
-            <CheckCircle2 size={16} />
+            <CheckCircle2 size={16} color="#059669" />
             <span>Settings saved successfully!</span>
           </div>
         )}
@@ -87,28 +83,31 @@ export const SettingsTab: React.FC = () => {
 
       {/* Card 1: Risk Thresholds */}
       <div style={{
-        backgroundColor: '#E8D8C3',
-        borderRadius: '8px',
-        border: '1px solid #D2BFA8',
+        backgroundColor: '#FFFFFF',
+        borderRadius: '12px',
+        border: '1px solid #E2E8F0',
         padding: '24px',
         display: 'flex',
         flexDirection: 'column',
-        gap: '20px'
+        gap: '20px',
+        boxShadow: '0 1px 3px rgba(15,23,42,0.04)'
       }}>
-        <h2 style={{
-          fontFamily: 'var(--font-serif)',
-          fontSize: '1.125rem',
-          fontWeight: 600,
-          color: '#34271E',
-          margin: 0
-        }}>
-          Risk thresholds
-        </h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Sliders size={18} color="#2563EB" />
+          <h2 style={{
+            fontSize: '1rem',
+            fontWeight: 600,
+            color: '#0F172A',
+            margin: 0
+          }}>
+            Risk Score Thresholds
+          </h2>
+        </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '0.8125rem', fontWeight: 500, color: '#5C4634' }}>
-              Flagged review threshold (score)
+            <label style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#475569' }}>
+              Flagged Review Threshold (Score)
             </label>
             <input
               type="number"
@@ -116,18 +115,19 @@ export const SettingsTab: React.FC = () => {
               onChange={e => setFlaggedThreshold(Number(e.target.value))}
               style={{
                 padding: '8px 12px',
-                borderRadius: '4px',
-                backgroundColor: '#F5EEE5',
-                border: '1px solid #D2BFA8',
-                color: '#5C4634',
-                fontSize: '0.875rem'
+                borderRadius: '6px',
+                backgroundColor: '#F8FAFC',
+                border: '1px solid #E2E8F0',
+                color: '#0F172A',
+                fontSize: '0.875rem',
+                outline: 'none'
               }}
             />
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '0.8125rem', fontWeight: 500, color: '#5C4634' }}>
-              High tier threshold (score)
+            <label style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#475569' }}>
+              High Tier Threshold (Score)
             </label>
             <input
               type="number"
@@ -135,18 +135,19 @@ export const SettingsTab: React.FC = () => {
               onChange={e => setHighThreshold(Number(e.target.value))}
               style={{
                 padding: '8px 12px',
-                borderRadius: '4px',
-                backgroundColor: '#F5EEE5',
-                border: '1px solid #D2BFA8',
-                color: '#5C4634',
-                fontSize: '0.875rem'
+                borderRadius: '6px',
+                backgroundColor: '#F8FAFC',
+                border: '1px solid #E2E8F0',
+                color: '#0F172A',
+                fontSize: '0.875rem',
+                outline: 'none'
               }}
             />
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '0.8125rem', fontWeight: 500, color: '#5C4634' }}>
-              Critical tier threshold (score)
+            <label style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#475569' }}>
+              Critical Tier Threshold (Score)
             </label>
             <input
               type="number"
@@ -154,19 +155,20 @@ export const SettingsTab: React.FC = () => {
               onChange={e => setCriticalThreshold(Number(e.target.value))}
               style={{
                 padding: '8px 12px',
-                borderRadius: '4px',
-                backgroundColor: '#F5EEE5',
-                border: '1px solid #D2BFA8',
-                color: '#5C4634',
-                fontSize: '0.875rem'
+                borderRadius: '6px',
+                backgroundColor: '#F8FAFC',
+                border: '1px solid #E2E8F0',
+                color: '#0F172A',
+                fontSize: '0.875rem',
+                outline: 'none'
               }}
             />
           </div>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          <label style={{ fontSize: '0.8125rem', fontWeight: 500, color: '#5C4634' }}>
-            Rapid pass-through trigger threshold (₹ INR)
+          <label style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#475569' }}>
+            Rapid Pass-Through Velocity Trigger Threshold (₹ INR)
           </label>
           <input
             type="number"
@@ -174,11 +176,12 @@ export const SettingsTab: React.FC = () => {
             onChange={e => setRapidThreshold(Number(e.target.value))}
             style={{
               padding: '8px 12px',
-              borderRadius: '4px',
-              backgroundColor: '#F5EEE5',
-              border: '1px solid #D2BFA8',
-              color: '#5C4634',
-              fontSize: '0.875rem'
+              borderRadius: '6px',
+              backgroundColor: '#F8FAFC',
+              border: '1px solid #E2E8F0',
+              color: '#0F172A',
+              fontSize: '0.875rem',
+              outline: 'none'
             }}
           />
         </div>
@@ -186,29 +189,32 @@ export const SettingsTab: React.FC = () => {
 
       {/* Card 2: Scoring Weights */}
       <div style={{
-        backgroundColor: '#E8D8C3',
-        borderRadius: '8px',
-        border: '1px solid #D2BFA8',
+        backgroundColor: '#FFFFFF',
+        borderRadius: '12px',
+        border: '1px solid #E2E8F0',
         padding: '24px',
         display: 'flex',
         flexDirection: 'column',
-        gap: '20px'
+        gap: '20px',
+        boxShadow: '0 1px 3px rgba(15,23,42,0.04)'
       }}>
-        <h2 style={{
-          fontFamily: 'var(--font-serif)',
-          fontSize: '1.125rem',
-          fontWeight: 600,
-          color: '#34271E',
-          margin: 0
-        }}>
-          GNN & Hybrid Feature Weights
-        </h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Sliders size={18} color="#2563EB" />
+          <h2 style={{
+            fontSize: '1rem',
+            fontWeight: 600,
+            color: '#0F172A',
+            margin: 0
+          }}>
+            ML Anomaly & Hybrid Graph Feature Weights
+          </h2>
+        </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <p style={{ margin: 0, fontWeight: 500, fontSize: '0.875rem' }}>Rapid pass-through velocity</p>
-              <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: '#8C7764' }}>Time between incoming credits and outgoing debits</p>
+              <p style={{ margin: 0, fontWeight: 600, fontSize: '0.875rem', color: '#0F172A' }}>Rapid pass-through velocity</p>
+              <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: '#64748B' }}>Time between incoming credits and outgoing debits</p>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <input
@@ -217,9 +223,9 @@ export const SettingsTab: React.FC = () => {
                 max="50"
                 value={rapidWeight}
                 onChange={e => setRapidWeight(Number(e.target.value))}
-                style={{ width: '160px', accentColor: '#34271E' }}
+                style={{ width: '160px', accentColor: '#2563EB', cursor: 'pointer' }}
               />
-              <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, width: '32px', textAlign: 'right' }}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: '#0F172A', width: '36px', textAlign: 'right' }}>
                 {rapidWeight}%
               </span>
             </div>
@@ -227,8 +233,8 @@ export const SettingsTab: React.FC = () => {
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <p style={{ margin: 0, fontWeight: 500, fontSize: '0.875rem' }}>Shared beneficiary syndication</p>
-              <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: '#8C7764' }}>Co-occurrence in common recipient nodes across hops</p>
+              <p style={{ margin: 0, fontWeight: 600, fontSize: '0.875rem', color: '#0F172A' }}>Shared beneficiary syndication</p>
+              <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: '#64748B' }}>Co-occurrence in common recipient nodes across hops</p>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <input
@@ -237,9 +243,9 @@ export const SettingsTab: React.FC = () => {
                 max="50"
                 value={sharedWeight}
                 onChange={e => setSharedWeight(Number(e.target.value))}
-                style={{ width: '160px', accentColor: '#34271E' }}
+                style={{ width: '160px', accentColor: '#2563EB', cursor: 'pointer' }}
               />
-              <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, width: '32px', textAlign: 'right' }}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: '#0F172A', width: '36px', textAlign: 'right' }}>
                 {sharedWeight}%
               </span>
             </div>
@@ -247,8 +253,8 @@ export const SettingsTab: React.FC = () => {
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <p style={{ margin: 0, fontWeight: 500, fontSize: '0.875rem' }}>Burst timing dispersion</p>
-              <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: '#8C7764' }}>Clustered transactions occurring inside tight temporal windows</p>
+              <p style={{ margin: 0, fontWeight: 600, fontSize: '0.875rem', color: '#0F172A' }}>Burst timing dispersion</p>
+              <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: '#64748B' }}>Clustered transactions occurring inside tight temporal windows</p>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <input
@@ -257,9 +263,9 @@ export const SettingsTab: React.FC = () => {
                 max="50"
                 value={burstWeight}
                 onChange={e => setBurstWeight(Number(e.target.value))}
-                style={{ width: '160px', accentColor: '#34271E' }}
+                style={{ width: '160px', accentColor: '#2563EB', cursor: 'pointer' }}
               />
-              <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, width: '32px', textAlign: 'right' }}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: '#0F172A', width: '36px', textAlign: 'right' }}>
                 {burstWeight}%
               </span>
             </div>
@@ -267,8 +273,8 @@ export const SettingsTab: React.FC = () => {
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <p style={{ margin: 0, fontWeight: 500, fontSize: '0.875rem' }}>Cyclic loop & smurfing topology</p>
-              <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: '#8C7764' }}>Graph motifs showing round-trip laundering loops</p>
+              <p style={{ margin: 0, fontWeight: 600, fontSize: '0.875rem', color: '#0F172A' }}>Cyclic loop & smurfing topology</p>
+              <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: '#64748B' }}>Graph motifs showing round-trip laundering loops</p>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <input
@@ -277,9 +283,9 @@ export const SettingsTab: React.FC = () => {
                 max="50"
                 value={loopWeight}
                 onChange={e => setLoopWeight(Number(e.target.value))}
-                style={{ width: '160px', accentColor: '#34271E' }}
+                style={{ width: '160px', accentColor: '#2563EB', cursor: 'pointer' }}
               />
-              <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, width: '32px', textAlign: 'right' }}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: '#0F172A', width: '36px', textAlign: 'right' }}>
                 {loopWeight}%
               </span>
             </div>
@@ -289,52 +295,60 @@ export const SettingsTab: React.FC = () => {
 
       {/* Card 3: Offline Air-Gap & Hardware Runtime */}
       <div style={{
-        backgroundColor: '#E8D8C3',
-        borderRadius: '8px',
-        border: '1px solid #D2BFA8',
+        backgroundColor: '#FFFFFF',
+        borderRadius: '12px',
+        border: '1px solid #E2E8F0',
         padding: '24px',
         display: 'flex',
         flexDirection: 'column',
-        gap: '20px'
+        gap: '20px',
+        boxShadow: '0 1px 3px rgba(15,23,42,0.04)'
       }}>
-        <h2 style={{
-          fontFamily: 'var(--font-serif)',
-          fontSize: '1.125rem',
-          fontWeight: 600,
-          color: '#34271E',
-          margin: 0
-        }}>
-          Offline Air-Gap & Hardware Optimization
-        </h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Shield size={18} color="#2563EB" />
+          <h2 style={{
+            fontSize: '1rem',
+            fontWeight: 600,
+            color: '#0F172A',
+            margin: 0
+          }}>
+            Offline Air-Gap & Hardware Optimization
+          </h2>
+        </div>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <p style={{ margin: 0, fontWeight: 500, fontSize: '0.875rem' }}>Enforce 100% Offline Air-Gap</p>
-            <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: '#8C7764' }}>Blocks all external HTTP outbound requests; strictly local RAM inference</p>
+            <p style={{ margin: 0, fontWeight: 600, fontSize: '0.875rem', color: '#0F172A' }}>Enforce 100% Offline Air-Gap Mode</p>
+            <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: '#64748B' }}>Blocks all external HTTP outbound network requests; strictly local in-memory RAM inference</p>
           </div>
           <input
             type="checkbox"
             checked={airGappedMode}
             onChange={e => setAirGappedMode(e.target.checked)}
-            style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+            style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#2563EB' }}
           />
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <p style={{ margin: 0, fontWeight: 500, fontSize: '0.875rem' }}>Parallel CPU Worker Threads</p>
-            <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: '#8C7764' }}>Multithreaded vector indexing for Parquet dataset ingestion</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Cpu size={18} color="#64748B" />
+            <div>
+              <p style={{ margin: 0, fontWeight: 600, fontSize: '0.875rem', color: '#0F172A' }}>Parallel CPU Worker Threads</p>
+              <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: '#64748B' }}>Multithreaded vector indexing and DuckDB query workers</p>
+            </div>
           </div>
           <select
             value={cpuThreads}
             onChange={e => setCpuThreads(Number(e.target.value))}
             style={{
               padding: '6px 12px',
-              borderRadius: '4px',
-              backgroundColor: '#F5EEE5',
-              border: '1px solid #D2BFA8',
-              color: '#5C4634',
-              fontSize: '0.875rem'
+              borderRadius: '6px',
+              backgroundColor: '#F8FAFC',
+              border: '1px solid #E2E8F0',
+              color: '#0F172A',
+              fontSize: '0.875rem',
+              fontWeight: 500,
+              outline: 'none'
             }}
           >
             <option value={4}>4 Threads</option>
@@ -353,16 +367,19 @@ export const SettingsTab: React.FC = () => {
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            padding: '10px 20px',
-            borderRadius: '4px',
-            backgroundColor: '#34271E',
-            color: '#FBF7F0',
+            padding: '10px 22px',
+            borderRadius: '8px',
+            backgroundColor: '#2563EB',
+            color: '#FFFFFF',
             fontSize: '0.875rem',
             fontWeight: 600,
             cursor: 'pointer',
             border: 'none',
-            fontFamily: 'var(--font-sans)'
+            boxShadow: '0 1px 2px rgba(37,99,235,0.2)',
+            transition: 'background-color 0.15s'
           }}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#1D4ED8')}
+          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#2563EB')}
         >
           <Save size={16} />
           <span>Save Configuration</span>
@@ -375,15 +392,17 @@ export const SettingsTab: React.FC = () => {
             alignItems: 'center',
             gap: '8px',
             padding: '10px 18px',
-            borderRadius: '4px',
-            backgroundColor: '#F5EEE5',
-            color: '#5C4634',
+            borderRadius: '8px',
+            backgroundColor: '#FFFFFF',
+            color: '#475569',
             fontSize: '0.875rem',
-            fontWeight: 500,
+            fontWeight: 600,
             cursor: 'pointer',
-            border: '1px solid #D2BFA8',
-            fontFamily: 'var(--font-sans)'
+            border: '1px solid #CBD5E1',
+            transition: 'background-color 0.15s'
           }}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F8FAFC')}
+          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#FFFFFF')}
         >
           <RefreshCw size={16} />
           <span>Reset to Defaults</span>

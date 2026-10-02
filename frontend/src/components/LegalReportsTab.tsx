@@ -66,55 +66,58 @@ export const LegalReportsTab: React.FC<LegalReportsTabProps> = ({ victimAccount 
   };
 
   return (
-    <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '1200px', margin: '0 auto' }}>
+    <div style={{ padding: '24px 32px', display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '1200px', margin: '0 auto', fontFamily: 'Inter, system-ui, sans-serif' }}>
       {/* Title Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <h1 style={{
-            fontFamily: 'var(--font-serif)',
-            fontSize: '1.25rem',
-            fontWeight: 600,
+            fontSize: '1.5rem',
+            fontWeight: 700,
             letterSpacing: '-0.025em',
-            lineHeight: 1.4,
-            color: '#34271E',
+            color: '#0F172A',
             margin: 0
           }}>
             Reports
           </h1>
           <p style={{
             fontSize: '0.875rem',
-            lineHeight: 1.428,
-            color: '#8C7764',
+            lineHeight: 1.4,
+            color: '#64748B',
             margin: 0
           }}>
-            Generated case documents and bank freeze notices
+            Generated case documents and statutory bank freeze notices
           </p>
         </div>
       </div>
 
       {/* Document Selector & Actions */}
       <div style={{
-        backgroundColor: '#F5EEE5',
-        borderRadius: '4px',
+        backgroundColor: '#FFFFFF',
+        borderRadius: '12px',
         padding: '16px 20px',
-        border: '1px solid var(--border)',
+        border: '1px solid #E2E8F0',
         display: 'flex',
         justifyContent: 'space-between',
-        alignItems: 'center'
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: '12px',
+        boxShadow: '0 1px 3px rgba(15,23,42,0.04)'
       }}>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
           <button
             onClick={() => setDocType('diary')}
             style={{
               padding: '8px 16px',
-              borderRadius: '6px',
-              backgroundColor: docType === 'diary' ? 'var(--primary)' : 'var(--surface-2)',
-              color: docType === 'diary' ? '#FBF7F0' : 'var(--text)',
+              borderRadius: '8px',
+              backgroundColor: docType === 'diary' ? '#2563EB' : '#F8FAFC',
+              color: docType === 'diary' ? '#FFFFFF' : '#334155',
+              border: `1px solid ${docType === 'diary' ? '#2563EB' : '#E2E8F0'}`,
               fontSize: '13px',
               fontWeight: 600,
               display: 'flex',
               alignItems: 'center',
-              gap: '6px'
+              gap: '6px',
+              cursor: 'pointer'
             }}
           >
             <FileText size={16} />
@@ -125,14 +128,16 @@ export const LegalReportsTab: React.FC<LegalReportsTabProps> = ({ victimAccount 
             onClick={() => setDocType('freeze')}
             style={{
               padding: '8px 16px',
-              borderRadius: '6px',
-              backgroundColor: docType === 'freeze' ? 'var(--primary)' : 'var(--surface-2)',
-              color: docType === 'freeze' ? '#FBF7F0' : 'var(--text)',
+              borderRadius: '8px',
+              backgroundColor: docType === 'freeze' ? '#2563EB' : '#F8FAFC',
+              color: docType === 'freeze' ? '#FFFFFF' : '#334155',
+              border: `1px solid ${docType === 'freeze' ? '#2563EB' : '#E2E8F0'}`,
               fontSize: '13px',
               fontWeight: 600,
               display: 'flex',
               alignItems: 'center',
-              gap: '6px'
+              gap: '6px',
+              cursor: 'pointer'
             }}
           >
             <Building2 size={16} />
@@ -143,14 +148,16 @@ export const LegalReportsTab: React.FC<LegalReportsTabProps> = ({ victimAccount 
             onClick={() => setDocType('freeze_hi')}
             style={{
               padding: '8px 16px',
-              borderRadius: '6px',
-              backgroundColor: docType === 'freeze_hi' ? 'var(--primary)' : 'var(--surface-2)',
-              color: docType === 'freeze_hi' ? '#FBF7F0' : 'var(--text)',
+              borderRadius: '8px',
+              backgroundColor: docType === 'freeze_hi' ? '#2563EB' : '#F8FAFC',
+              color: docType === 'freeze_hi' ? '#FFFFFF' : '#334155',
+              border: `1px solid ${docType === 'freeze_hi' ? '#2563EB' : '#E2E8F0'}`,
               fontSize: '13px',
               fontWeight: 600,
               display: 'flex',
               alignItems: 'center',
-              gap: '6px'
+              gap: '6px',
+              cursor: 'pointer'
             }}
           >
             <Building2 size={16} />
@@ -163,11 +170,13 @@ export const LegalReportsTab: React.FC<LegalReportsTabProps> = ({ victimAccount 
               onChange={e => setTargetBank(e.target.value)}
               style={{
                 padding: '8px 12px',
-                borderRadius: '6px',
-                border: '1px solid var(--border)',
+                borderRadius: '8px',
+                border: '1px solid #E2E8F0',
                 fontSize: '13px',
                 fontWeight: 600,
-                backgroundColor: '#F5EEE5'
+                backgroundColor: '#FFFFFF',
+                color: '#0F172A',
+                cursor: 'pointer'
               }}
             >
               <option value="AXIS">AXIS Bank</option>
@@ -190,15 +199,16 @@ export const LegalReportsTab: React.FC<LegalReportsTabProps> = ({ victimAccount 
               alignItems: 'center',
               gap: '6px',
               padding: '8px 14px',
-              borderRadius: '6px',
-              backgroundColor: 'var(--surface-2)',
-              border: '1px solid var(--border)',
+              borderRadius: '8px',
+              backgroundColor: '#F8FAFC',
+              border: '1px solid #E2E8F0',
               fontSize: '13px',
               fontWeight: 600,
-              color: 'var(--text)'
+              color: '#334155',
+              cursor: 'pointer'
             }}
           >
-            {copied ? <Check size={16} color="var(--success)" /> : <Copy size={16} />}
+            {copied ? <Check size={16} color="#16A34A" /> : <Copy size={16} />}
             <span>{copied ? 'Copied' : 'Copy Text'}</span>
           </button>
 
@@ -208,13 +218,15 @@ export const LegalReportsTab: React.FC<LegalReportsTabProps> = ({ victimAccount 
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              padding: '8px 14px',
-              borderRadius: '6px',
-              backgroundColor: 'var(--primary-light)',
-              border: '1px solid var(--primary-border)',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              backgroundColor: '#2563EB',
+              border: 'none',
               fontSize: '13px',
               fontWeight: 600,
-              color: 'var(--primary)'
+              color: '#FFFFFF',
+              cursor: 'pointer',
+              boxShadow: '0 1px 2px rgba(37,99,235,0.2)'
             }}
           >
             <Printer size={16} />
@@ -226,29 +238,30 @@ export const LegalReportsTab: React.FC<LegalReportsTabProps> = ({ victimAccount 
       {/* Anti-Hallucination Guardrail Certificate Banner */}
       {reportData?.verification && (
         <div style={{
-          backgroundColor: 'var(--success-light)',
-          border: '1px solid var(--success-border)',
-          borderRadius: '4px',
+          backgroundColor: '#ECFDF5',
+          border: '1px solid #A7F3D0',
+          borderRadius: '12px',
           padding: '14px 20px',
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center'
+          alignItems: 'center',
+          boxShadow: '0 1px 3px rgba(15,23,42,0.04)'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <ShieldCheck size={28} color="var(--success)" />
+            <ShieldCheck size={28} color="#059669" />
             <div>
-              <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--success)' }}>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: '#065F46' }}>
                 {reportData.verification.compliance_status}
               </div>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+              <div style={{ fontSize: '12px', color: '#047857' }}>
                 Automated Programmatic Guardrail: Checked {reportData.verification.counts.accounts_checked} Accounts, {reportData.verification.counts.txns_checked} Transactions, {reportData.verification.counts.ifscs_checked} IFSCs. Zero Unverified Entities.
               </div>
             </div>
           </div>
 
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>SHA-256 Digital Custody Hash:</div>
-            <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>
+            <div style={{ fontSize: '11px', color: '#047857' }}>SHA-256 Digital Custody Hash:</div>
+            <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', fontWeight: 600, color: '#065F46' }}>
               {reportData.sha256?.slice(0, 24)}...
             </div>
           </div>
@@ -257,28 +270,28 @@ export const LegalReportsTab: React.FC<LegalReportsTabProps> = ({ victimAccount 
 
       {/* Legal Notice Document Preview */}
       <div style={{
-        backgroundColor: '#F5EEE5',
-        borderRadius: '4px',
-        border: '1px solid var(--border)',
+        backgroundColor: '#FFFFFF',
+        borderRadius: '12px',
+        border: '1px solid #E2E8F0',
         padding: '32px',
-        boxShadow: 'var(--shadow-md)',
+        boxShadow: '0 1px 3px rgba(15,23,42,0.04)',
         minHeight: '480px'
       }}>
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>Generating court-ready legal notice...</div>
+          <div style={{ textAlign: 'center', padding: '40px', color: '#64748B' }}>Generating court-ready legal notice...</div>
         ) : reportData?.raw_text ? (
           <pre style={{
             fontFamily: 'var(--font-mono)',
             fontSize: '12px',
             lineHeight: 1.6,
-            color: 'var(--text)',
+            color: '#0F172A',
             whiteSpace: 'pre-wrap',
             wordBreak: 'break-word'
           }}>
             {reportData.raw_text}
           </pre>
         ) : (
-          <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
+          <div style={{ textAlign: 'center', padding: '40px', color: '#64748B' }}>
             No notice generated. Please select a victim account to initiate.
           </div>
         )}

@@ -1,83 +1,62 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root {
-  /* Monochromatic Almond & Warm Ivory Design System */
-  --bg: #FBF7F0;                 /* Warm ivory page background */
-  --surface: #FFFFFF;            /* Clean surface */
-  --surface-2: #F5EEE5;          /* Pale almond container & input fill */
-  --surface-almond: #E8D8C3;     /* Almond panel fill */
-  --surface-pista: #E8D8C3;      /* Harmonized almond accent */
-  --surface-hover: #DFCEB7;      /* Hover state */
-  --border: #D2BFA8;             /* Almond border */
-  --border-strong: #B89C7D;      /* Defined almond border */
-  --border-pista: #D2BFA8;
-  --border-subtle: #EBE1D3;      /* Faint almond separator */
+  /* Subtle, Modern Enterprise Slate & Blue Design System */
+  --bg-app: #F4F7FB;             /* Soft clean grayish-blue background */
+  --bg-card: #FFFFFF;            /* Pure white card surface */
+  --bg-card-subtle: #F8FAFC;     /* Faint off-white for headers/tables */
+  --border-light: #E2E8F0;       /* Ultra-fine card border */
+  --border-subtle: #EAECF0;      /* Subtle separator */
+  --border-focus: #3B82F6;       /* Clean focus blue */
 
-  /* Monochromatic Almond Typography */
-  --text: #34271E;               /* Dark coffee for titles, key metrics, emphasis */
-  --text-body: #5C4634;          /* Deep almond brown primary text */
-  --text-muted: #8C7764;         /* Muted taupe secondary text */
-  --text-subtle: #A38F7D;        /* Faint caption text */
+  /* Sidebar Dark Navy System */
+  --sidebar-bg: #0A1226;         /* Deep rich dark navy */
+  --sidebar-surface: #0E1A38;    /* Slightly lighter navy container */
+  --sidebar-text: #94A3B8;       /* Slate muted text */
+  --sidebar-text-hover: #F8FAFC; /* Crisp white text on hover */
+  --sidebar-active-bg: #2563EB;  /* Vibrant royal blue active pill */
+  --sidebar-border: #1E293B;
 
-  /* Primary Action & Buttons: Dark Coffee */
-  --primary: #34271E;            /* Dark coffee for buttons, active tabs, icons */
-  --primary-hover: #221811;
-  --primary-light: #F5EEE5;      /* Pale almond tint */
-  --primary-border: #D2BFA8;
+  /* Typography Colors */
+  --text-primary: #0F172A;       /* Deep slate primary headings */
+  --text-secondary: #334155;     /* Dark slate body text */
+  --text-muted: #64748B;         /* Slate gray captions and subtitles */
+  --text-faint: #94A3B8;         /* Subdued tertiary metadata */
 
-  /* Almond Accent Tokens */
-  --pista: #5C4634;
-  --pista-light: #F5EEE5;
-  --pista-border: #D2BFA8;
-  --pista-hover: #34271E;
+  /* Vibrant but Subtle Accent Colors */
+  --blue-primary: #2563EB;
+  --blue-hover: #1D4ED8;
+  --blue-light: #EFF6FF;
+  --blue-border: #DBEAFE;
 
-  --beige: #8C7764;
-  --beige-light: #F5EEE5;
-  --beige-border: #D2BFA8;
+  --emerald-primary: #10B981;
+  --emerald-dark: #059669;
+  --emerald-light: #ECFDF5;
+  --emerald-border: #D1FAE5;
 
-  /* Monochromatic Status Tones (Filled Almond Shades - No Clashing Hues) */
-  --success: #34271E;
-  --success-light: #E8D8C3;
-  --success-border: #D2BFA8;
+  --rose-primary: #EF4444;
+  --rose-dark: #DC2626;
+  --rose-light: #FEF2F2;
+  --rose-border: #FEE2E2;
 
-  --warning: #5C4634;
-  --warning-light: #F5EEE5;
-  --warning-border: #D2BFA8;
+  --amber-primary: #F59E0B;
+  --amber-dark: #D97706;
+  --amber-light: #FFFBEB;
+  --amber-border: #FEF3C7;
 
-  --danger: #34271E;
-  --danger-light: #E8D8C3;
-  --danger-border: #D2BFA8;
+  --purple-primary: #8B5CF6;
+  --purple-dark: #7C3AED;
+  --purple-light: #F5F3FF;
+  --purple-border: #EDE9FE;
 
-  /* Header Monochrome Almond Styling */
-  --header-bg: #FBF7F0;
-  --header-surface: #F5EEE5;
-  --header-border: #D2BFA8;
-  --header-text: #34271E;
-
-  /* Monochromatic Almond Forensic Layer Progression (Light to Dark) */
-  --layer-victim: #8C7764;       /* Muted Taupe (Victim) */
-  --layer-victim-bg: #F5EEE5;
-  --layer-1: #CDB394;            /* Soft Almond (L1 Smurfing Dispatch) */
-  --layer-1-bg: #F5EEE5;
-  --layer-2: #9D7D5E;            /* Warm Almond (L2 Layering Mule) */
-  --layer-2-bg: #E8D8C3;
-  --layer-3: #5C4634;            /* Deep Almond Brown (L3 Aggregator) */
-  --layer-3-bg: #E8D8C3;
-  --layer-4: #34271E;            /* Dark Coffee (L4 Cashout Exit) */
-  --layer-4-bg: #E8D8C3;
-
-  /* Risk Tiers Progression (Shades of Almond) */
-  --tier-low: #E8D8C3;
-  --tier-medium: #CDB394;
-  --tier-high: #9D7D5E;
-  --tier-critical: #34271E;
-
-  --font-sans: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-serif: 'Fraunces', Georgia, serif;
+  /* Fonts & Shadows */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
-  --shadow-sm: 0 1px 3px 0 rgba(52, 39, 30, 0.04), 0 1px 2px 0 rgba(52, 39, 30, 0.02);
-  --shadow-md: 0 4px 6px -1px rgba(52, 39, 30, 0.05), 0 2px 4px -2px rgba(52, 39, 30, 0.02);
-  --shadow-lg: 0 10px 15px -3px rgba(52, 39, 30, 0.06), 0 4px 6px -4px rgba(52, 39, 30, 0.02);
+
+  --shadow-xs: 0 1px 2px 0 rgba(15, 23, 42, 0.03);
+  --shadow-sm: 0 1px 3px 0 rgba(15, 23, 42, 0.05), 0 1px 2px 0 rgba(15, 23, 42, 0.02);
+  --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.06), 0 2px 4px -2px rgba(15, 23, 42, 0.03);
+  --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.04);
 }
 
 * {
@@ -88,15 +67,10 @@
 
 body {
   font-family: var(--font-sans);
-  background-color: var(--bg);
-  color: var(--text-body);
+  background-color: var(--bg-app);
+  color: var(--text-secondary);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
-}
-
-.heading-fraunces {
-  font-family: var(--font-serif);
-  color: var(--text);
 }
 
 button {
@@ -104,13 +78,14 @@ button {
   cursor: pointer;
   border: none;
   background: none;
+  transition: all 0.15s ease-in-out;
 }
 
 input, select, textarea {
   font-family: inherit;
 }
 
-/* Elegant Scrollbars */
+/* Custom Smooth Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -119,23 +94,37 @@ input, select, textarea {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--border-strong);
-  border-radius: 3px;
+  background: #CBD5E1;
+  border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
+  background: #94A3B8;
 }
 
 .mono {
   font-family: var(--font-mono);
 }
 
-/* Clean Animations */
-@keyframes pulse-subtle {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
+/* Subtle card container utility */
+.vajra-card {
+  background: #FFFFFF;
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
-.pulsing {
-  animation: pulse-subtle 2s infinite ease-in-out;
+.vajra-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: #CBD5E1;
+}
+
+/* Micro animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.25s ease-out forwards;
 }

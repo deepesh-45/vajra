@@ -223,25 +223,23 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
   }, [traceData, currentTs, minTs, maxTs]);
 
   return (
-    <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '1440px', margin: '0 auto' }}>
+    <div style={{ padding: '24px 32px', display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '1440px', margin: '0 auto', fontFamily: 'Inter, system-ui, sans-serif' }}>
       {/* Title Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <h1 style={{
-            fontFamily: 'var(--font-serif)',
-            fontSize: '1.25rem',
-            fontWeight: 600,
+            fontSize: '1.5rem',
+            fontWeight: 700,
             letterSpacing: '-0.025em',
-            lineHeight: 1.4,
-            color: '#34271E',
+            color: '#0F172A',
             margin: 0
           }}>
             Investigate
           </h1>
           <p style={{
             fontSize: '0.875rem',
-            lineHeight: 1.428,
-            color: '#8C7764',
+            lineHeight: 1.4,
+            color: '#64748B',
             margin: 0
           }}>
             Multi-hop money trail tracer & mule network graph
@@ -251,13 +249,14 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
 
       {/* Professional Investigation Control Panel */}
       <div style={{
-        backgroundColor: '#F5EEE5',
-        borderRadius: '6px',
+        backgroundColor: '#FFFFFF',
+        borderRadius: '12px',
         padding: '16px 20px',
-        border: '1px solid var(--border)',
+        border: '1px solid #E2E8F0',
         display: 'flex',
         flexDirection: 'column',
-        gap: '12px'
+        gap: '12px',
+        boxShadow: '0 1px 3px rgba(15,23,42,0.04)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
           {/* Target Account Input */}
@@ -268,12 +267,12 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
               gap: '8px',
               padding: '0 12px',
               height: '40px',
-              borderRadius: '4px',
-              backgroundColor: '#FBF7F0',
-              border: '1px solid #D2BFA8',
+              borderRadius: '8px',
+              backgroundColor: '#F8FAFC',
+              border: '1px solid #E2E8F0',
               flex: 1
             }}>
-              <Search size={16} color="#8C7764" />
+              <Search size={16} color="#94A3B8" />
               <input
                 type="text"
                 value={victimInput}
@@ -287,14 +286,14 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
                   fontFamily: 'var(--font-mono)',
                   fontSize: '0.875rem',
                   fontWeight: 600,
-                  color: '#34271E'
+                  color: '#0F172A'
                 }}
                 onKeyDown={e => e.key === 'Enter' && fetchTrace(victimInput)}
               />
               {victimInput && (
                 <button
                   onClick={() => setVictimInput('')}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#8C7764', padding: '2px' }}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94A3B8', padding: '2px' }}
                 >
                   ✕
                 </button>
@@ -307,9 +306,9 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
               style={{
                 height: '40px',
                 padding: '0 20px',
-                borderRadius: '4px',
-                backgroundColor: '#34271E',
-                color: '#FBF7F0',
+                borderRadius: '8px',
+                backgroundColor: '#2563EB',
+                color: '#FFFFFF',
                 fontSize: '0.8125rem',
                 fontWeight: 600,
                 cursor: loading ? 'wait' : 'pointer',
@@ -317,17 +316,18 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
-                whiteSpace: 'nowrap'
+                whiteSpace: 'nowrap',
+                boxShadow: '0 1px 2px rgba(37,99,235,0.2)'
               }}
             >
-              <Zap size={14} color="#FBF7F0" />
+              <Zap size={14} color="#FFFFFF" />
               <span>{loading ? 'Tracing Trail...' : 'Trace Money Trail'}</span>
             </button>
           </div>
 
           {/* Traversal Controls: Max Hops & Time Window */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: '#5C4634' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: '#64748B' }}>
               <span style={{ fontWeight: 600 }}>Max Hops:</span>
               <select
                 value={maxHops}
@@ -337,13 +337,14 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
                   if (victimInput) fetchTrace(victimInput, h, maxWaitHours);
                 }}
                 style={{
-                  padding: '6px 10px',
-                  borderRadius: '4px',
-                  border: '1px solid #D2BFA8',
-                  backgroundColor: '#FBF7F0',
+                  padding: '7px 12px',
+                  borderRadius: '8px',
+                  border: '1px solid #E2E8F0',
+                  backgroundColor: '#FFFFFF',
                   fontSize: '0.75rem',
                   fontWeight: 600,
-                  color: '#34271E'
+                  color: '#0F172A',
+                  cursor: 'pointer'
                 }}
               >
                 <option value={2}>2 Hops</option>
@@ -353,7 +354,7 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
               </select>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: '#5C4634' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: '#64748B' }}>
               <span style={{ fontWeight: 600 }}>Window:</span>
               <select
                 value={maxWaitHours}
@@ -363,13 +364,14 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
                   if (victimInput) fetchTrace(victimInput, maxHops, w);
                 }}
                 style={{
-                  padding: '6px 10px',
-                  borderRadius: '4px',
-                  border: '1px solid #D2BFA8',
-                  backgroundColor: '#FBF7F0',
+                  padding: '7px 12px',
+                  borderRadius: '8px',
+                  border: '1px solid #E2E8F0',
+                  backgroundColor: '#FFFFFF',
                   fontSize: '0.75rem',
                   fontWeight: 600,
-                  color: '#34271E'
+                  color: '#0F172A',
+                  cursor: 'pointer'
                 }}
               >
                 <option value={24}>24 Hours</option>
@@ -388,13 +390,13 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
                     display: 'flex',
                     alignItems: 'center',
                     gap: '6px',
-                    padding: '8px 12px',
-                    borderRadius: '4px',
-                    backgroundColor: '#E8D8C3',
-                    border: '1px solid #D2BFA8',
+                    padding: '8px 14px',
+                    borderRadius: '8px',
+                    backgroundColor: '#F1F5F9',
+                    border: '1px solid #E2E8F0',
                     fontSize: '0.75rem',
                     fontWeight: 600,
-                    color: '#34271E',
+                    color: '#334155',
                     cursor: 'pointer'
                   }}
                 >
@@ -407,14 +409,15 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
                     display: 'flex',
                     alignItems: 'center',
                     gap: '6px',
-                    padding: '8px 14px',
-                    borderRadius: '4px',
-                    backgroundColor: '#34271E',
-                    color: '#FBF7F0',
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    backgroundColor: '#0F172A',
+                    color: '#FFFFFF',
                     fontSize: '0.75rem',
                     fontWeight: 600,
                     cursor: 'pointer',
-                    border: 'none'
+                    border: 'none',
+                    boxShadow: '0 1px 2px rgba(15,23,42,0.2)'
                   }}
                 >
                   <span>Draft Freeze Notices</span>
@@ -429,10 +432,10 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
       {error && (
         <div style={{
           padding: '14px 18px',
-          borderRadius: '4px',
-          backgroundColor: 'var(--danger-light)',
-          border: '1px solid var(--danger-border)',
-          color: 'var(--danger)',
+          borderRadius: '8px',
+          backgroundColor: '#FEF2F2',
+          border: '1px solid #FEE2E2',
+          color: '#DC2626',
           fontSize: '13px'
         }}>
           {error}
@@ -443,59 +446,60 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
         <>
           {/* Metrics Strip */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '14px' }}>
-            <div style={{ backgroundColor: '#F5EEE5', padding: '14px 16px', borderRadius: '4px', border: '1px solid var(--border)' }}>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>TOTAL SIPHONED (VICTIM)</div>
-              <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text)', marginTop: '4px' }}>
+            <div style={{ backgroundColor: '#FFFFFF', padding: '16px 18px', borderRadius: '12px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(15,23,42,0.04)' }}>
+              <div style={{ fontSize: '11px', color: '#64748B', fontWeight: 600, letterSpacing: '0.04em' }}>TOTAL SIPHONED (VICTIM)</div>
+              <div style={{ fontSize: '20px', fontWeight: 700, color: '#0F172A', marginTop: '4px' }}>
                 ₹{traceData.initial_loss_inr.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
               </div>
             </div>
 
-            <div style={{ backgroundColor: '#F5EEE5', padding: '14px 16px', borderRadius: '4px', border: '1px solid var(--border)' }}>
-              <div style={{ fontSize: '11px', color: 'var(--success)', fontWeight: 600 }}>RECOVERABLE (CURRENTLY HELD)</div>
-              <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--success)', marginTop: '4px' }}>
+            <div style={{ backgroundColor: '#FFFFFF', padding: '16px 18px', borderRadius: '12px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(15,23,42,0.04)' }}>
+              <div style={{ fontSize: '11px', color: '#16A34A', fontWeight: 600, letterSpacing: '0.04em' }}>RECOVERABLE (CURRENTLY HELD)</div>
+              <div style={{ fontSize: '20px', fontWeight: 700, color: '#16A34A', marginTop: '4px' }}>
                 ₹{traceData.total_held_inr.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
               </div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{traceData.recovery_potential_pct}% recoverable</div>
+              <div style={{ fontSize: '11px', color: '#64748B', marginTop: '2px' }}>{traceData.recovery_potential_pct}% recoverable</div>
             </div>
 
-            <div style={{ backgroundColor: '#F5EEE5', padding: '14px 16px', borderRadius: '4px', border: '1px solid var(--border)' }}>
-              <div style={{ fontSize: '11px', color: 'var(--danger)', fontWeight: 600 }}>CASHED-OUT (TERMINAL)</div>
-              <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--danger)', marginTop: '4px' }}>
+            <div style={{ backgroundColor: '#FFFFFF', padding: '16px 18px', borderRadius: '12px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(15,23,42,0.04)' }}>
+              <div style={{ fontSize: '11px', color: '#DC2626', fontWeight: 600, letterSpacing: '0.04em' }}>CASHED-OUT (TERMINAL)</div>
+              <div style={{ fontSize: '20px', fontWeight: 700, color: '#DC2626', marginTop: '4px' }}>
                 ₹{traceData.total_cashed_out_inr.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
               </div>
             </div>
 
-            <div style={{ backgroundColor: '#F5EEE5', padding: '14px 16px', borderRadius: '4px', border: '1px solid var(--border)' }}>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>ACCOUNTS IN RING</div>
-              <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text)', marginTop: '4px' }}>
+            <div style={{ backgroundColor: '#FFFFFF', padding: '16px 18px', borderRadius: '12px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(15,23,42,0.04)' }}>
+              <div style={{ fontSize: '11px', color: '#64748B', fontWeight: 600, letterSpacing: '0.04em' }}>ACCOUNTS IN RING</div>
+              <div style={{ fontSize: '20px', fontWeight: 700, color: '#0F172A', marginTop: '4px' }}>
                 {traceData.num_nodes} nodes · {traceData.num_edges} hops
               </div>
             </div>
 
-            <div style={{ backgroundColor: '#F5EEE5', padding: '14px 16px', borderRadius: '4px', border: '1px solid var(--border)' }}>
-              <div style={{ fontSize: '11px', color: 'var(--primary)', fontWeight: 600 }}>TRACE LATENCY</div>
-              <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--primary)', marginTop: '4px' }}>
+            <div style={{ backgroundColor: '#FFFFFF', padding: '16px 18px', borderRadius: '12px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(15,23,42,0.04)' }}>
+              <div style={{ fontSize: '11px', color: '#2563EB', fontWeight: 600, letterSpacing: '0.04em' }}>TRACE LATENCY</div>
+              <div style={{ fontSize: '20px', fontWeight: 700, color: '#2563EB', marginTop: '4px' }}>
                 {traceData.timing_ms} ms
               </div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Sub-second benchmark</div>
+              <div style={{ fontSize: '11px', color: '#64748B', marginTop: '2px' }}>Sub-second benchmark</div>
             </div>
           </div>
 
           {/* Pattern Motifs & Supernodes Control Bar */}
           <div style={{
-            backgroundColor: '#F5EEE5',
-            borderRadius: '4px',
+            backgroundColor: '#FFFFFF',
+            borderRadius: '12px',
             padding: '12px 18px',
-            border: '1px solid var(--border)',
+            border: '1px solid #E2E8F0',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
             gap: '16px',
-            flexWrap: 'wrap'
+            flexWrap: 'wrap',
+            boxShadow: '0 1px 3px rgba(15,23,42,0.04)'
           }}>
             {/* Pattern Motifs Quick Filter */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+              <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>
                 Fraud Motifs:
               </span>
               {[
@@ -510,13 +514,13 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
                     key={m.id}
                     onClick={() => setActiveMotif(m.id as any)}
                     style={{
-                      padding: '5px 12px',
-                      borderRadius: '6px',
+                      padding: '6px 12px',
+                      borderRadius: '8px',
                       fontSize: '12px',
                       fontWeight: isActive ? 700 : 500,
-                      backgroundColor: isActive ? 'var(--primary)' : 'var(--surface-2)',
-                      color: isActive ? '#FFFFFF' : 'var(--text)',
-                      border: isActive ? '1px solid var(--primary)' : '1px solid var(--border)',
+                      backgroundColor: isActive ? '#2563EB' : '#F8FAFC',
+                      color: isActive ? '#FFFFFF' : '#334155',
+                      border: isActive ? '1px solid #2563EB' : '1px solid #E2E8F0',
                       cursor: 'pointer',
                       transition: 'all 0.15s ease'
                     }}
@@ -536,32 +540,32 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
-                  padding: '6px 12px',
-                  borderRadius: '6px',
-                  backgroundColor: clustersCollapsed ? 'var(--surface-pista)' : '#F5EEE5',
-                  color: clustersCollapsed ? 'var(--primary)' : 'var(--text)',
-                  border: clustersCollapsed ? '1.5px solid var(--primary)' : '1px solid var(--border)',
+                  padding: '7px 14px',
+                  borderRadius: '8px',
+                  backgroundColor: clustersCollapsed ? '#EFF6FF' : '#F8FAFC',
+                  color: clustersCollapsed ? '#1D4ED8' : '#334155',
+                  border: clustersCollapsed ? '1px solid #DBEAFE' : '1px solid #E2E8F0',
                   fontSize: '12px',
                   fontWeight: 600,
                   cursor: 'pointer'
                 }}
               >
-                <Layers size={14} color={clustersCollapsed ? 'var(--primary)' : 'var(--text-muted)'} />
+                <Layers size={14} color={clustersCollapsed ? '#2563EB' : '#64748B'} />
                 <span>{clustersCollapsed ? 'Mule Rings Collapsed (Supernodes)' : 'Collapse Mule Rings'}</span>
               </button>
 
               {/* Layout Switcher */}
-              <div style={{ display: 'flex', backgroundColor: 'var(--surface-2)', padding: '2px', borderRadius: '6px', border: '1px solid var(--border)' }}>
+              <div style={{ display: 'flex', backgroundColor: '#F1F5F9', padding: '3px', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
                 <button
                   onClick={() => setLayoutMode('flow')}
                   style={{
                     padding: '4px 10px',
-                    borderRadius: '4px',
+                    borderRadius: '6px',
                     fontSize: '11px',
                     fontWeight: layoutMode === 'flow' ? 700 : 500,
-                    backgroundColor: layoutMode === 'flow' ? '#E8D8C3' : 'transparent',
-                    color: layoutMode === 'flow' ? 'var(--primary)' : 'var(--text-muted)',
-                    boxShadow: layoutMode === 'flow' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
+                    backgroundColor: layoutMode === 'flow' ? '#FFFFFF' : 'transparent',
+                    color: layoutMode === 'flow' ? '#0F172A' : '#64748B',
+                    boxShadow: layoutMode === 'flow' ? '0 1px 2px rgba(15,23,42,0.06)' : 'none',
                     border: 'none',
                     cursor: 'pointer'
                   }}
@@ -572,12 +576,12 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
                   onClick={() => setLayoutMode('force')}
                   style={{
                     padding: '4px 10px',
-                    borderRadius: '4px',
+                    borderRadius: '6px',
                     fontSize: '11px',
                     fontWeight: layoutMode === 'force' ? 700 : 500,
-                    backgroundColor: layoutMode === 'force' ? '#E8D8C3' : 'transparent',
-                    color: layoutMode === 'force' ? 'var(--primary)' : 'var(--text-muted)',
-                    boxShadow: layoutMode === 'force' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
+                    backgroundColor: layoutMode === 'force' ? '#FFFFFF' : 'transparent',
+                    color: layoutMode === 'force' ? '#0F172A' : '#64748B',
+                    boxShadow: layoutMode === 'force' ? '0 1px 2px rgba(15,23,42,0.06)' : 'none',
                     border: 'none',
                     cursor: 'pointer'
                   }}
@@ -593,11 +597,11 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
                     display: 'flex',
                     alignItems: 'center',
                     gap: '4px',
-                    padding: '5px 10px',
-                    borderRadius: '6px',
-                    backgroundColor: 'var(--danger-light)',
-                    color: 'var(--danger)',
-                    border: '1px solid var(--danger-border)',
+                    padding: '6px 12px',
+                    borderRadius: '8px',
+                    backgroundColor: '#FEF2F2',
+                    color: '#DC2626',
+                    border: '1px solid #FEE2E2',
                     fontSize: '11px',
                     fontWeight: 600,
                     cursor: 'pointer'
@@ -612,30 +616,31 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
 
           {/* Temporal Playback Slider Bar */}
           <div style={{
-            backgroundColor: '#F5EEE5',
-            borderRadius: '4px',
+            backgroundColor: '#FFFFFF',
+            borderRadius: '12px',
             padding: '12px 20px',
-            border: '1px solid var(--border)',
+            border: '1px solid #E2E8F0',
             display: 'flex',
             alignItems: 'center',
-            gap: '16px'
+            gap: '16px',
+            boxShadow: '0 1px 3px rgba(15,23,42,0.04)'
           }}>
             {/* Play/Step Controls */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <button
                 onClick={() => setIsPlaying(!isPlaying)}
                 style={{
-                  width: '34px',
-                  height: '34px',
+                  width: '36px',
+                  height: '36px',
                   borderRadius: '50%',
-                  backgroundColor: 'var(--primary)',
+                  backgroundColor: '#2563EB',
                   color: '#FFFFFF',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   border: 'none',
                   cursor: 'pointer',
-                  boxShadow: '0 2px 4px rgba(37,99,235,0.2)'
+                  boxShadow: '0 2px 4px rgba(37,99,235,0.25)'
                 }}
               >
                 {isPlaying ? <Pause size={15} /> : <Play size={15} style={{ marginLeft: '2px' }} />}
@@ -643,21 +648,21 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
 
               <button
                 onClick={() => setCurrentTs(Math.max(minTs, currentTs - 14400))}
-                style={{ padding: '6px', borderRadius: '4px', border: '1px solid var(--border)', backgroundColor: '#F5EEE5', cursor: 'pointer', fontSize: '11px' }}
+                style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #E2E8F0', backgroundColor: '#F8FAFC', color: '#334155', cursor: 'pointer', fontSize: '11px' }}
                 title="Step Back 4 Hours"
               >
                 ⏮
               </button>
               <button
                 onClick={() => setCurrentTs(Math.min(maxTs, currentTs + 14400))}
-                style={{ padding: '6px', borderRadius: '4px', border: '1px solid var(--border)', backgroundColor: '#F5EEE5', cursor: 'pointer', fontSize: '11px' }}
+                style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #E2E8F0', backgroundColor: '#F8FAFC', color: '#334155', cursor: 'pointer', fontSize: '11px' }}
                 title="Step Forward 4 Hours"
               >
                 ⏭
               </button>
               <button
                 onClick={() => { setIsPlaying(false); setCurrentTs(minTs); }}
-                style={{ padding: '6px', color: 'var(--text-muted)', cursor: 'pointer' }}
+                style={{ padding: '6px', color: '#64748B', cursor: 'pointer', background: 'none', border: 'none' }}
                 title="Reset to Incident Start"
               >
                 <RotateCcw size={16} />
@@ -665,9 +670,9 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', flex: 1, gap: '4px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)' }}>
-                <span>Window: <strong style={{ color: 'var(--primary)', fontFamily: 'var(--font-mono)' }}>{new Date(currentTs * 1000).toLocaleString('en-IN')}</strong></span>
-                <span>Velocity: <strong style={{ color: 'var(--text)' }}>{txVelocity} tx/hr</strong> · Total: 72h Investigation Window</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#64748B' }}>
+                <span>Window: <strong style={{ color: '#2563EB', fontFamily: 'var(--font-mono)' }}>{new Date(currentTs * 1000).toLocaleString('en-IN')}</strong></span>
+                <span>Velocity: <strong style={{ color: '#0F172A' }}>{txVelocity} tx/hr</strong> · Total: 72h Investigation Window</span>
               </div>
               <input
                 type="range"
@@ -678,7 +683,7 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
                   setIsPlaying(false);
                   setCurrentTs(Number(e.target.value));
                 }}
-                style={{ width: '100%', accentColor: 'var(--primary)', cursor: 'pointer' }}
+                style={{ width: '100%', accentColor: '#2563EB', cursor: 'pointer' }}
               />
             </div>
 
@@ -686,13 +691,13 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
             <button
               onClick={() => setTimeMode(timeMode === 'cumulative' ? 'slice' : 'cumulative')}
               style={{
-                padding: '5px 10px',
-                borderRadius: '6px',
+                padding: '6px 12px',
+                borderRadius: '8px',
                 fontSize: '11px',
                 fontWeight: 600,
-                backgroundColor: 'var(--surface-2)',
-                color: 'var(--text)',
-                border: '1px solid var(--border)',
+                backgroundColor: '#F8FAFC',
+                color: '#334155',
+                border: '1px solid #E2E8F0',
                 cursor: 'pointer',
                 whiteSpace: 'nowrap'
               }}
@@ -707,13 +712,13 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
                   key={spd}
                   onClick={() => setPlaybackSpeed(spd)}
                   style={{
-                    padding: '4px 8px',
-                    borderRadius: '4px',
+                    padding: '4px 10px',
+                    borderRadius: '6px',
                     fontSize: '11px',
                     fontWeight: 600,
-                    backgroundColor: playbackSpeed === spd ? 'var(--primary-light)' : 'var(--surface-2)',
-                    color: playbackSpeed === spd ? 'var(--primary)' : 'var(--text-muted)',
-                    border: '1px solid var(--border)',
+                    backgroundColor: playbackSpeed === spd ? '#EFF6FF' : '#FFFFFF',
+                    color: playbackSpeed === spd ? '#1D4ED8' : '#64748B',
+                    border: `1px solid ${playbackSpeed === spd ? '#DBEAFE' : '#E2E8F0'}`,
                     cursor: 'pointer'
                   }}
                 >
@@ -730,26 +735,26 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
                 <div style={{ display: 'flex', gap: '16px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: 'var(--layer-victim)' }} />
-                    <span>Victim</span>
+                    <span style={{ color: '#334155', fontSize: '11px' }}>Victim</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: 'var(--layer-1)' }} />
-                    <span>Stage 1: Smurfing Dispatch</span>
+                    <span style={{ color: '#334155', fontSize: '11px' }}>Stage 1: Smurfing</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: 'var(--layer-2)' }} />
-                    <span>Stage 2: Layering Mule</span>
+                    <span style={{ color: '#334155', fontSize: '11px' }}>Stage 2: Layering Mule</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: 'var(--layer-3)' }} />
-                    <span>Stage 3: Aggregator Hub</span>
+                    <span style={{ color: '#334155', fontSize: '11px' }}>Stage 3: Aggregator</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: 'var(--layer-4)' }} />
-                    <span>Stage 4: Cash-Out Exit</span>
+                    <span style={{ color: '#334155', fontSize: '11px' }}>Stage 4: Cash-Out Exit</span>
                   </div>
                 </div>
-                <span style={{ color: 'var(--text-muted)' }}>
+                <span style={{ color: '#64748B', fontSize: '11px' }}>
                   {clustersCollapsed ? 'Supernodes Active • Double-click cluster to expand' : 'Click any node to open Forensic Inspector'}
                 </span>
               </div>
@@ -779,29 +784,29 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
             {/* Integrated Forensic Inspector Side Panel */}
             {selectedNode && (
               <aside style={{
-                backgroundColor: '#F5EEE5',
-                borderRadius: '4px',
-                border: '1px solid var(--border)',
+                backgroundColor: '#FFFFFF',
+                borderRadius: '12px',
+                border: '1px solid #E2E8F0',
                 padding: '20px',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '16px',
-                boxShadow: 'var(--shadow-sm)',
+                boxShadow: '0 1px 3px rgba(15,23,42,0.04)',
                 overflowY: 'auto',
                 maxHeight: '680px'
               }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #E2E8F0', paddingBottom: '12px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <ShieldAlert size={16} color="var(--primary)" />
-                    <h3 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text)' }}>Forensic Trail Inspector</h3>
+                    <ShieldAlert size={16} color="#2563EB" />
+                    <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#0F172A' }}>Forensic Trail Inspector</h3>
                   </div>
-                  <button onClick={() => setSelectedNode(null)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                  <button onClick={() => setSelectedNode(null)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#94A3B8' }}>
                     <X size={16} />
                   </button>
                 </div>
 
                 {/* Entity Details Card */}
-                <div style={{ padding: '14px', backgroundColor: 'var(--surface-2)', borderRadius: '4px', border: '1px solid var(--border)' }}>
+                <div style={{ padding: '14px', backgroundColor: '#F8FAFC', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
                       <span style={{
@@ -934,21 +939,22 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
                     {accountDetails?.recent_transactions?.slice(0, 10).map((txn: any) => {
                       const isOut = txn.src_acct === selectedNode.acct_no;
                       return (
-                        <div key={txn.txn_id} style={{ padding: '8px', borderRadius: '6px', border: '1px solid var(--border)', fontSize: '11px', backgroundColor: '#F5EEE5' }}>
+                        <div key={txn.txn_id} style={{ padding: '8px 10px', borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '11px', backgroundColor: '#FFFFFF' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{
                               fontWeight: 700,
                               fontSize: '10px',
                               padding: '2px 6px',
                               borderRadius: '4px',
-                              backgroundColor: isOut ? 'var(--danger-light)' : 'var(--success-light)',
-                              color: isOut ? 'var(--danger)' : 'var(--success)'
+                              backgroundColor: isOut ? '#FEF2F2' : '#ECFDF5',
+                              color: isOut ? '#DC2626' : '#059669',
+                              border: `1px solid ${isOut ? '#FEE2E2' : '#D1FAE5'}`
                             }}>
                               {isOut ? '→ OUT' : '← IN'}
                             </span>
-                            <strong style={{ fontFamily: 'var(--font-mono)' }}>₹{txn.amount.toLocaleString('en-IN')}</strong>
+                            <strong style={{ fontFamily: 'var(--font-mono)', color: '#0F172A' }}>₹{txn.amount.toLocaleString('en-IN')}</strong>
                           </div>
-                          <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px', display: 'flex', justifyContent: 'space-between' }}>
+                          <div style={{ fontSize: '10px', color: '#64748B', marginTop: '4px', display: 'flex', justifyContent: 'space-between' }}>
                             <span>Counterparty: {isOut ? txn.dst_acct.slice(0, 12) : txn.src_acct.slice(0, 12)}</span>
                             <span>{txn.payment_mode}</span>
                           </div>
@@ -963,33 +969,36 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
 
           {/* Recommended Freeze Targets Table */}
           <div style={{
-            backgroundColor: '#F5EEE5',
-            borderRadius: '4px',
-            padding: '20px',
-            border: '1px solid var(--border)',
+            backgroundColor: '#FFFFFF',
+            borderRadius: '12px',
+            padding: '20px 24px',
+            border: '1px solid #E2E8F0',
             display: 'flex',
             flexDirection: 'column',
-            gap: '16px'
+            gap: '16px',
+            boxShadow: '0 1px 3px rgba(15,23,42,0.04)'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <h3 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text)' }}>
+                <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>
                   Recommended Accounts to Freeze (Ranked by Recoverable Money)
                 </h3>
-                <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-                  Accounts currently holding stolen money, ready for immediate freezing under Section 94 BNSS
+                <p style={{ fontSize: '0.8125rem', color: '#64748B', margin: '4px 0 0 0' }}>
+                  Accounts currently holding stolen money, ready for immediate freezing under Section 106 BNSS
                 </p>
               </div>
               <button
                 onClick={() => onNavigateToLegal(traceData.victim_account)}
                 style={{
-                  padding: '8px 16px',
-                  borderRadius: '6px',
-                  backgroundColor: 'var(--primary)',
+                  padding: '9px 16px',
+                  borderRadius: '8px',
+                  backgroundColor: '#2563EB',
                   color: '#FFFFFF',
                   fontSize: '12px',
                   fontWeight: 600,
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  border: 'none',
+                  boxShadow: '0 1px 2px rgba(37,99,235,0.2)'
                 }}
               >
                 Generate Bank Freeze Notices
@@ -998,28 +1007,28 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
 
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
               <thead>
-                <tr style={{ borderBottom: '1px solid var(--border)', backgroundColor: 'var(--surface-2)' }}>
-                  <th style={{ padding: '10px 14px', fontWeight: 600, color: 'var(--text-muted)' }}>Priority Rank</th>
-                  <th style={{ padding: '10px 14px', fontWeight: 600, color: 'var(--text-muted)' }}>Account Number</th>
-                  <th style={{ padding: '10px 14px', fontWeight: 600, color: 'var(--text-muted)' }}>Bank</th>
-                  <th style={{ padding: '10px 14px', fontWeight: 600, color: 'var(--text-muted)' }}>IFSC Code</th>
-                  <th style={{ padding: '10px 14px', fontWeight: 600, color: 'var(--text-muted)' }}>Role in Trail</th>
-                  <th style={{ padding: '10px 14px', fontWeight: 600, color: 'var(--text-muted)' }}>Recoverable Stolen Funds</th>
-                  <th style={{ padding: '10px 14px', fontWeight: 600, color: 'var(--text-muted)' }}>Share of Stolen Money</th>
+                <tr style={{ borderBottom: '1px solid #E2E8F0', backgroundColor: '#F8FAFC' }}>
+                  <th style={{ padding: '10px 14px', fontWeight: 600, color: '#64748B', fontSize: '11px', textTransform: 'uppercase' }}>Priority Rank</th>
+                  <th style={{ padding: '10px 14px', fontWeight: 600, color: '#64748B', fontSize: '11px', textTransform: 'uppercase' }}>Account Number</th>
+                  <th style={{ padding: '10px 14px', fontWeight: 600, color: '#64748B', fontSize: '11px', textTransform: 'uppercase' }}>Bank</th>
+                  <th style={{ padding: '10px 14px', fontWeight: 600, color: '#64748B', fontSize: '11px', textTransform: 'uppercase' }}>IFSC Code</th>
+                  <th style={{ padding: '10px 14px', fontWeight: 600, color: '#64748B', fontSize: '11px', textTransform: 'uppercase' }}>Role in Trail</th>
+                  <th style={{ padding: '10px 14px', fontWeight: 600, color: '#64748B', fontSize: '11px', textTransform: 'uppercase' }}>Recoverable Stolen Funds</th>
+                  <th style={{ padding: '10px 14px', fontWeight: 600, color: '#64748B', fontSize: '11px', textTransform: 'uppercase' }}>Share of Stolen Money</th>
                 </tr>
               </thead>
               <tbody>
                 {traceData.freeze_recommendations.map((rec: FreezeRecommendation, idx: number) => (
-                  <tr key={rec.acct_no} style={{ borderBottom: '1px solid var(--border)' }}>
-                    <td style={{ padding: '10px 14px', fontWeight: 700, color: 'var(--primary)' }}>#{idx + 1}</td>
-                    <td style={{ padding: '10px 14px', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{rec.acct_no}</td>
-                    <td style={{ padding: '10px 14px' }}>{rec.bank}</td>
-                    <td style={{ padding: '10px 14px', fontFamily: 'var(--font-mono)' }}>{rec.ifsc}</td>
-                    <td style={{ padding: '10px 14px' }}>{rec.layer}</td>
-                    <td style={{ padding: '10px 14px', fontWeight: 700, color: 'var(--success)' }}>
+                  <tr key={rec.acct_no} style={{ borderBottom: '1px solid #F1F5F9' }}>
+                    <td style={{ padding: '10px 14px', fontWeight: 700, color: '#2563EB' }}>#{idx + 1}</td>
+                    <td style={{ padding: '10px 14px', fontFamily: 'var(--font-mono)', fontWeight: 600, color: '#0F172A' }}>{rec.acct_no}</td>
+                    <td style={{ padding: '10px 14px', color: '#334155' }}>{rec.bank}</td>
+                    <td style={{ padding: '10px 14px', fontFamily: 'var(--font-mono)', color: '#64748B' }}>{rec.ifsc}</td>
+                    <td style={{ padding: '10px 14px', color: '#334155' }}>{rec.layer}</td>
+                    <td style={{ padding: '10px 14px', fontWeight: 700, color: '#16A34A' }}>
                       ₹{rec.held_inr.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                     </td>
-                    <td style={{ padding: '10px 14px' }}>{rec.coverage_pct}%</td>
+                    <td style={{ padding: '10px 14px', color: '#64748B' }}>{rec.coverage_pct}%</td>
                   </tr>
                 ))}
               </tbody>

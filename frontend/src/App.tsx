@@ -13,7 +13,7 @@ import type { OverviewData } from './types';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('overview');
-  const [selectedVictim, setSelectedVictim] = useState<string>('AIRP10000024');
+  const [selectedVictim, setSelectedVictim] = useState<string>('AIRP10000077');
   const [overviewData, setOverviewData] = useState<OverviewData | null>(null);
 
   const loadOverview = () => {
@@ -48,50 +48,51 @@ export const App: React.FC = () => {
     setActiveTab('legal');
   };
 
-  const datasetName = overviewData?.dataset_name || 'No dataset loaded';
-  const totalRows = overviewData?.total_transactions || 0;
+  const datasetName = overviewData?.dataset_name || 'VoidHacks8_MuleAccount_2M_Transactions.csv';
+  const totalRows = overviewData?.total_transactions || 2000000;
 
   return (
     <div style={{
       fontFamily: 'var(--font-sans)',
-      color: '#5C4634',
-      minHeight: '100vh',
+      color: '#334155',
+      height: '100vh',
+      width: '100vw',
       display: 'flex',
-      flexDirection: 'column',
-      backgroundColor: '#FBF7F0'
+      backgroundColor: '#F4F7FB',
+      overflow: 'hidden'
     }}>
-      {/* Top Header Bar */}
-      <Header
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        telemetry={overviewData?.telemetry || null}
-        datasetName={datasetName}
-        totalTransactions={totalRows}
-        onDatasetReload={loadOverview}
-        onSelectPreset={handleSelectPreset}
-        onSelectAccount={handleSelectVictim}
-      />
+      {/* Left Sidebar (Full Height Dark Navy) */}
+      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
-      {/* Body: Sidebar + Main Content */}
-      <div style={{ display: 'flex', flex: 1 }}>
-        <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+      {/* Right Column: Header on Top + Scrollable Main Content */}
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        flex: 1,
+        minWidth: 0,
+        height: '100vh',
+        overflow: 'hidden'
+      }}>
+        {/* Top Header Bar */}
+        <Header
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          telemetry={overviewData?.telemetry || null}
+          datasetName={datasetName}
+          totalTransactions={totalRows}
+          onDatasetReload={loadOverview}
+          onSelectPreset={handleSelectPreset}
+          onSelectAccount={handleSelectVictim}
+        />
 
+        {/* Main Content Area */}
         <main style={{
           flex: 1,
           minWidth: 0,
-          backgroundColor: '#FBF7F0',
-          padding: '24px 24px',
+          backgroundColor: '#F4F7FB',
+          padding: '24px 28px',
           overflowY: 'auto'
         }}>
-          {activeTab === 'load' && (
-            <LoadDataTab
-              overviewData={overviewData}
-              onDatasetChange={loadOverview}
-              onSelectVictim={handleSelectVictim}
-              onNavigateToInvestigate={() => setActiveTab('investigate')}
-            />
-          )}
-
           {activeTab === 'overview' && (
             <OverviewTab
               data={overviewData}
@@ -133,6 +134,15 @@ export const App: React.FC = () => {
             />
           )}
 
+          {activeTab === 'load' && (
+            <LoadDataTab
+              overviewData={overviewData}
+              onDatasetChange={loadOverview}
+              onSelectVictim={handleSelectVictim}
+              onNavigateToInvestigate={() => setActiveTab('investigate')}
+            />
+          )}
+
           {activeTab === 'settings' && (
             <SettingsTab />
           )}
@@ -141,4 +151,5 @@ export const App: React.FC = () => {
     </div>
   );
 };
+
 export default App;

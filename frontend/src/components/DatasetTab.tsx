@@ -95,9 +95,9 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
       flexDirection: 'column',
       gap: '20px',
       padding: '24px 32px',
-      backgroundColor: '#FBF7F0',
+      backgroundColor: 'transparent',
       minHeight: '100%',
-      color: '#34271E',
+      color: '#334155',
       fontFamily: 'Inter, system-ui, sans-serif'
     }}>
       {/* Top Header Card */}
@@ -105,10 +105,11 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
         display: 'flex',
         flexDirection: 'column',
         gap: '16px',
-        backgroundColor: '#F5EEE5',
-        border: '1px solid #D2BFA8',
-        borderRadius: '8px',
-        padding: '20px 24px'
+        backgroundColor: '#FFFFFF',
+        border: '1px solid #E2E8F0',
+        borderRadius: '12px',
+        padding: '20px 24px',
+        boxShadow: '0 1px 3px rgba(15,23,42,0.04)'
       }}>
         <div style={{
           display: 'flex',
@@ -119,11 +120,11 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
         }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <Database size={22} color="#34271E" />
+              <Database size={22} color="#2563EB" />
               <h1 style={{
                 fontSize: '1.25rem',
-                fontWeight: 600,
-                color: '#34271E',
+                fontWeight: 700,
+                color: '#0F172A',
                 margin: 0,
                 letterSpacing: '-0.02em'
               }}>
@@ -132,27 +133,29 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
               <span style={{
                 fontSize: '0.75rem',
                 padding: '3px 8px',
-                borderRadius: '4px',
-                backgroundColor: '#E8D8C3',
-                color: '#5C4634',
+                borderRadius: '6px',
+                backgroundColor: '#EFF6FF',
+                color: '#1D4ED8',
                 fontWeight: 600,
                 textTransform: 'uppercase',
-                letterSpacing: '0.04em'
+                letterSpacing: '0.04em',
+                border: '1px solid #DBEAFE'
               }}>
                 Columnar Parquet Engine
               </span>
             </div>
             <p style={{
               fontSize: '0.875rem',
-              color: '#8C7764',
+              color: '#64748B',
               margin: '6px 0 0 0',
               lineHeight: 1.4
             }}>
               Direct zero-copy relational storage in <code style={{
                 fontFamily: 'monospace',
-                backgroundColor: '#E8D8C3',
+                backgroundColor: '#F1F5F9',
+                color: '#0F172A',
                 padding: '2px 6px',
-                borderRadius: '3px',
+                borderRadius: '4px',
                 fontSize: '0.8rem'
               }}>data/duckdb/vajra.duckdb</code>. Inspect, filter, and trace 100 rows per view.
             </p>
@@ -166,13 +169,14 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
                 alignItems: 'center',
                 gap: '6px',
                 padding: '8px 14px',
-                borderRadius: '4px',
-                backgroundColor: '#E8D8C3',
-                border: '1px solid #D2BFA8',
-                color: '#34271E',
+                borderRadius: '8px',
+                backgroundColor: '#F8FAFC',
+                border: '1px solid #E2E8F0',
+                color: '#334155',
                 fontSize: '0.8125rem',
                 fontWeight: 500,
-                cursor: 'pointer'
+                cursor: 'pointer',
+                boxShadow: '0 1px 2px rgba(15,23,42,0.04)'
               }}
             >
               <RefreshCw size={14} className={loading ? 'spin' : ''} />
@@ -186,45 +190,45 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
           gap: '12px',
-          paddingTop: '12px',
-          borderTop: '1px solid #D2BFA8'
+          paddingTop: '14px',
+          borderTop: '1px solid #E2E8F0'
         }}>
           <div>
-            <span style={{ fontSize: '0.75rem', color: '#8C7764', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <span style={{ fontSize: '0.75rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Dataset Name
             </span>
-            <div style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#34271E', marginTop: '2px', wordBreak: 'break-all' }}>
+            <div style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#0F172A', marginTop: '2px', wordBreak: 'break-all' }}>
               {meta?.dataset_name || 'VoidHacks8_MuleAccount_2M_Transactions.csv'}
             </div>
           </div>
 
           <div>
-            <span style={{ fontSize: '0.75rem', color: '#8C7764', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <span style={{ fontSize: '0.75rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Total Rows in DuckDB
             </span>
-            <div style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#34271E', marginTop: '2px', fontVariantNumeric: 'tabular-nums' }}>
+            <div style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#0F172A', marginTop: '2px', fontVariantNumeric: 'tabular-nums' }}>
               {meta?.total_rows ? meta.total_rows.toLocaleString() : totalCount.toLocaleString()} rows
             </div>
           </div>
 
           <div>
-            <span style={{ fontSize: '0.75rem', color: '#8C7764', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <span style={{ fontSize: '0.75rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Distinct Accounts
             </span>
-            <div style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#34271E', marginTop: '2px', fontVariantNumeric: 'tabular-nums' }}>
+            <div style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#0F172A', marginTop: '2px', fontVariantNumeric: 'tabular-nums' }}>
               {meta?.total_accounts ? meta.total_accounts.toLocaleString() : '24,873'} accounts
             </div>
           </div>
 
           <div>
-            <span style={{ fontSize: '0.75rem', color: '#8C7764', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <span style={{ fontSize: '0.75rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Evidence SHA-256 Hash
             </span>
             <div style={{
               fontSize: '0.8125rem',
               fontWeight: 500,
               fontFamily: 'monospace',
-              color: '#5C4634',
+              color: '#475569',
               marginTop: '2px',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
@@ -243,10 +247,11 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
         alignItems: 'center',
         justifyContent: 'space-between',
         gap: '12px',
-        backgroundColor: '#F5EEE5',
+        backgroundColor: '#FFFFFF',
         padding: '14px 18px',
-        borderRadius: '6px',
-        border: '1px solid #D2BFA8'
+        borderRadius: '12px',
+        border: '1px solid #E2E8F0',
+        boxShadow: '0 1px 3px rgba(15,23,42,0.04)'
       }}>
         {/* Search Input */}
         <form onSubmit={handleSearchSubmit} style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: '1 1 320px' }}>
@@ -254,14 +259,14 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            backgroundColor: '#FBF7F0',
-            border: '1px solid #D2BFA8',
-            borderRadius: '4px',
-            padding: '0 10px',
-            height: '36px',
+            backgroundColor: '#F8FAFC',
+            border: '1px solid #E2E8F0',
+            borderRadius: '8px',
+            padding: '0 12px',
+            height: '38px',
             width: '100%'
           }}>
-            <Search size={15} color="#8C7764" />
+            <Search size={15} color="#94A3B8" />
             <input
               type="text"
               placeholder="Search by Account, Txn ID, Narration, IFSC..."
@@ -273,22 +278,23 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
                 outline: 'none',
                 width: '100%',
                 fontSize: '0.8125rem',
-                color: '#34271E'
+                color: '#0F172A'
               }}
             />
           </div>
           <button
             type="submit"
             style={{
-              height: '36px',
-              padding: '0 16px',
-              backgroundColor: '#34271E',
-              color: '#FBF7F0',
+              height: '38px',
+              padding: '0 18px',
+              backgroundColor: '#2563EB',
+              color: '#FFFFFF',
               border: 'none',
-              borderRadius: '4px',
+              borderRadius: '8px',
               fontSize: '0.8125rem',
-              fontWeight: 500,
-              cursor: 'pointer'
+              fontWeight: 600,
+              cursor: 'pointer',
+              boxShadow: '0 1px 2px rgba(37,99,235,0.2)'
             }}
           >
             Search
@@ -299,7 +305,7 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
           {/* Payment Mode */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '0.75rem', color: '#8C7764', fontWeight: 500 }}>Mode:</span>
+            <span style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 500 }}>Mode:</span>
             <select
               value={paymentMode}
               onChange={(e) => {
@@ -307,12 +313,12 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
                 setPage(1);
               }}
               style={{
-                height: '36px',
-                padding: '0 8px',
-                borderRadius: '4px',
-                backgroundColor: '#FBF7F0',
-                border: '1px solid #D2BFA8',
-                color: '#34271E',
+                height: '38px',
+                padding: '0 10px',
+                borderRadius: '8px',
+                backgroundColor: '#FFFFFF',
+                border: '1px solid #E2E8F0',
+                color: '#0F172A',
                 fontSize: '0.8125rem',
                 outline: 'none',
                 cursor: 'pointer'
@@ -328,17 +334,17 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
 
           {/* Sort By */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '0.75rem', color: '#8C7764', fontWeight: 500 }}>Sort:</span>
+            <span style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 500 }}>Sort:</span>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
               style={{
-                height: '36px',
-                padding: '0 8px',
-                borderRadius: '4px',
-                backgroundColor: '#FBF7F0',
-                border: '1px solid #D2BFA8',
-                color: '#34271E',
+                height: '38px',
+                padding: '0 10px',
+                borderRadius: '8px',
+                backgroundColor: '#FFFFFF',
+                border: '1px solid #E2E8F0',
+                color: '#0F172A',
                 fontSize: '0.8125rem',
                 outline: 'none',
                 cursor: 'pointer'
@@ -354,12 +360,12 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
             <button
               onClick={() => setSortDir(prev => prev === 'desc' ? 'asc' : 'desc')}
               style={{
-                height: '36px',
-                padding: '0 10px',
-                borderRadius: '4px',
-                backgroundColor: '#FBF7F0',
-                border: '1px solid #D2BFA8',
-                color: '#34271E',
+                height: '38px',
+                padding: '0 12px',
+                borderRadius: '8px',
+                backgroundColor: '#FFFFFF',
+                border: '1px solid #E2E8F0',
+                color: '#0F172A',
                 fontSize: '0.8125rem',
                 display: 'flex',
                 alignItems: 'center',
@@ -375,7 +381,7 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
 
           {/* Rows per page */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '0.75rem', color: '#8C7764', fontWeight: 500 }}>Rows:</span>
+            <span style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 500 }}>Rows:</span>
             <select
               value={pageSize}
               onChange={(e) => {
@@ -383,12 +389,12 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
                 setPage(1);
               }}
               style={{
-                height: '36px',
-                padding: '0 8px',
-                borderRadius: '4px',
-                backgroundColor: '#FBF7F0',
-                border: '1px solid #D2BFA8',
-                color: '#34271E',
+                height: '38px',
+                padding: '0 10px',
+                borderRadius: '8px',
+                backgroundColor: '#FFFFFF',
+                border: '1px solid #E2E8F0',
+                color: '#0F172A',
                 fontSize: '0.8125rem',
                 outline: 'none',
                 cursor: 'pointer'
@@ -404,12 +410,12 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
             <button
               onClick={handleResetFilters}
               style={{
-                height: '36px',
-                padding: '0 12px',
-                borderRadius: '4px',
-                backgroundColor: '#E8D8C3',
-                border: '1px solid #D2BFA8',
-                color: '#5C4634',
+                height: '38px',
+                padding: '0 14px',
+                borderRadius: '8px',
+                backgroundColor: '#F1F5F9',
+                border: '1px solid #E2E8F0',
+                color: '#475569',
                 fontSize: '0.75rem',
                 fontWeight: 600,
                 cursor: 'pointer'
@@ -429,8 +435,8 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
         flexWrap: 'wrap',
         gap: '12px'
       }}>
-        <div style={{ fontSize: '0.875rem', color: '#5C4634' }}>
-          Showing <strong style={{ color: '#34271E' }}>{currentStart.toLocaleString()}</strong> – <strong style={{ color: '#34271E' }}>{currentEnd.toLocaleString()}</strong> of <strong style={{ color: '#34271E' }}>{totalCount.toLocaleString()}</strong> transactions (Page <strong>{page}</strong> of <strong>{totalPages.toLocaleString()}</strong>)
+        <div style={{ fontSize: '0.875rem', color: '#64748B' }}>
+          Showing <strong style={{ color: '#0F172A' }}>{currentStart.toLocaleString()}</strong> – <strong style={{ color: '#0F172A' }}>{currentEnd.toLocaleString()}</strong> of <strong style={{ color: '#0F172A' }}>{totalCount.toLocaleString()}</strong> transactions (Page <strong>{page}</strong> of <strong>{totalPages.toLocaleString()}</strong>)
         </div>
 
         {/* Page Switcher */}
@@ -440,10 +446,10 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
             disabled={page <= 1 || loading}
             style={{
               padding: '6px 10px',
-              borderRadius: '4px',
-              backgroundColor: '#F5EEE5',
-              border: '1px solid #D2BFA8',
-              color: page <= 1 ? '#B5A593' : '#34271E',
+              borderRadius: '6px',
+              backgroundColor: '#FFFFFF',
+              border: '1px solid #E2E8F0',
+              color: page <= 1 ? '#CBD5E1' : '#0F172A',
               cursor: page <= 1 ? 'not-allowed' : 'pointer',
               display: 'flex',
               alignItems: 'center'
@@ -458,10 +464,10 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
             disabled={page <= 1 || loading}
             style={{
               padding: '6px 12px',
-              borderRadius: '4px',
-              backgroundColor: '#F5EEE5',
-              border: '1px solid #D2BFA8',
-              color: page <= 1 ? '#B5A593' : '#34271E',
+              borderRadius: '6px',
+              backgroundColor: '#FFFFFF',
+              border: '1px solid #E2E8F0',
+              color: page <= 1 ? '#CBD5E1' : '#0F172A',
               cursor: page <= 1 ? 'not-allowed' : 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -476,7 +482,7 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
 
           {/* Quick Page Indicator / Jump */}
           <form onSubmit={handlePageJumpSubmit} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span style={{ fontSize: '0.8125rem', color: '#8C7764' }}>Page</span>
+            <span style={{ fontSize: '0.8125rem', color: '#64748B' }}>Page</span>
             <input
               type="number"
               min={1}
@@ -487,28 +493,28 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
                 width: '64px',
                 height: '32px',
                 textAlign: 'center',
-                borderRadius: '4px',
-                border: '1px solid #D2BFA8',
-                backgroundColor: '#FBF7F0',
-                color: '#34271E',
+                borderRadius: '6px',
+                border: '1px solid #E2E8F0',
+                backgroundColor: '#FFFFFF',
+                color: '#0F172A',
                 fontSize: '0.8125rem',
                 fontWeight: 600,
                 outline: 'none'
               }}
             />
-            <span style={{ fontSize: '0.8125rem', color: '#8C7764' }}>of {totalPages.toLocaleString()}</span>
+            <span style={{ fontSize: '0.8125rem', color: '#64748B' }}>of {totalPages.toLocaleString()}</span>
             {pageJump !== '' && (
               <button
                 type="submit"
                 style={{
                   height: '32px',
                   padding: '0 8px',
-                  backgroundColor: '#34271E',
-                  color: '#FBF7F0',
+                  backgroundColor: '#2563EB',
+                  color: '#FFFFFF',
                   border: 'none',
-                  borderRadius: '4px',
+                  borderRadius: '6px',
                   fontSize: '0.75rem',
-                  fontWeight: 500,
+                  fontWeight: 600,
                   cursor: 'pointer'
                 }}
               >
@@ -522,10 +528,10 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
             disabled={page >= totalPages || loading}
             style={{
               padding: '6px 12px',
-              borderRadius: '4px',
-              backgroundColor: '#F5EEE5',
-              border: '1px solid #D2BFA8',
-              color: page >= totalPages ? '#B5A593' : '#34271E',
+              borderRadius: '6px',
+              backgroundColor: '#FFFFFF',
+              border: '1px solid #E2E8F0',
+              color: page >= totalPages ? '#CBD5E1' : '#0F172A',
               cursor: page >= totalPages ? 'not-allowed' : 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -543,10 +549,10 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
             disabled={page >= totalPages || loading}
             style={{
               padding: '6px 10px',
-              borderRadius: '4px',
-              backgroundColor: '#F5EEE5',
-              border: '1px solid #D2BFA8',
-              color: page >= totalPages ? '#B5A593' : '#34271E',
+              borderRadius: '6px',
+              backgroundColor: '#FFFFFF',
+              border: '1px solid #E2E8F0',
+              color: page >= totalPages ? '#CBD5E1' : '#0F172A',
               cursor: page >= totalPages ? 'not-allowed' : 'pointer',
               display: 'flex',
               alignItems: 'center'
@@ -560,40 +566,41 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
 
       {/* Main Tabular View */}
       <div style={{
-        backgroundColor: '#FBF7F0',
-        border: '1px solid #D2BFA8',
-        borderRadius: '6px',
+        backgroundColor: '#FFFFFF',
+        border: '1px solid #E2E8F0',
+        borderRadius: '12px',
         overflowX: 'auto',
-        boxShadow: '0 1px 3px rgba(52,39,30,0.05)'
+        boxShadow: '0 1px 3px rgba(15,23,42,0.04)'
       }}>
         {loading ? (
-          <div style={{ padding: '60px', textAlign: 'center', color: '#8C7764' }}>
-            <RefreshCw size={28} className="spin" style={{ margin: '0 auto 12px' }} />
-            <p style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 500, color: '#34271E' }}>
+          <div style={{ padding: '60px', textAlign: 'center', color: '#64748B' }}>
+            <RefreshCw size={28} className="spin" style={{ margin: '0 auto 12px', color: '#2563EB' }} />
+            <p style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 600, color: '#0F172A' }}>
               Streaming 100 rows directly from DuckDB...
             </p>
             <p style={{ margin: '4px 0 0 0', fontSize: '0.8125rem' }}>
-              Querying <code style={{ backgroundColor: '#E8D8C3', padding: '2px 4px', borderRadius: '2px' }}>txns</code> table with offset {(page - 1) * pageSize}
+              Querying <code style={{ backgroundColor: '#F1F5F9', color: '#0F172A', padding: '2px 4px', borderRadius: '4px' }}>txns</code> table with offset {(page - 1) * pageSize}
             </p>
           </div>
         ) : error ? (
-          <div style={{ padding: '40px', textAlign: 'center', color: '#A8422B' }}>
-            <p style={{ fontWeight: 600, fontSize: '1rem', margin: '0 0 8px 0' }}>Error loading data from DuckDB</p>
+          <div style={{ padding: '40px', textAlign: 'center', color: '#DC2626' }}>
+            <p style={{ fontWeight: 700, fontSize: '1rem', margin: '0 0 8px 0' }}>Error loading data from DuckDB</p>
             <p style={{ fontSize: '0.875rem', margin: 0 }}>{error}</p>
           </div>
         ) : data && data.transactions.length === 0 ? (
-          <div style={{ padding: '60px', textAlign: 'center', color: '#8C7764' }}>
-            <p style={{ fontWeight: 600, fontSize: '1rem', color: '#34271E', margin: '0 0 8px 0' }}>No transactions found</p>
+          <div style={{ padding: '60px', textAlign: 'center', color: '#64748B' }}>
+            <p style={{ fontWeight: 700, fontSize: '1rem', color: '#0F172A', margin: '0 0 8px 0' }}>No transactions found</p>
             <p style={{ fontSize: '0.875rem', margin: '0 0 16px 0' }}>Try broadening your search term or changing the payment mode filter.</p>
             <button
               onClick={handleResetFilters}
               style={{
                 padding: '8px 16px',
-                borderRadius: '4px',
-                backgroundColor: '#34271E',
-                color: '#FBF7F0',
+                borderRadius: '8px',
+                backgroundColor: '#2563EB',
+                color: '#FFFFFF',
                 border: 'none',
                 fontSize: '0.8125rem',
+                fontWeight: 600,
                 cursor: 'pointer'
               }}
             >
@@ -609,9 +616,12 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
           }}>
             <thead>
               <tr style={{
-                backgroundColor: '#F5EEE5',
-                borderBottom: '2px solid #D2BFA8',
-                color: '#5C4634'
+                backgroundColor: '#F8FAFC',
+                borderBottom: '1px solid #E2E8F0',
+                color: '#64748B',
+                fontSize: '11px',
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em'
               }}>
                 <th style={{ padding: '12px 14px', width: '48px', fontWeight: 600 }}>#</th>
                 <th style={{ padding: '12px 14px', fontWeight: 600 }}>Txn ID</th>
@@ -632,29 +642,29 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
                   <tr
                     key={tx.txn_id || idx}
                     style={{
-                      borderBottom: '1px solid #E8D8C3',
-                      backgroundColor: idx % 2 === 0 ? '#FBF7F0' : '#FAF4EB',
+                      borderBottom: '1px solid #F1F5F9',
+                      backgroundColor: idx % 2 === 0 ? '#FFFFFF' : '#FAFCFF',
                       transition: 'background-color 0.15s ease'
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = '#F5EEE5';
+                      e.currentTarget.style.backgroundColor = '#F1F5F9';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = idx % 2 === 0 ? '#FBF7F0' : '#FAF4EB';
+                      e.currentTarget.style.backgroundColor = idx % 2 === 0 ? '#FFFFFF' : '#FAFCFF';
                     }}
                   >
                     {/* Index */}
-                    <td style={{ padding: '10px 14px', color: '#8C7764', fontVariantNumeric: 'tabular-nums' }}>
+                    <td style={{ padding: '10px 14px', color: '#94A3B8', fontVariantNumeric: 'tabular-nums' }}>
                       {rowNum}
                     </td>
 
                     {/* Txn ID */}
-                    <td style={{ padding: '10px 14px', fontFamily: 'monospace', fontWeight: 500, color: '#34271E' }}>
+                    <td style={{ padding: '10px 14px', fontFamily: 'monospace', fontWeight: 600, color: '#0F172A' }}>
                       {tx.txn_id}
                     </td>
 
                     {/* Timestamp */}
-                    <td style={{ padding: '10px 14px', color: '#5C4634', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
+                    <td style={{ padding: '10px 14px', color: '#475569', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
                       {tx.timestamp}
                     </td>
 
@@ -666,12 +676,12 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
                           style={{
                             border: 'none',
                             backgroundColor: 'transparent',
-                            color: '#34271E',
+                            color: '#2563EB',
                             fontWeight: 600,
                             fontFamily: 'monospace',
                             cursor: 'pointer',
                             padding: 0,
-                            textDecoration: 'underline',
+                            textDecoration: 'none',
                             fontSize: '0.8125rem'
                           }}
                           title={`Investigate Remitter ${tx.src_acct}`}
@@ -681,15 +691,16 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
                         <span style={{
                           fontSize: '0.6875rem',
                           padding: '1px 5px',
-                          borderRadius: '3px',
-                          backgroundColor: '#E8D8C3',
-                          color: '#5C4634',
+                          borderRadius: '4px',
+                          backgroundColor: '#F1F5F9',
+                          color: '#475569',
+                          border: '1px solid #E2E8F0',
                           fontWeight: 500
                         }}>
                           {tx.src_bank || tx.src_ifsc?.slice(0, 4)}
                         </span>
                       </div>
-                      <div style={{ fontSize: '0.6875rem', color: '#8C7764', marginTop: '2px', fontFamily: 'monospace' }}>
+                      <div style={{ fontSize: '0.6875rem', color: '#94A3B8', marginTop: '2px', fontFamily: 'monospace' }}>
                         {tx.src_ifsc}
                       </div>
                     </td>
@@ -702,12 +713,12 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
                           style={{
                             border: 'none',
                             backgroundColor: 'transparent',
-                            color: '#34271E',
+                            color: '#2563EB',
                             fontWeight: 600,
                             fontFamily: 'monospace',
                             cursor: 'pointer',
                             padding: 0,
-                            textDecoration: 'underline',
+                            textDecoration: 'none',
                             fontSize: '0.8125rem'
                           }}
                           title={`Investigate Beneficiary ${tx.dst_acct}`}
@@ -717,15 +728,16 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
                         <span style={{
                           fontSize: '0.6875rem',
                           padding: '1px 5px',
-                          borderRadius: '3px',
-                          backgroundColor: '#E8D8C3',
-                          color: '#5C4634',
+                          borderRadius: '4px',
+                          backgroundColor: '#F1F5F9',
+                          color: '#475569',
+                          border: '1px solid #E2E8F0',
                           fontWeight: 500
                         }}>
                           {tx.dst_bank || tx.dst_ifsc?.slice(0, 4)}
                         </span>
                       </div>
-                      <div style={{ fontSize: '0.6875rem', color: '#8C7764', marginTop: '2px', fontFamily: 'monospace' }}>
+                      <div style={{ fontSize: '0.6875rem', color: '#94A3B8', marginTop: '2px', fontFamily: 'monospace' }}>
                         {tx.dst_ifsc}
                       </div>
                     </td>
@@ -734,8 +746,8 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
                     <td style={{
                       padding: '10px 14px',
                       textAlign: 'right',
-                      fontWeight: 600,
-                      color: '#34271E',
+                      fontWeight: 700,
+                      color: '#0F172A',
                       fontVariantNumeric: 'tabular-nums',
                       whiteSpace: 'nowrap'
                     }}>
@@ -746,12 +758,12 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
                     <td style={{ padding: '10px 14px', textAlign: 'center' }}>
                       <span style={{
                         padding: '2px 7px',
-                        borderRadius: '3px',
+                        borderRadius: '4px',
                         fontSize: '0.6875rem',
                         fontWeight: 600,
-                        backgroundColor: tx.payment_mode === 'UPI' ? '#E8D8C3' : tx.payment_mode === 'IMPS' ? '#D2BFA8' : '#FAF4EB',
-                        border: '1px solid #D2BFA8',
-                        color: '#34271E'
+                        backgroundColor: tx.payment_mode === 'UPI' ? '#EFF6FF' : tx.payment_mode === 'IMPS' ? '#F0FDF4' : '#F8FAFC',
+                        border: `1px solid ${tx.payment_mode === 'UPI' ? '#DBEAFE' : tx.payment_mode === 'IMPS' ? '#DCFCE7' : '#E2E8F0'}`,
+                        color: tx.payment_mode === 'UPI' ? '#1D4ED8' : tx.payment_mode === 'IMPS' ? '#15803D' : '#475569'
                       }}>
                         {tx.payment_mode}
                       </span>
@@ -760,7 +772,7 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
                     {/* Narration */}
                     <td style={{
                       padding: '10px 14px',
-                      color: '#5C4634',
+                      color: '#475569',
                       maxWidth: '220px',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
@@ -771,10 +783,10 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
 
                     {/* Device / IP */}
                     <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
-                      <div style={{ fontSize: '0.75rem', color: '#34271E' }}>
+                      <div style={{ fontSize: '0.75rem', color: '#0F172A', fontWeight: 500 }}>
                         {tx.device_type}
                       </div>
-                      <div style={{ fontSize: '0.6875rem', color: '#8C7764', fontFamily: 'monospace' }}>
+                      <div style={{ fontSize: '0.6875rem', color: '#94A3B8', fontFamily: 'monospace' }}>
                         {tx.ip}
                       </div>
                     </td>
@@ -788,12 +800,12 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
                           alignItems: 'center',
                           gap: '3px',
                           padding: '4px 8px',
-                          borderRadius: '4px',
-                          backgroundColor: '#34271E',
-                          color: '#FBF7F0',
-                          border: 'none',
+                          borderRadius: '6px',
+                          backgroundColor: '#EFF6FF',
+                          color: '#1D4ED8',
+                          border: '1px solid #DBEAFE',
                           fontSize: '0.6875rem',
-                          fontWeight: 500,
+                          fontWeight: 600,
                           cursor: 'pointer'
                         }}
                         title={`Trace money flow from ${tx.src_acct}`}
@@ -819,8 +831,8 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
         gap: '12px',
         padding: '8px 0'
       }}>
-        <div style={{ fontSize: '0.8125rem', color: '#8C7764' }}>
-          Page <strong style={{ color: '#34271E' }}>{page}</strong> of <strong style={{ color: '#34271E' }}>{totalPages.toLocaleString()}</strong> ({totalCount.toLocaleString()} total rows)
+        <div style={{ fontSize: '0.8125rem', color: '#64748B' }}>
+          Page <strong style={{ color: '#0F172A' }}>{page}</strong> of <strong style={{ color: '#0F172A' }}>{totalPages.toLocaleString()}</strong> ({totalCount.toLocaleString()} total rows)
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -832,10 +844,10 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
             disabled={page <= 1 || loading}
             style={{
               padding: '6px 12px',
-              borderRadius: '4px',
-              backgroundColor: '#F5EEE5',
-              border: '1px solid #D2BFA8',
-              color: page <= 1 ? '#B5A593' : '#34271E',
+              borderRadius: '6px',
+              backgroundColor: '#FFFFFF',
+              border: '1px solid #E2E8F0',
+              color: page <= 1 ? '#CBD5E1' : '#0F172A',
               cursor: page <= 1 ? 'not-allowed' : 'pointer',
               fontSize: '0.8125rem'
             }}
@@ -851,10 +863,10 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
             disabled={page <= 1 || loading}
             style={{
               padding: '6px 14px',
-              borderRadius: '4px',
-              backgroundColor: '#F5EEE5',
-              border: '1px solid #D2BFA8',
-              color: page <= 1 ? '#B5A593' : '#34271E',
+              borderRadius: '6px',
+              backgroundColor: '#FFFFFF',
+              border: '1px solid #E2E8F0',
+              color: page <= 1 ? '#CBD5E1' : '#0F172A',
               cursor: page <= 1 ? 'not-allowed' : 'pointer',
               fontSize: '0.8125rem',
               fontWeight: 500
@@ -871,13 +883,14 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
             disabled={page >= totalPages || loading}
             style={{
               padding: '6px 14px',
-              borderRadius: '4px',
-              backgroundColor: '#34271E',
+              borderRadius: '6px',
+              backgroundColor: '#2563EB',
               border: 'none',
-              color: '#FBF7F0',
+              color: '#FFFFFF',
               cursor: page >= totalPages ? 'not-allowed' : 'pointer',
               fontSize: '0.8125rem',
-              fontWeight: 500
+              fontWeight: 600,
+              boxShadow: '0 1px 2px rgba(37,99,235,0.2)'
             }}
           >
             Next 100 →
@@ -891,10 +904,10 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
             disabled={page >= totalPages || loading}
             style={{
               padding: '6px 12px',
-              borderRadius: '4px',
-              backgroundColor: '#F5EEE5',
-              border: '1px solid #D2BFA8',
-              color: page >= totalPages ? '#B5A593' : '#34271E',
+              borderRadius: '6px',
+              backgroundColor: '#FFFFFF',
+              border: '1px solid #E2E8F0',
+              color: page >= totalPages ? '#CBD5E1' : '#0F172A',
               cursor: page >= totalPages ? 'not-allowed' : 'pointer',
               fontSize: '0.8125rem'
             }}
