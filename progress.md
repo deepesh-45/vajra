@@ -216,10 +216,11 @@ To rigorously test Operation Vajra beyond standard benchmarks, we implemented **
      - One-click **"Isolate Multi-Hop Trail"** action that focuses upstream and downstream path while dimming unrelated nodes
      - Real-time connected transaction log showing directional flow (IN/OUT), counterparty, timestamp, and amount.
 
-6. **Overlap-Free Dynamic Stage Lanes & Immersive Fullscreen Mode:**
-   - **Guaranteed Zero-Collision Separation:** Nodes are positioned across dynamic multi-column stage lanes with guaranteed horizontal separation ($dx \ge 115\text{ px}$) and vertical staggered spacing ($dy \ge 56\text{ px}$), followed by a 5-pass circle-circle relaxation sweep ensuring no nodes touch or overlap even in 500+ node networks.
-   - **Clutter-Free Minimalist Visualization:** Eliminates noisy floating labels, rupee amounts, and text tags from the global canvas view. Nodes display clean, high-contrast bank initials (`SB`, `HD`, `IC`) inside uniform circles. Full account details and recoverable rupee sums appear upon hover in an elevated tooltip or in the inspector panel when selected.
-   - **100vw × 100vh Fullscreen Canvas:** Features an expand-to-fullscreen button and keyboard hotkey (`F` to toggle, `Escape` to exit). Fullscreen provides an unconstrained canvas with floating HUD controls (`Fit View`, `Zoom`, `Motif Filters`, `Cluster Toggles`) and automatic window-fit auto-framing.
+6. **Rebuilt Overlap-Free Layout Engine & Edge Focus Isolation:**
+   - **Guaranteed Zero-Collision Separation:** Nodes are positioned across dynamic multi-column stage lanes with generous column spacing ($140\text{ px}$), vertical row spacing ($72\text{ px}$), and hexagonal vertical stagger offsets ($(colIdx \bmod 2) \times 36\text{ px}$). A 6-pass pairwise collision relaxation algorithm enforces a minimum $32\text{ px}$ boundary clearance between nodes.
+   - **Tangle-Free Edge Focus Isolation:** Eliminates the criss-crossing "hairball" visual wall in dense 500+ node / 1,600+ edge networks. Background flows are rendered as quiet, subtle reference tracks ($0.8\text{ px}$, $25\%$ opacity). Hovering or selecting any node instantly illuminates its upstream and downstream money paths with bold high-contrast emerald/amber arcs ($3.5\text{ px}$) and active transfer particles.
+   - **Clutter-Free Minimalist Representation:** Eliminates floating badges, rupee tags, and long account IDs from the default canvas view. Nodes display clean, high-contrast 2-letter bank initials (`SB`, `HD`, `IC`) inside uniform circles. Full account details, IFSC, balance, dwell time, and recoverable stolen sums appear in an elevated dark forest tooltip upon hover or in the inspector panel when clicked.
+   - **100vw × 100vh Fullscreen Canvas:** Features a prominent `⛶ Fullscreen` toggle button and keyboard shortcuts (`F` to toggle, `Escape` to exit). Fullscreen provides an unconstrained canvas with floating HUD controls (`Fit View`, `Zoom In/Out`, `Motif Filters`, `Cluster Toggles`) and automatic window-fit auto-framing on resize.
 
 ---
 

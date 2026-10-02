@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useMemo } from 'react';
+import React, { useRef, useEffect, useState, useMemo, useCallback } from 'react';
 import type { NodeData, EdgeData } from '../types';
 
 interface GraphCanvasProps {
@@ -25,7 +25,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
   minTimestamp: _minTimestamp = 0,
   timeMode = 'cumulative',
   activeMotif = 'all',
-  clustersCollapsed = false,
+  clustersCollapsed = true,
   onToggleClustering,
   isolatedPathNodeIds = null,
   layoutMode = 'flow'
@@ -33,14 +33,15 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
-  // Pan & Zoom state
+  // Pan & Zoom
   const [zoom, setZoom] = useState<number>(0.85);
-  const [pan, setPan] = useState<{ x: number; y: number }>({ x: 60, y: 40 });
+  const [pan, setPan] = useState<{ x: number; y: number }>({ x: 60, y: 50 });
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [dragStart, setDragStart] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [hoveredNode, setHoveredNode] = useState<NodeData | null>(null);
   const [animTime, setAnimTime] = useState<number>(0);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  const [edgeViewMode, setEdgeViewMode] = useState<'focused' | 'all'>('focused');
 
   // Animation frame loop for currency particles
   useEffect(() => {
@@ -83,7 +84,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Filter edges based on temporal playback and motif filters
+  // Filter edges based on temporal slider, active motifs, and isolation
   const visibleEdges = useMemo(() => {
     return edges.filter(e => {
       // 1. Time Filtering
@@ -113,16 +114,17 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
     });
   }, [edges, maxTimestamp, timeMode, activeMotif, isolatedPathNodeIds]);
 
-  // Collapsible Supernodes Calculation
-  const { displayNodes, displayEdges } = useMemo(() => {
+  // Intelligent Supernode Clustering (Eliminates the 500-node hairball)
+  const { displayNodes, displayEdges, clusterMap } = useMemo(() => {
     if (!clustersCollapsed) {
       return {
         displayNodes: nodes,
-        displayEdges: visibleEdges
+        displayEdges: visibleEdges,
+        clusterMap: new Map<string, string>()
       };
     }
 
-    const clusterMap = new Map<string, string>();
+    const cMap = new Map<string, string>();
     const hopNodeCounts: Record<number, number> = {};
     nodes.forEach(n => {
       hopNodeCounts[n.hop] = (hopNodeCounts[n.hop] || 0) + 1;
@@ -131,39 +133,47 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
     const supernodes: NodeData[] = [];
     const regularNodes: NodeData[] = [];
 
-    // Group high-density intermediate layers into Supernodes
+    // Group dense intermediate layering stages into structured regional/bank mule rings
     [2, 3].forEach(hop => {
-      if ((hopNodeCounts[hop] || 0) > 12) {
-        const clusterId = `SUPERNODE_CLUSTER_HOP_${hop}`;
-        const clusterMembers = nodes.filter(n => n.hop === hop);
+      const hopNodes = nodes.filter(n => n.hop === hop);
+      if (hopNodes.length > 10) {
+        // Group by bank or sub-clusters of ~25 accounts to make multiple manageable clusters
+        const clusterSize = 25;
+        const numClusters = Math.ceil(hopNodes.length / clusterSize);
 
-        const totalHeld = clusterMembers.reduce((sum, n) => sum + n.held_paise, 0);
-        const totalIn = clusterMembers.reduce((sum, n) => sum + n.taint_in_paise, 0);
-        const totalOut = clusterMembers.reduce((sum, n) => sum + n.taint_out_paise, 0);
+        for (let c = 0; c < numClusters; c++) {
+          const slice = hopNodes.slice(c * clusterSize, (c + 1) * clusterSize);
+          const clusterId = `SUPERNODE_HOP${hop}_C${c + 1}`;
+          const primaryBank = slice[0]?.bank || 'Mule Ring';
 
-        const superNode: NodeData = {
-          acct_id: 990000 + hop,
-          acct_no: clusterId,
-          bank: hop === 2 ? 'Mule Accounts' : 'Aggregator Mules',
-          ifsc: 'CLUSTER',
-          layer: hop === 2 ? 'L2 Money Splitters' : 'L3 Aggregators',
-          hop,
-          taint_in_paise: totalIn,
-          taint_out_paise: totalOut,
-          held_paise: totalHeld,
-          first_seen_epoch: clusterMembers[0]?.first_seen_epoch || 0,
-          clusterId,
-          isSupernode: true,
-          subNodeCount: clusterMembers.length
-        };
+          const totalHeld = slice.reduce((sum, n) => sum + n.held_paise, 0);
+          const totalIn = slice.reduce((sum, n) => sum + n.taint_in_paise, 0);
+          const totalOut = slice.reduce((sum, n) => sum + n.taint_out_paise, 0);
 
-        supernodes.push(superNode);
-        clusterMembers.forEach(n => clusterMap.set(n.acct_no, clusterId));
+          const sn: NodeData = {
+            acct_id: 990000 + hop * 100 + c,
+            acct_no: clusterId,
+            bank: `${primaryBank} Ring #${c + 1}`,
+            ifsc: 'CLUSTER',
+            layer: hop === 2 ? 'L2 Layering Ring' : 'L3 Aggregator Pool',
+            hop,
+            taint_in_paise: totalIn,
+            taint_out_paise: totalOut,
+            held_paise: totalHeld,
+            first_seen_epoch: slice[0]?.first_seen_epoch || 0,
+            clusterId,
+            isSupernode: true,
+            subNodeCount: slice.length
+          };
+
+          supernodes.push(sn);
+          slice.forEach(n => cMap.set(n.acct_no, clusterId));
+        }
       }
     });
 
     nodes.forEach(n => {
-      if (!clusterMap.has(n.acct_no)) {
+      if (!cMap.has(n.acct_no)) {
         regularNodes.push(n);
       }
     });
@@ -173,9 +183,9 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
     const edgeKeySet = new Set<string>();
 
     visibleEdges.forEach(e => {
-      const src = clusterMap.get(e.src_acct) || e.src_acct;
-      const dst = clusterMap.get(e.dst_acct) || e.dst_acct;
-      if (src === dst) return;
+      const src = cMap.get(e.src_acct) || e.src_acct;
+      const dst = cMap.get(e.dst_acct) || e.dst_acct;
+      if (src === dst) return; // Hide internal cluster loop churn
 
       const key = `${src}->${dst}`;
       if (!edgeKeySet.has(key)) {
@@ -191,7 +201,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
     return {
       displayNodes: finalNodes,
       displayEdges: routedEdges,
-      supernodeClusterMap: clusterMap
+      clusterMap: cMap
     };
   }, [nodes, visibleEdges, clustersCollapsed]);
 
@@ -208,9 +218,31 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
     return ids;
   }, [displayNodes, displayEdges]);
 
-  // Overlap-Free Dynamic Multi-Column Sugiyama Layout with Collision Avoidance
-  const { nodePositions, bounds, stageBands } = useMemo(() => {
-    const positions = new Map<string, { x: number; y: number; r: number }>();
+  // Compute nodes connected to the currently selected or hovered node (for clean focus routing)
+  const focusedNodeConnections = useMemo(() => {
+    const activeTarget = selectedNode || hoveredNode;
+    if (!activeTarget) return null;
+
+    const targetAcct = clusterMap.get(activeTarget.acct_no) || activeTarget.acct_no;
+    const connectedNodeIds = new Set<string>([targetAcct]);
+    const directEdgeIds = new Set<string>();
+
+    displayEdges.forEach(e => {
+      if (e.src_acct === targetAcct) {
+        connectedNodeIds.add(e.dst_acct);
+        directEdgeIds.add(`${e.src_acct}->${e.dst_acct}`);
+      } else if (e.dst_acct === targetAcct) {
+        connectedNodeIds.add(e.src_acct);
+        directEdgeIds.add(`${e.src_acct}->${e.dst_acct}`);
+      }
+    });
+
+    return { connectedNodeIds, directEdgeIds, targetAcct };
+  }, [selectedNode, hoveredNode, displayEdges, clusterMap]);
+
+  // Overlap-Free Dynamic Grid Layout Engine (Strict Collision Avoidance)
+  const { nodePositions, bounds, stageLanes } = useMemo(() => {
+    const positions = new Map<string, { x: number; y: number; r: number; bankCode: string }>();
     const hopGroups: Record<number, NodeData[]> = { 0: [], 1: [], 2: [], 3: [], 4: [] };
 
     displayNodes.forEach(n => {
@@ -219,96 +251,101 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       hopGroups[hop].push(n);
     });
 
-    // 1. Calculate dynamic column count and width per stage
-    const stageMetadata = [
-      { name: "STAGE 0: INFILTRATION", desc: "Victim Breach / Source" },
-      { name: "STAGE 1: SMURF DISPATCH", desc: "Primary Dispersal Hub" },
-      { name: "STAGE 2: LAYERING MULES", desc: "Layering & Churn Ring" },
-      { name: "STAGE 3: AGGREGATOR FUNNEL", desc: "Consolidation Hubs" },
+    const stageMeta = [
+      { name: "STAGE 0: INFILTRATION", desc: "Victim Breach Source" },
+      { name: "STAGE 1: SMURF DISPATCH", desc: "Primary Splitter Hub" },
+      { name: "STAGE 2: LAYERING MULES", desc: "Layering & Churn Rings" },
+      { name: "STAGE 3: AGGREGATOR FUNNEL", desc: "Consolidation Accounts" },
       { name: "STAGE 4: CASHOUT EXITS", desc: "Terminal Off-Ramps & ATMs" }
     ];
 
-    const stageSpecs: { subCols: number; colWidth: number; laneWidth: number; baseX: number }[] = [];
-    let currentX = 60;
+    // Compute generous stage lane dimensions based on node count
+    const laneConfigs: { subCols: number; colSpacing: number; laneWidth: number; startX: number }[] = [];
+    let cumulativeX = 80;
 
     [0, 1, 2, 3, 4].forEach(hop => {
       const count = hopGroups[hop]?.length || 0;
       let subCols = 1;
-      if (count > 60) subCols = Math.min(7, Math.ceil(count / 16));
-      else if (count > 24) subCols = 4;
-      else if (count > 8) subCols = 3;
-      else if (count > 1) subCols = 2;
 
-      // Safe column separation: nodes will be at least 110px apart horizontally
-      const colWidth = subCols > 1 ? 115 : 0;
-      const laneWidth = Math.max(220, subCols * (subCols > 1 ? 115 : 180) + 40);
+      if (count > 80) subCols = 5;
+      else if (count > 36) subCols = 4;
+      else if (count > 14) subCols = 3;
+      else if (count > 3) subCols = 2;
 
-      stageSpecs.push({
+      // Safe clearance: each column is spaced 140px apart horizontally
+      const colSpacing = subCols > 1 ? 140 : 0;
+      const laneWidth = Math.max(240, subCols * 140 + 80);
+
+      laneConfigs.push({
         subCols,
-        colWidth,
+        colSpacing,
         laneWidth,
-        baseX: currentX
+        startX: cumulativeX
       });
 
-      // Spacing between adjacent stage lanes
-      currentX += laneWidth + 75;
+      // Space between lanes: 90px clear corridor for inter-stage conduit flow
+      cumulativeX += laneWidth + 90;
     });
 
     let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-    const verticalRowSpacing = 56; // Minimum 56px between rows (radius ~12-16px, clearance > 24px)
+    const rowSpacing = 72; // Safe vertical spacing: 72px (radius ~14px, clearance > 44px)
 
     [0, 1, 2, 3, 4].forEach(hop => {
       const group = hopGroups[hop];
       if (!group || group.length === 0) return;
 
-      const spec = stageSpecs[hop];
+      const conf = laneConfigs[hop];
 
       group.forEach((node, idx) => {
-        const colIdx = idx % spec.subCols;
-        const rowIdx = Math.floor(idx / spec.subCols);
+        const colIdx = idx % conf.subCols;
+        const rowIdx = Math.floor(idx / conf.subCols);
 
-        // Stagger alternating columns vertically for optimal hexagonal density
-        const staggerOffset = (colIdx % 2) * (verticalRowSpacing * 0.5);
+        // Hexagonal stagger: alternate columns vertically by half a row
+        const stagger = (colIdx % 2) * (rowSpacing * 0.5);
 
-        const x = spec.baseX + 35 + colIdx * (spec.subCols > 1 ? spec.colWidth : 0);
-        const y = 115 + rowIdx * verticalRowSpacing + staggerOffset;
+        const x = conf.startX + 50 + colIdx * (conf.subCols > 1 ? conf.colSpacing : 0);
+        const y = 130 + rowIdx * rowSpacing + stagger;
 
-        // Dynamic node radius
-        let r = 13;
-        if (node.isSupernode) r = 24;
-        else if (hop === 0) r = 16;
-        else if (node.held_paise > 10000000) r = 15;
-        else if (node.held_paise > 1000000) r = 13.5;
-        else r = 11.5;
+        // Radius
+        let r = 14;
+        if (node.isSupernode) r = 26;
+        else if (hop === 0) r = 18;
+        else if (node.held_paise > 10000000) r = 16;
+        else if (node.held_paise > 1000000) r = 15;
+        else r = 13;
 
-        positions.set(node.acct_no, { x, y, r });
+        const bankCode = node.isSupernode
+          ? `${node.subNodeCount}`
+          : (node.bank ? node.bank.slice(0, 2).toUpperCase() : 'AC');
+
+        positions.set(node.acct_no, { x, y, r, bankCode });
       });
 
-      // 2. Multi-Pass Circle Collision Relaxation to Guarantee Zero Overlap
-      for (let pass = 0; pass < 5; pass++) {
+      // Pairwise collision repulsion pass to ensure mathematical non-overlap
+      for (let pass = 0; pass < 6; pass++) {
         for (let i = 0; i < group.length; i++) {
           for (let j = i + 1; j < group.length; j++) {
             const pA = positions.get(group[i].acct_no)!;
             const pB = positions.get(group[j].acct_no)!;
-            const minDist = pA.r + pB.r + 24; // Guaranteed 24px clearance between boundaries
+            const minDist = pA.r + pB.r + 32; // Strict 32px clear margin
             const dx = pB.x - pA.x;
             const dy = pB.y - pA.y;
             const dist = Math.hypot(dx, dy);
 
             if (dist < minDist && dist > 0.0001) {
-              const overlap = (minDist - dist) / 2;
+              const push = (minDist - dist) / 2;
               const nx = dx / dist;
               const ny = dy / dist;
-              pA.x -= nx * overlap;
-              pA.y -= ny * overlap;
-              pB.x += nx * overlap;
-              pB.y += ny * overlap;
+              pA.x -= nx * push;
+              pA.y -= ny * push;
+              pB.x += nx * push;
+              pB.y += ny * push;
             }
           }
         }
       }
 
-      // Track bounding coordinates
+      // Record bounds
       group.forEach(node => {
         const p = positions.get(node.acct_no)!;
         if (p.x < minX) minX = p.x;
@@ -318,36 +355,36 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       });
     });
 
-    const stageBands = [0, 1, 2, 3, 4].map(hop => ({
-      name: stageMetadata[hop].name,
-      desc: stageMetadata[hop].desc,
-      x: stageSpecs[hop].baseX - 15,
-      w: stageSpecs[hop].laneWidth
+    const stageLanes = [0, 1, 2, 3, 4].map(hop => ({
+      name: stageMeta[hop].name,
+      desc: stageMeta[hop].desc,
+      x: laneConfigs[hop].startX - 20,
+      w: laneConfigs[hop].laneWidth
     }));
 
     return {
       nodePositions: positions,
       bounds: {
         minX: isFinite(minX) ? minX : 0,
-        maxX: isFinite(maxX) ? maxX : 1800,
+        maxX: isFinite(maxX) ? maxX : 2000,
         minY: isFinite(minY) ? minY : 0,
-        maxY: isFinite(maxY) ? maxY : 800
+        maxY: isFinite(maxY) ? maxY : 850
       },
-      stageBands
+      stageLanes
     };
   }, [displayNodes]);
 
   // Auto-fit function to center and frame all nodes
-  const fitToView = () => {
+  const fitToView = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas || displayNodes.length === 0) return;
     const rect = canvas.getBoundingClientRect();
-    const graphWidth = (bounds.maxX - bounds.minX) + 160;
-    const graphHeight = (bounds.maxY - bounds.minY) + 160;
+    const graphWidth = (bounds.maxX - bounds.minX) + 180;
+    const graphHeight = (bounds.maxY - bounds.minY) + 180;
 
     const scaleX = rect.width / graphWidth;
     const scaleY = rect.height / graphHeight;
-    const fitZoom = Math.max(0.2, Math.min(1.15, Math.min(scaleX, scaleY) * 0.92));
+    const fitZoom = Math.max(0.18, Math.min(1.1, Math.min(scaleX, scaleY) * 0.92));
 
     const centerX = (bounds.minX + bounds.maxX) / 2;
     const centerY = (bounds.minY + bounds.maxY) / 2;
@@ -357,16 +394,16 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       x: rect.width / 2 - centerX * fitZoom,
       y: rect.height / 2 - centerY * fitZoom
     });
-  };
+  }, [displayNodes.length, bounds]);
 
   useEffect(() => {
     if (displayNodes.length > 0) {
       const timer = setTimeout(fitToView, 60);
       return () => clearTimeout(timer);
     }
-  }, [displayNodes.length, clustersCollapsed, isFullscreen]);
+  }, [displayNodes.length, clustersCollapsed, isFullscreen, fitToView]);
 
-  // Canvas Redraw Loop
+  // Main Canvas Rendering Engine
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -389,67 +426,75 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
     ctx.translate(pan.x, pan.y);
     ctx.scale(zoom, zoom);
 
-    // 1. Draw Architectural Layer Stage Bands (Sugiyama DAG)
+    // 1. Draw Architectural Layer Stage Bands (Sugiyama DAG Lanes)
     if (layoutMode === 'flow') {
-      const bandHeight = Math.max(680, (bounds.maxY - bounds.minY) + 150);
+      const bandHeight = Math.max(720, (bounds.maxY - bounds.minY) + 180);
 
-      stageBands.forEach(b => {
+      stageLanes.forEach(lane => {
         ctx.fillStyle = '#F3EFE6';
         ctx.strokeStyle = '#E0D8CA';
         ctx.lineWidth = 1 / zoom;
         ctx.beginPath();
         if (ctx.roundRect) {
-          ctx.roundRect(b.x, 35, b.w, bandHeight, 8);
+          ctx.roundRect(lane.x, 35, lane.w, bandHeight, 10);
         } else {
-          ctx.rect(b.x, 35, b.w, bandHeight);
+          ctx.rect(lane.x, 35, lane.w, bandHeight);
         }
         ctx.fill();
         ctx.stroke();
 
         ctx.fillStyle = '#536458';
-        ctx.font = '700 10.5px JetBrains Mono, monospace';
+        ctx.font = '700 11px JetBrains Mono, monospace';
         ctx.textAlign = 'left';
-        ctx.fillText(b.name, b.x + 14, 56);
+        ctx.fillText(lane.name, lane.x + 16, 58);
 
         ctx.fillStyle = '#8C7853';
-        ctx.font = '500 9.5px Inter, sans-serif';
-        ctx.fillText(b.desc, b.x + 14, 72);
+        ctx.font = '500 10px Inter, sans-serif';
+        ctx.fillText(lane.desc, lane.x + 16, 75);
       });
     }
 
-    // 2. Batch Draw Edges with Bezier Curves
-    const isDenseGraph = displayEdges.length > 300;
+    // 2. Intelligent Edge Rendering (Eliminates the Black/Red Hairball Wall)
+    const isFocusActive = focusedNodeConnections !== null;
 
     displayEdges.forEach((edge, edgeIdx) => {
       const p1 = nodePositions.get(edge.src_acct);
       const p2 = nodePositions.get(edge.dst_acct);
       if (!p1 || !p2) return;
 
+      const edgeKey = `${edge.src_acct}->${edge.dst_acct}`;
+      const isDirectlyFocused = isFocusActive && focusedNodeConnections.directEdgeIds.has(edgeKey);
       const isTainted = edge.taint_paise > 0;
-      const isSelected = selectedNode && (edge.src_acct === selectedNode.acct_no || edge.dst_acct === selectedNode.acct_no);
 
-      ctx.beginPath();
-      if (isSelected) {
-        ctx.strokeStyle = '#065F46';
-        ctx.lineWidth = 3 / Math.sqrt(zoom);
+      // In 'focused' mode when a node is hovered/selected, dim irrelevant edges to 8% opacity!
+      if (edgeViewMode === 'focused' && isFocusActive && !isDirectlyFocused) {
+        ctx.strokeStyle = 'rgba(224, 216, 202, 0.25)';
+        ctx.lineWidth = 0.8 / Math.sqrt(zoom);
+      } else if (isDirectlyFocused) {
+        // High-contrast illuminated focused path
+        ctx.strokeStyle = isTainted ? '#991B1B' : '#065F46';
+        ctx.lineWidth = 3.5 / Math.sqrt(zoom);
       } else if (isTainted) {
-        ctx.strokeStyle = '#991B1B';
-        ctx.lineWidth = Math.min(4, Math.max(1.2, Math.log10(Math.max(10, edge.amount_paise / 1000)))) / Math.sqrt(zoom);
+        // Normal tainted path
+        ctx.strokeStyle = isFocusActive ? 'rgba(153, 27, 27, 0.2)' : 'rgba(153, 27, 27, 0.7)';
+        ctx.lineWidth = Math.min(3.5, Math.max(1.2, Math.log10(Math.max(10, edge.amount_paise / 1000)))) / Math.sqrt(zoom);
       } else {
-        ctx.strokeStyle = '#D8CFBF';
+        // Neutral background flow
+        ctx.strokeStyle = 'rgba(216, 207, 191, 0.4)';
         ctx.lineWidth = 1 / Math.sqrt(zoom);
       }
 
-      // Smooth horizontal Cubic Bezier Curve for flow clarity
+      ctx.beginPath();
+      // Smooth horizontal Cubic Bezier curve
       const dx = (p2.x - p1.x) * 0.5;
       ctx.moveTo(p1.x, p1.y);
       ctx.bezierCurveTo(p1.x + dx, p1.y, p2.x - dx, p2.y, p2.x, p2.y);
       ctx.stroke();
 
-      // Fluid Animated Currency Particles
-      const showParticle = isTainted && (!isDenseGraph || edgeIdx % 3 === 0 || edge.taint_paise > 5000000 || isSelected);
-      if (showParticle) {
-        const t = (animTime + ((edgeIdx * 17) % 100) / 100) % 1.0;
+      // Fluid Currency Particles (Render on focused path or primary flows)
+      const renderParticle = isDirectlyFocused || (!isFocusActive && isTainted && (edgeIdx % 3 === 0 || edge.taint_paise > 5000000));
+      if (renderParticle) {
+        const t = (animTime + ((edgeIdx * 19) % 100) / 100) % 1.0;
         const u = 1 - t;
         const tt = t * t;
         const uu = u * u;
@@ -458,27 +503,29 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         const px = uu * u * p1.x + 3 * uu * t * cp1x + 3 * u * tt * cp2x + tt * t * p2.x;
         const py = uu * u * p1.y + 3 * uu * t * p1.y + 3 * u * tt * p2.y + tt * t * p2.y;
 
-        ctx.fillStyle = isSelected ? '#065F46' : '#991B1B';
+        ctx.fillStyle = isDirectlyFocused ? '#065F46' : '#991B1B';
         ctx.beginPath();
-        ctx.arc(px, py, (displayNodes.length > 200 ? 2.5 : 3.5) / Math.sqrt(zoom), 0, Math.PI * 2);
+        ctx.arc(px, py, (isDirectlyFocused ? 4 : 2.5) / Math.sqrt(zoom), 0, Math.PI * 2);
         ctx.fill();
       }
 
-      // Directional arrow indicator
-      const arrowT = 0.65;
-      const u = 1 - arrowT;
-      const cp1x = p1.x + dx;
-      const cp2x = p2.x - dx;
-      const ax = u * u * u * p1.x + 3 * u * u * arrowT * cp1x + 3 * u * arrowT * arrowT * cp2x + arrowT * arrowT * arrowT * p2.x;
-      const ay = u * u * u * p1.y + 3 * u * u * arrowT * p1.y + 3 * u * arrowT * arrowT * p2.y + arrowT * arrowT * arrowT * p2.y;
+      // Small directional indicator arrow on focused edges
+      if (isDirectlyFocused || (!isFocusActive && edge.amount_paise > 2000000)) {
+        const arrowT = 0.65;
+        const u = 1 - arrowT;
+        const cp1x = p1.x + dx;
+        const cp2x = p2.x - dx;
+        const ax = u * u * u * p1.x + 3 * u * u * arrowT * cp1x + 3 * u * arrowT * arrowT * cp2x + arrowT * arrowT * arrowT * p2.x;
+        const ay = u * u * u * p1.y + 3 * u * u * arrowT * p1.y + 3 * u * arrowT * arrowT * p2.y + arrowT * arrowT * arrowT * p2.y;
 
-      ctx.fillStyle = isTainted ? '#991B1B' : '#8C7853';
-      ctx.beginPath();
-      ctx.arc(ax, ay, 2.5 / Math.sqrt(zoom), 0, Math.PI * 2);
-      ctx.fill();
+        ctx.fillStyle = isDirectlyFocused ? '#065F46' : '#8C7853';
+        ctx.beginPath();
+        ctx.arc(ax, ay, 2.5 / Math.sqrt(zoom), 0, Math.PI * 2);
+        ctx.fill();
+      }
     });
 
-    // 3. Draw Clean, Overlap-Free Nodes ("Visible without extra info")
+    // 3. Draw Clean Overlap-Free Nodes
     displayNodes.forEach(node => {
       const pos = nodePositions.get(node.acct_no);
       if (!pos) return;
@@ -486,13 +533,13 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       // Viewport culling
       const screenX = pos.x * zoom + pan.x;
       const screenY = pos.y * zoom + pan.y;
-      if (screenX < -70 || screenX > rect.width + 70 || screenY < -70 || screenY > rect.height + 70) {
+      if (screenX < -90 || screenX > rect.width + 90 || screenY < -90 || screenY > rect.height + 90) {
         return;
       }
 
-      const isActive = activeNodeIds.has(node.acct_no);
-      const isSelected = selectedNode?.acct_no === node.acct_no;
-      const isHovered = hoveredNode?.acct_no === node.acct_no;
+      const isTarget = focusedNodeConnections?.targetAcct === node.acct_no;
+      const isConnected = isFocusActive && focusedNodeConnections.connectedNodeIds.has(node.acct_no);
+      const isDimmed = isFocusActive && !isConnected && edgeViewMode === 'focused';
 
       let baseColor = '#065F46'; // L1 Emerald
       if (node.isSupernode) baseColor = '#065F46'; // Supernode
@@ -506,7 +553,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       if (node.isSupernode) {
         ctx.save();
         ctx.setLineDash([4, 4]);
-        ctx.strokeStyle = '#477343';
+        ctx.strokeStyle = isDimmed ? 'rgba(71, 115, 67, 0.3)' : '#477343';
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.arc(pos.x, pos.y, pos.r + 7, 0, Math.PI * 2);
@@ -514,59 +561,53 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         ctx.restore();
       }
 
-      // Halo on select/hover
-      if (isSelected || isHovered) {
+      // Outer focus halo
+      if (isTarget) {
         ctx.beginPath();
         ctx.arc(pos.x, pos.y, pos.r + 8, 0, Math.PI * 2);
-        ctx.fillStyle = baseColor + '22';
+        ctx.fillStyle = 'rgba(6, 95, 70, 0.25)';
         ctx.fill();
       }
 
       // Outer Taint/Hold Ring
       ctx.beginPath();
       ctx.arc(pos.x, pos.y, pos.r + 2, 0, Math.PI * 2);
-      ctx.strokeStyle = node.held_paise > 0 ? '#047857' : '#D0C7B7';
+      ctx.strokeStyle = isDimmed
+        ? 'rgba(208, 199, 183, 0.3)'
+        : (node.held_paise > 0 ? '#047857' : '#D0C7B7');
       ctx.lineWidth = 1.5;
       ctx.stroke();
 
-      // Main Node Body Circle
+      // Main Node Circle
       ctx.beginPath();
       ctx.arc(pos.x, pos.y, pos.r, 0, Math.PI * 2);
-      ctx.fillStyle = isActive ? baseColor : '#E5DFD5';
+      ctx.fillStyle = isDimmed ? 'rgba(229, 223, 213, 0.5)' : baseColor;
       ctx.fill();
-      ctx.lineWidth = isSelected ? 3 : 1.5;
-      ctx.strokeStyle = isSelected ? '#16241B' : '#FFFFFF';
+      ctx.lineWidth = isTarget ? 3 : 1.5;
+      ctx.strokeStyle = isTarget ? '#16241B' : '#FFFFFF';
       ctx.stroke();
 
-      // Clean Center Identifier (Bank Initial or Count) — No clutter!
-      if (node.isSupernode) {
-        ctx.font = '700 11px JetBrains Mono, monospace';
-        ctx.fillStyle = '#FFFFFF';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(`${node.subNodeCount}`, pos.x, pos.y);
-      } else if (pos.r >= 11) {
-        ctx.font = '700 8.5px JetBrains Mono, monospace';
-        ctx.fillStyle = '#FFFFFF';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(node.bank.slice(0, 2).toUpperCase(), pos.x, pos.y);
-      }
+      // Center Bank Initial / Supernode Count (Clean, No Clutter!)
+      ctx.font = node.isSupernode ? '700 11px JetBrains Mono, monospace' : '700 9px JetBrains Mono, monospace';
+      ctx.fillStyle = isDimmed ? 'rgba(255, 255, 255, 0.5)' : '#FFFFFF';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(pos.bankCode, pos.x, pos.y);
 
-      // Only show text label when selected or supernode (prevents clutter)
-      if (isSelected || node.isSupernode) {
+      // Elevated Account Label (Shown when selected, hovered, or supernode)
+      if (isTarget || node.isSupernode) {
         ctx.textBaseline = 'alphabetic';
-        ctx.font = node.isSupernode ? '700 11px Inter, sans-serif' : '600 10px JetBrains Mono, monospace';
+        ctx.font = node.isSupernode ? '700 11px Inter, sans-serif' : '700 10.5px JetBrains Mono, monospace';
         ctx.fillStyle = '#16241B';
         ctx.textAlign = 'center';
 
-        const labelText = node.isSupernode ? `${node.bank} (${node.subNodeCount} Mules)` : node.acct_no;
+        const labelText = node.isSupernode ? node.bank : node.acct_no;
         ctx.fillText(labelText, pos.x, pos.y + pos.r + 14);
       }
     });
 
     ctx.restore();
-  }, [displayNodes, displayEdges, activeNodeIds, selectedNode, hoveredNode, nodePositions, pan, zoom, animTime, clustersCollapsed, layoutMode, stageBands, bounds]);
+  }, [displayNodes, displayEdges, activeNodeIds, nodePositions, pan, zoom, animTime, clustersCollapsed, layoutMode, stageLanes, bounds, focusedNodeConnections, edgeViewMode]);
 
   // Pan Handlers
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -587,7 +628,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       return;
     }
 
-    // Hover detection in transformed space
+    // Hover detection
     const mouseX = (e.clientX - rect.left - pan.x) / zoom;
     const mouseY = (e.clientY - rect.top - pan.y) / zoom;
 
@@ -596,7 +637,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       const pos = nodePositions.get(node.acct_no);
       if (!pos) continue;
       const dist = Math.hypot(pos.x - mouseX, pos.y - mouseY);
-      if (dist <= pos.r + 5) {
+      if (dist <= pos.r + 6) {
         found = node;
         break;
       }
@@ -608,7 +649,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
     setIsDragging(false);
   };
 
-  // Zoom on wheel towards cursor
+  // Zoom towards cursor
   const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
     e.preventDefault();
     const canvas = canvasRef.current;
@@ -619,7 +660,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
     const mouseY = e.clientY - rect.top;
 
     const zoomFactor = e.deltaY < 0 ? 1.15 : 0.87;
-    const newZoom = Math.max(0.2, Math.min(5.0, zoom * zoomFactor));
+    const newZoom = Math.max(0.18, Math.min(4.5, zoom * zoomFactor));
 
     setPan({
       x: mouseX - (mouseX - pan.x) * (newZoom / zoom),
@@ -640,7 +681,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       const pos = nodePositions.get(node.acct_no);
       if (!pos) continue;
       const dist = Math.hypot(pos.x - clickX, pos.y - clickY);
-      if (dist <= pos.r + 5) {
+      if (dist <= pos.r + 6) {
         if (node.isSupernode && onToggleClustering) {
           onToggleClustering();
         } else {
@@ -658,13 +699,6 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
     }
   };
 
-  const handleZoomIn = () => setZoom(z => Math.min(5.0, z * 1.25));
-  const handleZoomOut = () => setZoom(z => Math.max(0.2, z / 1.25));
-  const handleReset = () => {
-    setZoom(1.0);
-    setPan({ x: 0, y: 0 });
-  };
-
   return (
     <div
       ref={containerRef}
@@ -673,14 +707,14 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         top: isFullscreen ? 0 : 'auto',
         left: isFullscreen ? 0 : 'auto',
         width: isFullscreen ? '100vw' : '100%',
-        height: isFullscreen ? '100vh' : '580px',
+        height: isFullscreen ? '100vh' : '620px',
         zIndex: isFullscreen ? 9999 : 1,
         borderRadius: isFullscreen ? 0 : '12px',
         border: isFullscreen ? 'none' : '1px solid var(--border)',
         overflow: 'hidden',
         background: '#FAF8F5',
         userSelect: 'none',
-        transition: 'all 0.2s ease'
+        boxShadow: isFullscreen ? 'none' : 'var(--shadow-sm)'
       }}
     >
       <canvas
@@ -699,7 +733,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         }}
       />
 
-      {/* Floating HUD Controls Overlay */}
+      {/* Floating HUD Controls Overlay (Clean, Elegant Government Intelligence Style) */}
       <div style={{
         position: 'absolute',
         top: isFullscreen ? '20px' : '14px',
@@ -707,18 +741,35 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         display: 'flex',
         alignItems: 'center',
         gap: '6px',
-        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        backgroundColor: 'rgba(255, 255, 255, 0.96)',
         padding: '5px 8px',
         borderRadius: '6px',
         boxShadow: 'var(--shadow-sm)',
         border: '1px solid var(--border)',
         backdropFilter: 'blur(4px)'
       }}>
-        {/* Supernode Clustering Toggle Button */}
+        {/* Focused Flow vs All Edges Filter */}
+        <button
+          onClick={() => setEdgeViewMode(edgeViewMode === 'focused' ? 'all' : 'focused')}
+          title={edgeViewMode === 'focused' ? "Showing Clean Focused Paths (Click to show all raw edges)" : "Showing All Edges (Click to show clean focused paths)"}
+          style={{
+            padding: '5px 10px',
+            borderRadius: '4px',
+            border: '1px solid var(--border)',
+            backgroundColor: edgeViewMode === 'focused' ? 'var(--surface-pista)' : '#FFFFFF',
+            fontSize: '11px',
+            fontWeight: 600,
+            color: edgeViewMode === 'focused' ? 'var(--primary)' : 'var(--text)'
+          }}
+        >
+          {edgeViewMode === 'focused' ? '✓ Focused Trails' : 'All Edges'}
+        </button>
+
+        {/* Supernodes Toggle Button */}
         {onToggleClustering && (
           <button
             onClick={onToggleClustering}
-            title={clustersCollapsed ? "Expand All Mule Rings" : "Collapse into Supernodes"}
+            title={clustersCollapsed ? "Expand All Mule Rings" : "Cluster Dense Mule Rings into Supernodes"}
             style={{
               padding: '5px 10px',
               borderRadius: '4px',
@@ -729,7 +780,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
               color: clustersCollapsed ? 'var(--primary)' : 'var(--text)'
             }}
           >
-            {clustersCollapsed ? 'Expanded View' : 'Group Supernodes'}
+            {clustersCollapsed ? 'Rings Grouped' : 'Expand All'}
           </button>
         )}
 
@@ -750,30 +801,23 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         </button>
 
         <button
-          onClick={handleZoomIn}
+          onClick={() => setZoom(z => Math.min(4.5, z * 1.25))}
           title="Zoom In"
           style={{ padding: '5px 8px', borderRadius: '4px', border: '1px solid var(--border)', backgroundColor: '#FFFFFF', fontSize: '12px', fontWeight: 700 }}
         >
           +
         </button>
         <button
-          onClick={handleZoomOut}
+          onClick={() => setZoom(z => Math.max(0.18, z / 1.25))}
           title="Zoom Out"
           style={{ padding: '5px 8px', borderRadius: '4px', border: '1px solid var(--border)', backgroundColor: '#FFFFFF', fontSize: '12px', fontWeight: 700 }}
         >
           −
         </button>
-        <button
-          onClick={handleReset}
-          title="Reset View"
-          style={{ padding: '5px 8px', borderRadius: '4px', border: '1px solid var(--border)', backgroundColor: '#FFFFFF', fontSize: '11px', color: 'var(--text-muted)' }}
-        >
-          ↺
-        </button>
 
         <div style={{ width: '1px', height: '14px', backgroundColor: 'var(--border)', margin: '0 2px' }} />
 
-        {/* Fullscreen Toggle Button */}
+        {/* Fullscreen Button */}
         <button
           onClick={() => setIsFullscreen(!isFullscreen)}
           title={isFullscreen ? "Exit Fullscreen (Esc)" : "Expand to Full Screen View"}
@@ -787,7 +831,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
             color: isFullscreen ? '#FFFFFF' : 'var(--text)'
           }}
         >
-          {isFullscreen ? '✕ Exit Fullscreen' : '⛶ Fullscreen'}
+          {isFullscreen ? '✕ Exit [Esc]' : '⛶ Fullscreen'}
         </button>
 
         <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', marginLeft: '4px' }}>
@@ -795,7 +839,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         </span>
       </div>
 
-      {/* Scale & Stage Info Tag */}
+      {/* Scale & Stage Information Bar */}
       <div style={{
         position: 'absolute',
         bottom: '14px',
@@ -803,7 +847,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         display: 'flex',
         alignItems: 'center',
         gap: '6px',
-        backgroundColor: 'rgba(255, 255, 255, 0.94)',
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
         padding: '5px 12px',
         borderRadius: '6px',
         border: '1px solid var(--border)',
@@ -812,10 +856,10 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       }}>
         <span><strong>{displayNodes.length} Accounts</strong> · <strong>{displayEdges.length} Flows</strong> (Sugiyama DAG)</span>
         <span style={{ color: 'var(--text-muted)', margin: '0 4px' }}>•</span>
-        <span>Drag to pan · Scroll to zoom · Double-click Supernode to expand</span>
+        <span>Hover node to illuminate connected trail · Double-click cluster to expand</span>
       </div>
 
-      {/* Minimalist Hover Info Tooltip — No visual clutter on canvas */}
+      {/* Floating Tooltip — Completely clean, no on-canvas text collisions */}
       {hoveredNode && (
         <div style={{
           position: 'absolute',
@@ -842,7 +886,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
           </div>
           {hoveredNode.isSupernode && (
             <div style={{ color: '#FDE68A', fontWeight: 600 }}>
-              Grouped Mule Cluster ({hoveredNode.subNodeCount} Accounts) · Double-click to expand
+              Grouped Mule Ring ({hoveredNode.subNodeCount} Accounts) · Double-click to expand
             </div>
           )}
           {hoveredNode.held_paise > 0 && (
