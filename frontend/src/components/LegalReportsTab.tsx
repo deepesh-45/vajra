@@ -214,6 +214,23 @@ export const LegalReportsTab: React.FC<LegalReportsTabProps> = ({ victimAccount 
               Statutory Notices & Reports
             </h1>
             <span style={{
+              display: 'inline-flex',
+              alignItems: 'baseline',
+              gap: '4px',
+              backgroundColor: '#EFF6FF',
+              border: '1px solid #DBEAFE',
+              padding: '1px 6px',
+              borderRadius: '5px'
+            }}>
+              <span style={{ fontSize: '10px', fontWeight: 800, color: '#1D4ED8' }}>VAJRA</span>
+              <span className="brand-devanagari" style={{
+                fontFamily: "'Alkatra', 'Modak', cursive, sans-serif",
+                fontSize: '13px',
+                color: '#2563EB',
+                lineHeight: 1
+              }}>वज्र</span>
+            </span>
+            <span style={{
               fontSize: '10.5px',
               fontWeight: 700,
               backgroundColor: '#FEF3C7',

@@ -46,7 +46,7 @@ export const LoadDataTab: React.FC<LoadDataTabProps> = ({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // New Study Form State
-  const [studyName, setStudyName] = useState<string>('Operation Vajra: Multi-State UPI Mule Syndicate');
+  const [studyName, setStudyName] = useState<string>('Operation Vajra (वज्र): Multi-State UPI Mule Syndicate');
   const [caseRef, setCaseRef] = useState<string>('FIR No. 412/2024 - Cyber Crime Division Indore');
   const [investigatorName, setInvestigatorName] = useState<string>('Ayush Sharma (Lead Cyber Analyst)');
   const [datasetSelectionMode, setDatasetSelectionMode] = useState<'upload' | 'preset'>('preset');
@@ -163,15 +163,34 @@ export const LoadDataTab: React.FC<LoadDataTabProps> = ({
       {/* Title Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <h1 style={{
-            fontSize: '1.375rem',
-            fontWeight: 700,
-            letterSpacing: '-0.02em',
-            color: '#0F172A',
-            margin: 0
-          }}>
-            Load Data & Forensic Studies
-          </h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <h1 style={{
+              fontSize: '1.375rem',
+              fontWeight: 700,
+              letterSpacing: '-0.02em',
+              color: '#0F172A',
+              margin: 0
+            }}>
+              Load Data & Forensic Studies
+            </h1>
+            <span style={{
+              display: 'inline-flex',
+              alignItems: 'baseline',
+              gap: '4px',
+              backgroundColor: '#EFF6FF',
+              border: '1px solid #DBEAFE',
+              padding: '1px 7px',
+              borderRadius: '5px'
+            }}>
+              <span style={{ fontSize: '10px', fontWeight: 800, color: '#1D4ED8' }}>VAJRA</span>
+              <span className="brand-devanagari" style={{
+                fontFamily: "'Alkatra', 'Modak', cursive, sans-serif",
+                fontSize: '13px',
+                color: '#2563EB',
+                lineHeight: 1
+              }}>वज्र</span>
+            </span>
+          </div>
           <p style={{
             fontSize: '0.875rem',
             color: '#64748B',

@@ -103,15 +103,25 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{
-              fontSize: '1.25rem',
-              fontWeight: 700,
-              color: '#0F172A',
-              letterSpacing: '-0.02em',
-              lineHeight: 1.2
-            }}>
-              Vajra
-            </span>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+              <span style={{
+                fontSize: '1.15rem',
+                fontWeight: 800,
+                color: '#0F172A',
+                letterSpacing: '-0.02em',
+                lineHeight: 1.2
+              }}>
+                VAJRA
+              </span>
+              <span className="brand-devanagari" style={{
+                fontFamily: "'Alkatra', 'Modak', cursive, sans-serif",
+                fontSize: '1.45rem',
+                color: '#2563EB',
+                lineHeight: 1
+              }}>
+                वज्र
+              </span>
+            </div>
             <span style={{
               fontSize: '0.6875rem',
               color: '#786A5C',

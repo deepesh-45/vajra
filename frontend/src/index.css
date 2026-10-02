@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Alkatra:wght@400..700&family=Modak&family=Patua+One&display=swap');
 
 :root {
   /* Subtle, Modern Enterprise Slate & Blue Design System */
@@ -52,11 +53,24 @@
   /* Fonts & Shadows */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
+  --font-devanagari: 'Alkatra', 'Modak', cursive, system-ui, sans-serif;
+  --font-brand: 'Alkatra', 'Modak', 'Patua One', cursive, system-ui, sans-serif;
 
   --shadow-xs: 0 1px 2px 0 rgba(15, 23, 42, 0.03);
   --shadow-sm: 0 1px 3px 0 rgba(15, 23, 42, 0.05), 0 1px 2px 0 rgba(15, 23, 42, 0.02);
   --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.06), 0 2px 4px -2px rgba(15, 23, 42, 0.03);
   --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.04);
+}
+
+.brand-vajra {
+  font-family: var(--font-brand);
+  letter-spacing: 0.02em;
+}
+
+.brand-devanagari {
+  font-family: var(--font-devanagari);
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
 * {

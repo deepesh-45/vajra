@@ -116,19 +116,41 @@ export const Header: React.FC<HeaderProps> = ({
         zIndex: 50,
         boxShadow: '0 1px 2px rgba(0, 0, 0, 0.02)'
       }}>
-        {/* Center/Left Search Box */}
-        <div ref={searchRef} style={{ width: '440px', position: 'relative' }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            padding: '0 14px',
-            height: '40px',
-            borderRadius: '10px',
-            backgroundColor: '#F8FAFC',
-            border: '1px solid #E2E8F0',
-            transition: 'border-color 0.2s, box-shadow 0.2s'
-          }}>
+        {/* Left: Brand Identity Badge & Search */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '5px' }}>
+            <span style={{
+              fontSize: '1.05rem',
+              fontWeight: 800,
+              color: '#0F172A',
+              letterSpacing: '-0.02em',
+              lineHeight: 1
+            }}>
+              VAJRA
+            </span>
+            <span className="brand-devanagari" style={{
+              fontFamily: "'Alkatra', 'Modak', cursive, sans-serif",
+              fontSize: '1.35rem',
+              color: '#2563EB',
+              lineHeight: 1
+            }}>
+              वज्र
+            </span>
+          </div>
+
+          {/* Search Box */}
+          <div ref={searchRef} style={{ width: '400px', position: 'relative' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              padding: '0 14px',
+              height: '40px',
+              borderRadius: '10px',
+              backgroundColor: '#F8FAFC',
+              border: '1px solid #E2E8F0',
+              transition: 'border-color 0.2s, box-shadow 0.2s'
+            }}>
             <Search size={16} color="#64748B" />
             <input
               type="text"
@@ -295,8 +317,9 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           )}
         </div>
+      </div>
 
-        {/* Right Side Controls */}
+      {/* Right Side Controls */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           {/* Day / Night Toggle Pill */}
           <div
