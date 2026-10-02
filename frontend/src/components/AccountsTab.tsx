@@ -152,10 +152,44 @@ export const AccountsTab: React.FC<AccountsTabProps> = ({ data, onSelectVictim }
     return `${acc.slice(0, 4)}••••${acc.slice(-4)}`;
   };
 
-  const scoreVelocity = accountProfile?.score?.score_velocity ?? 24;
-  const scoreTopology = accountProfile?.score?.score_topology ?? 22;
-  const scoreCashout = accountProfile?.score?.score_cashout ?? 18;
-  const scoreDevice = accountProfile?.score?.score_device_ip ?? 12;
+  const getPlainReasons = (account: AccountRow, profile: AccountProfile | null): string[] => {
+    const reasons: string[] = [];
+    const score = profile?.score;
+
+    if (score) {
+      if (score.score_velocity && score.score_velocity >= 15) {
+        reasons.push('Transfers out funds immediately after receiving them');
+      }
+      if (score.score_topology && score.score_topology >= 15) {
+        reasons.push('Splits money into smaller amounts sent to multiple accounts');
+      }
+      if (score.score_cashout && score.score_cashout >= 10) {
+        reasons.push('Frequent ATM cash withdrawals shortly after deposits');
+      }
+      if (score.score_device_ip && score.score_device_ip >= 8) {
+        reasons.push('Access detected from unknown or foreign network locations');
+      }
+    }
+
+    if (reasons.length === 0) {
+      const roleLower = account.role.toLowerCase();
+      if (roleLower.includes('distributor')) {
+        reasons.push('Distributes incoming scam funds rapidly to other accounts');
+        reasons.push('Maintains near-zero balance after transfers');
+      } else if (roleLower.includes('collector')) {
+        reasons.push('Directly collects money transferred by fraud victims');
+        reasons.push('Sudden surge in incoming payments from unknown senders');
+      } else if (roleLower.includes('terminal')) {
+        reasons.push('Final withdrawal point where funds are converted to cash');
+        reasons.push('Nearly 100% of received money is quickly withdrawn');
+      } else {
+        reasons.push('Pass-through account with rapid incoming and outgoing flows');
+        reasons.push('Directly linked to suspected accounts in the fraud network');
+      }
+    }
+
+    return reasons.slice(0, 3);
+  };
 
   return (
     <div style={{
@@ -177,7 +211,7 @@ export const AccountsTab: React.FC<AccountsTabProps> = ({ data, onSelectVictim }
             color: '#0F172A',
             margin: 0
           }}>
-            Accounts Ledger
+            Accounts Directory
           </h1>
           <p style={{
             fontSize: '0.875rem',
@@ -185,7 +219,7 @@ export const AccountsTab: React.FC<AccountsTabProps> = ({ data, onSelectVictim }
             color: '#64748B',
             margin: 0
           }}>
-            {data?.total_accounts ? data.total_accounts.toLocaleString() : '24,873'} accounts • sortable, searchable & ML-scored
+            {data?.total_accounts ? data.total_accounts.toLocaleString() : '24,873'} accounts • Filter by bank, risk level, or account number
           </p>
         </div>
 
@@ -260,9 +294,9 @@ export const AccountsTab: React.FC<AccountsTabProps> = ({ data, onSelectVictim }
             }}
           >
             <option value="All">All Roles</option>
-            <option value="DISTRIBUTOR">Distributor (Fan-out)</option>
-            <option value="COLLECTOR">Collector (Mule)</option>
-            <option value="TERMINAL">Terminal (Cash-out)</option>
+            <option value="DISTRIBUTOR">Distributor (Sends to many)</option>
+            <option value="COLLECTOR">Collector (Receives funds)</option>
+            <option value="TERMINAL">Cash-Out (ATM / Withdrawal)</option>
           </select>
 
           {/* Search Box */}
@@ -270,7 +304,7 @@ export const AccountsTab: React.FC<AccountsTabProps> = ({ data, onSelectVictim }
             <Search size={14} color="#94A3B8" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }} />
             <input
               type="text"
-              placeholder="Filter account or IFSC..."
+              placeholder="Search account or IFSC..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               style={{
@@ -296,7 +330,7 @@ export const AccountsTab: React.FC<AccountsTabProps> = ({ data, onSelectVictim }
             fontWeight: 700,
             color: '#1D4ED8'
           }}>
-            {loadingAccounts ? 'Loading...' : `${totalIndexedCount.toLocaleString()} Accounts Indexed`}
+            {loadingAccounts ? 'Loading...' : `${totalIndexedCount.toLocaleString()} Accounts Found`}
           </div>
         </div>
       </div>
@@ -347,7 +381,7 @@ export const AccountsTab: React.FC<AccountsTabProps> = ({ data, onSelectVictim }
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#0F172A' }}>
-                Account register
+                Account List
               </span>
               <span style={{
                 fontSize: '11px',
@@ -358,11 +392,11 @@ export const AccountsTab: React.FC<AccountsTabProps> = ({ data, onSelectVictim }
                 border: '1px solid #E2E8F0',
                 fontWeight: 600
               }}>
-                Indexed View
+                Live Data
               </span>
             </div>
             <span style={{ fontSize: '0.75rem', color: '#64748B' }}>
-              Click row to inspect forensic feature attribution & ML explanations
+              Click any account to view summary and trace money trail
             </span>
           </div>
 
@@ -382,12 +416,12 @@ export const AccountsTab: React.FC<AccountsTabProps> = ({ data, onSelectVictim }
                 <tr style={{ borderBottom: '1px solid #E2E8F0', textAlign: 'left' }}>
                   <th style={{ padding: '12px 16px' }}>Account</th>
                   <th style={{ padding: '12px 12px' }}>Bank</th>
-                  <th style={{ padding: '12px 12px' }}>Risk</th>
-                  <th style={{ padding: '12px 12px' }}>Tier</th>
+                  <th style={{ padding: '12px 12px' }}>Risk Score</th>
+                  <th style={{ padding: '12px 12px' }}>Risk Level</th>
                   <th style={{ padding: '12px 12px' }}>Role</th>
-                  <th style={{ padding: '12px 12px', textAlign: 'right' }}>In Total</th>
-                  <th style={{ padding: '12px 12px', textAlign: 'right' }}>Out Total</th>
-                  <th style={{ padding: '12px 16px' }}>Syndicate</th>
+                  <th style={{ padding: '12px 12px', textAlign: 'right' }}>Money Received</th>
+                  <th style={{ padding: '12px 12px', textAlign: 'right' }}>Money Sent</th>
+                  <th style={{ padding: '12px 16px' }}>Network Group</th>
                 </tr>
               </thead>
               <tbody>
@@ -459,18 +493,21 @@ export const AccountsTab: React.FC<AccountsTabProps> = ({ data, onSelectVictim }
         {/* Selected Account Detail Panel */}
         {selectedAccount && (
           <div style={{
-            width: '400px',
+            width: '380px',
             backgroundColor: '#FFFFFF',
             borderRadius: '12px',
             border: '1px solid #E2E8F0',
-            padding: '24px',
+            padding: '20px',
             display: 'flex',
             flexDirection: 'column',
-            gap: '18px',
+            gap: '16px',
             flexShrink: 0,
-            boxShadow: '0 1px 3px rgba(15,23,42,0.04)'
+            boxShadow: '0 2px 8px rgba(15,23,42,0.04)',
+            position: 'sticky',
+            top: '24px'
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            {/* Header: Title + Close */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <p style={{
                   fontSize: '11px',
@@ -480,262 +517,177 @@ export const AccountsTab: React.FC<AccountsTabProps> = ({ data, onSelectVictim }
                   color: '#64748B',
                   margin: 0
                 }}>
-                  Selected account
+                  Account Summary
                 </p>
-                <h2 style={{
-                  fontSize: '1.125rem',
+                <h3 style={{
+                  fontSize: '1.05rem',
                   fontWeight: 700,
                   color: '#0F172A',
-                  margin: '4px 0 0 0'
+                  margin: '2px 0 0 0'
                 }}>
-                  Account detail
-                </h2>
+                  {selectedAccount.bank}
+                </h3>
               </div>
               <button
                 onClick={() => setSelectedAccount(null)}
                 style={{
-                  background: 'none',
+                  background: '#F1F5F9',
                   border: 'none',
+                  borderRadius: '6px',
                   cursor: 'pointer',
-                  color: '#94A3B8',
-                  padding: '4px'
+                  color: '#64748B',
+                  padding: '6px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
                 }}
+                title="Close"
               >
-                <X size={18} />
+                <X size={16} />
               </button>
             </div>
 
-            {/* Account Card */}
+            {/* Account ID & Risk Tag */}
             <div style={{
               backgroundColor: '#F8FAFC',
               borderRadius: '8px',
               border: '1px solid #E2E8F0',
-              padding: '14px 16px'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '0.9375rem', color: '#0F172A' }}>
-                  {maskAcct(selectedAccount.acct_no)}
-                </span>
-                <span style={{
-                  padding: '3px 8px',
-                  borderRadius: '6px',
-                  backgroundColor: selectedAccount.tier === 'Critical' || selectedAccount.tier === 'High' ? '#FEF2F2' : '#EFF6FF',
-                  color: selectedAccount.tier === 'Critical' || selectedAccount.tier === 'High' ? '#DC2626' : '#2563EB',
-                  border: `1px solid ${selectedAccount.tier === 'Critical' || selectedAccount.tier === 'High' ? '#FEE2E2' : '#DBEAFE'}`,
-                  fontSize: '11px',
-                  fontWeight: 600
-                }}>
-                  {selectedAccount.tier}
-                </span>
-              </div>
-              <p style={{ fontSize: '0.8125rem', color: '#64748B', margin: '6px 0 0 0' }}>
-                {selectedAccount.bank} • {selectedAccount.ifsc}
-              </p>
-            </div>
-
-            {/* Metrics Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
-              <div style={{
-                borderRadius: '8px',
-                border: '1px solid #E2E8F0',
-                padding: '12px 14px',
-                backgroundColor: '#FAFCFF'
-              }}>
-                <p style={{ fontSize: '11px', color: '#64748B', margin: 0, fontWeight: 500 }}>Mule Risk</p>
-                <p style={{
-                  fontSize: '1.5rem',
-                  fontWeight: 700,
-                  color: selectedAccount.risk >= 80 ? '#DC2626' : '#0F172A',
-                  margin: '4px 0 0 0'
-                }}>
-                  {selectedAccount.risk}
-                  <span style={{ fontSize: '0.875rem', fontWeight: 400, color: '#94A3B8' }}>
-                    /100
-                  </span>
-                </p>
-              </div>
-
-              <div style={{
-                borderRadius: '8px',
-                border: '1px solid #E2E8F0',
-                padding: '12px 14px',
-                backgroundColor: '#FAFCFF'
-              }}>
-                <p style={{ fontSize: '11px', color: '#64748B', margin: 0, fontWeight: 500 }}>Isolation Outlier</p>
-                <p style={{
-                  fontSize: '1.5rem',
-                  fontWeight: 700,
-                  color: (accountProfile?.score?.isolation_anomaly_score ?? 0) >= 0.65 ? '#DC2626' : '#0F172A',
-                  margin: '4px 0 0 0'
-                }}>
-                  {accountProfile?.score?.isolation_anomaly_score !== undefined 
-                    ? Math.round(accountProfile.score.isolation_anomaly_score * 100)
-                    : selectedAccount.confidence}
-                  <span style={{ fontSize: '0.875rem', fontWeight: 400, color: '#94A3B8' }}>
-                    %
-                  </span>
-                </p>
-                {accountProfile?.score?.anomaly_percentile !== undefined && (
-                  <p style={{ fontSize: '10px', color: '#64748B', margin: '2px 0 0 0' }}>
-                    Top {Math.round(100 - accountProfile.score.anomaly_percentile)}% Outlier
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* TreeSHAP Exact Explainability & Court Evidence */}
-            {accountProfile?.shap_explanation && accountProfile.shap_explanation.top_drivers.length > 0 && (
-              <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '8px',
-                padding: '14px',
-                borderRadius: '8px',
-                backgroundColor: '#F8FAFC',
-                border: '1px solid #E2E8F0'
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: '#0F172A' }}>
-                    TreeSHAP Forensic Attribution
-                  </span>
-                  <span style={{
-                    fontSize: '10px',
-                    fontWeight: 600,
-                    padding: '2px 6px',
-                    borderRadius: '4px',
-                    backgroundColor: '#0F172A',
-                    color: '#FFFFFF'
-                  }}>
-                    Exact Game Theory
-                  </span>
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  {accountProfile.shap_explanation.top_drivers.map((d, idx) => (
-                    <div key={idx} style={{
-                      padding: '8px 10px',
-                      borderRadius: '6px',
-                      backgroundColor: '#FFFFFF',
-                      border: '1px solid #E2E8F0',
-                      fontSize: '11px'
-                    }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                        <span style={{ fontWeight: 600, color: '#0F172A' }}>{d.label}</span>
-                        <span style={{
-                          fontFamily: 'monospace',
-                          fontWeight: 700,
-                          color: '#D97706',
-                          fontSize: '10px'
-                        }}>
-                          SHAP +{d.shap_value}
-                        </span>
-                      </div>
-                      <p style={{ margin: 0, fontSize: '11px', color: '#475569', lineHeight: 1.4 }}>
-                        {d.evidence_text}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Court Admissible Evidence Box */}
-                {accountProfile.shap_explanation.court_admissible_narrative && (
-                  <div style={{
-                    marginTop: '4px',
-                    padding: '10px 12px',
-                    borderRadius: '6px',
-                    backgroundColor: '#EFF6FF',
-                    borderLeft: '3px solid #2563EB',
-                    fontSize: '11px',
-                    color: '#1E3A8A',
-                    lineHeight: 1.45
-                  }}>
-                    <strong style={{ display: 'block', marginBottom: '3px', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.04em', color: '#1D4ED8' }}>
-                      ⚖️ Court-Admissible Narrative (BNSS 106 / Sec 91 CrPC)
-                    </strong>
-                    {accountProfile.shap_explanation.court_admissible_narrative}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Explainable Feature Attribution Sub-Scores */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748B' }}>
-                  Rule Heuristic Indicators
-                </span>
-                <span style={{ fontSize: '10px', color: '#94A3B8' }}>Heuristic Slices</span>
-              </div>
-
-              {/* Bar 1: Velocity */}
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '4px' }}>
-                  <span style={{ fontWeight: 500, color: '#334155' }}>Pass-Through Velocity</span>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: '#0F172A' }}>{scoreVelocity}/30</span>
-                </div>
-                <div style={{ width: '100%', height: '6px', backgroundColor: '#E2E8F0', borderRadius: '3px', overflow: 'hidden' }}>
-                  <div style={{ width: `${(scoreVelocity / 30) * 100}%`, height: '100%', backgroundColor: '#2563EB', borderRadius: '3px' }} />
-                </div>
-              </div>
-
-              {/* Bar 2: Topology */}
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '4px' }}>
-                  <span style={{ fontWeight: 500, color: '#334155' }}>Fan-In / Fan-Out Topology</span>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: '#0F172A' }}>{scoreTopology}/25</span>
-                </div>
-                <div style={{ width: '100%', height: '6px', backgroundColor: '#E2E8F0', borderRadius: '3px', overflow: 'hidden' }}>
-                  <div style={{ width: `${(scoreTopology / 25) * 100}%`, height: '100%', backgroundColor: '#3B82F6', borderRadius: '3px' }} />
-                </div>
-              </div>
-
-              {/* Bar 3: Cashout */}
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '4px' }}>
-                  <span style={{ fontWeight: 500, color: '#334155' }}>Cash-Out / Narration Risk</span>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: '#0F172A' }}>{scoreCashout}/20</span>
-                </div>
-                <div style={{ width: '100%', height: '6px', backgroundColor: '#E2E8F0', borderRadius: '3px', overflow: 'hidden' }}>
-                  <div style={{ width: `${(scoreCashout / 20) * 100}%`, height: '100%', backgroundColor: '#60A5FA', borderRadius: '3px' }} />
-                </div>
-              </div>
-
-              {/* Bar 4: Device & Foreign IP */}
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '4px' }}>
-                  <span style={{ fontWeight: 500, color: '#334155' }}>Foreign IP / Headless Device</span>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: '#0F172A' }}>{scoreDevice}/15</span>
-                </div>
-                <div style={{ width: '100%', height: '6px', backgroundColor: '#E2E8F0', borderRadius: '3px', overflow: 'hidden' }}>
-                  <div style={{ width: `${(scoreDevice / 15) * 100}%`, height: '100%', backgroundColor: '#93C5FD', borderRadius: '3px' }} />
-                </div>
-              </div>
-            </div>
-
-            {/* Mask Toggle */}
-            <div style={{
+              padding: '12px 14px',
               display: 'flex',
               justifyContent: 'space-between',
-              alignItems: 'center',
-              paddingTop: '10px',
-              borderTop: '1px solid #E2E8F0'
+              alignItems: 'center'
             }}>
               <div>
-                <p style={{ fontSize: '0.8125rem', fontWeight: 500, color: '#0F172A', margin: 0 }}>Show account number</p>
-                <p style={{ fontSize: '0.75rem', color: '#64748B', margin: '2px 0 0 0' }}>Unmask sensitive account digits</p>
+                <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '0.9375rem', color: '#0F172A' }}>
+                  {maskAcct(selectedAccount.acct_no)}
+                </div>
+                <div style={{ fontSize: '11px', color: '#64748B', marginTop: '2px' }}>
+                  IFSC: {selectedAccount.ifsc}
+                </div>
               </div>
-              <input
-                type="checkbox"
-                checked={showMasked}
-                onChange={e => setShowMasked(e.target.checked)}
-                style={{ cursor: 'pointer', width: '16px', height: '16px' }}
-              />
+              <span style={{
+                padding: '4px 10px',
+                borderRadius: '6px',
+                fontSize: '11px',
+                fontWeight: 700,
+                backgroundColor: selectedAccount.risk >= 75 ? '#FEF2F2' : selectedAccount.risk >= 50 ? '#FFFBEB' : '#ECFDF5',
+                color: selectedAccount.risk >= 75 ? '#DC2626' : selectedAccount.risk >= 50 ? '#D97706' : '#059669',
+                border: `1px solid ${selectedAccount.risk >= 75 ? '#FEE2E2' : selectedAccount.risk >= 50 ? '#FEF3C7' : '#D1FAE5'}`
+              }}>
+                {selectedAccount.risk >= 75 ? 'High Risk' : selectedAccount.risk >= 50 ? 'Suspicious' : 'Low Risk'}
+              </span>
             </div>
 
-            {/* Officer Action Buttons */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingTop: '10px', borderTop: '1px solid #E2E8F0' }}>
-              <p style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#0F172A', margin: 0 }}>Officer action</p>
-              
+            {/* 3 Key Stats Row */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+              <div style={{
+                borderRadius: '8px',
+                border: '1px solid #E2E8F0',
+                padding: '10px 8px',
+                backgroundColor: '#FAFCFF',
+                textAlign: 'center'
+              }}>
+                <span style={{ fontSize: '10px', color: '#64748B', fontWeight: 600, textTransform: 'uppercase' }}>Risk Score</span>
+                <p style={{
+                  fontSize: '1.15rem',
+                  fontWeight: 800,
+                  color: selectedAccount.risk >= 75 ? '#DC2626' : '#0F172A',
+                  margin: '4px 0 0 0'
+                }}>
+                  {selectedAccount.risk}<span style={{ fontSize: '0.75rem', fontWeight: 500, color: '#94A3B8' }}>/100</span>
+                </p>
+              </div>
+
+              <div style={{
+                borderRadius: '8px',
+                border: '1px solid #E2E8F0',
+                padding: '10px 8px',
+                backgroundColor: '#FAFCFF',
+                textAlign: 'center'
+              }}>
+                <span style={{ fontSize: '10px', color: '#64748B', fontWeight: 600, textTransform: 'uppercase' }}>Money In</span>
+                <p style={{
+                  fontSize: '0.8125rem',
+                  fontWeight: 700,
+                  fontFamily: 'var(--font-mono)',
+                  color: '#0F172A',
+                  margin: '6px 0 0 0',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
+                }}>
+                  {selectedAccount.in_total}
+                </p>
+              </div>
+
+              <div style={{
+                borderRadius: '8px',
+                border: '1px solid #E2E8F0',
+                padding: '10px 8px',
+                backgroundColor: '#FAFCFF',
+                textAlign: 'center'
+              }}>
+                <span style={{ fontSize: '10px', color: '#64748B', fontWeight: 600, textTransform: 'uppercase' }}>Money Out</span>
+                <p style={{
+                  fontSize: '0.8125rem',
+                  fontWeight: 700,
+                  fontFamily: 'var(--font-mono)',
+                  color: '#0F172A',
+                  margin: '6px 0 0 0',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
+                }}>
+                  {selectedAccount.out_total}
+                </p>
+              </div>
+            </div>
+
+            {/* Why Flagged (Plain English, Minimal) */}
+            <div style={{
+              borderRadius: '8px',
+              backgroundColor: '#F8FAFC',
+              border: '1px solid #E2E8F0',
+              padding: '12px 14px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '11px', fontWeight: 700, color: '#0F172A', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  Why this account is flagged
+                </span>
+                <span style={{
+                  fontSize: '10px',
+                  fontWeight: 600,
+                  color: '#2563EB',
+                  backgroundColor: '#EFF6FF',
+                  padding: '2px 6px',
+                  borderRadius: '4px'
+                }}>
+                  {selectedAccount.role}
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {getPlainReasons(selectedAccount, accountProfile).map((reason, idx) => (
+                  <div key={idx} style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '6px',
+                    fontSize: '0.8rem',
+                    color: '#334155',
+                    lineHeight: 1.35
+                  }}>
+                    <span style={{ color: '#DC2626', fontWeight: 700, marginTop: '-1px' }}>•</span>
+                    <span>{reason}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingTop: '2px' }}>
               <button
                 onClick={() => onSelectVictim(selectedAccount.acct_no)}
                 style={{
@@ -743,7 +695,7 @@ export const AccountsTab: React.FC<AccountsTabProps> = ({ data, onSelectVictim }
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '8px',
-                  padding: '11px 16px',
+                  padding: '10px 14px',
                   borderRadius: '8px',
                   backgroundColor: '#2563EB',
                   color: '#FFFFFF',
@@ -751,45 +703,73 @@ export const AccountsTab: React.FC<AccountsTabProps> = ({ data, onSelectVictim }
                   fontWeight: 600,
                   cursor: 'pointer',
                   border: 'none',
-                  boxShadow: '0 1px 2px rgba(37,99,235,0.2)'
+                  boxShadow: '0 1px 2px rgba(37,99,235,0.2)',
+                  transition: 'background-color 0.15s'
                 }}
+                onMouseEnter={e => e.currentTarget.style.backgroundColor = '#1D4ED8'}
+                onMouseLeave={e => e.currentTarget.style.backgroundColor = '#2563EB'}
               >
-                <span>Trace Money Trail in Investigate</span>
+                <span>Trace Money Trail</span>
                 <ArrowRight size={14} />
               </button>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
                 <button
-                  onClick={() => setOfficerNote(`Marked ${selectedAccount.acct_no} as Confirmed Mule for Sec 106 freeze.`)}
+                  onClick={() => setOfficerNote(`Marked ${maskAcct(selectedAccount.acct_no)} as Confirmed Mule account.`)}
                   style={{
-                    padding: '8px',
+                    padding: '7px 10px',
                     borderRadius: '6px',
                     backgroundColor: '#EFF6FF',
                     border: '1px solid #DBEAFE',
                     color: '#1D4ED8',
                     fontSize: '0.75rem',
                     fontWeight: 600,
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    transition: 'all 0.15s'
                   }}
+                  onMouseEnter={e => e.currentTarget.style.backgroundColor = '#DBEAFE'}
+                  onMouseLeave={e => e.currentTarget.style.backgroundColor = '#EFF6FF'}
                 >
                   Confirm Mule
                 </button>
                 <button
-                  onClick={() => setOfficerNote(`Marked ${selectedAccount.acct_no} as Flagged for Case Diary review.`)}
+                  onClick={() => setOfficerNote(`Marked ${maskAcct(selectedAccount.acct_no)} for review.`)}
                   style={{
-                    padding: '8px',
+                    padding: '7px 10px',
                     borderRadius: '6px',
                     backgroundColor: '#F8FAFC',
                     border: '1px solid #E2E8F0',
                     color: '#64748B',
                     fontSize: '0.75rem',
                     fontWeight: 600,
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    transition: 'all 0.15s'
                   }}
+                  onMouseEnter={e => e.currentTarget.style.backgroundColor = '#F1F5F9'}
+                  onMouseLeave={e => e.currentTarget.style.backgroundColor = '#F8FAFC'}
                 >
-                  Flag Review
+                  Flag for Review
                 </button>
               </div>
+            </div>
+
+            {/* Reveal Full Account Checkbox */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              paddingTop: '6px',
+              borderTop: '1px solid #F1F5F9',
+              fontSize: '0.75rem',
+              color: '#64748B'
+            }}>
+              <span>Show full account number</span>
+              <input
+                type="checkbox"
+                checked={showMasked}
+                onChange={e => setShowMasked(e.target.checked)}
+                style={{ cursor: 'pointer', width: '15px', height: '15px' }}
+              />
             </div>
           </div>
         )}
