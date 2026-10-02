@@ -52,7 +52,7 @@ export const App: React.FC = () => {
   const totalRows = overviewData?.total_transactions || 2000000;
 
   return (
-    <div style={{
+    <div className="app-root" style={{
       fontFamily: 'var(--font-sans)',
       color: '#334155',
       height: '100vh',
@@ -65,7 +65,7 @@ export const App: React.FC = () => {
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
       {/* Right Column: Header on Top + Scrollable Main Content */}
-      <div style={{
+      <div className="app-main-column" style={{
         display: 'flex',
         flexDirection: 'column',
         flex: 1,
@@ -86,7 +86,7 @@ export const App: React.FC = () => {
         />
 
         {/* Main Content Area */}
-        <main style={{
+        <main className="app-content" style={{
           flex: 1,
           minWidth: 0,
           backgroundColor: '#F4F7FB',

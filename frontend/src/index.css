@@ -128,3 +128,82 @@ input, select, textarea {
 .animate-fade-in {
   animation: fadeIn 0.25s ease-out forwards;
 }
+
+/* ==========================================================================
+   Print Styles for Official Legal Reports & Requisitions
+   ========================================================================== */
+@media print {
+  /* Hide sidebar, header, navigation controls, and non-printable UI */
+  aside,
+  header,
+  nav,
+  .no-print,
+  .no-print * {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+  }
+
+  /* Reset layout constraints so document prints across pages */
+  html,
+  body,
+  #root,
+  .app-root,
+  .app-main-column,
+  .app-content,
+  main {
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    position: static !important;
+    display: block !important;
+    background: #FFFFFF !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  /* Target the printable legal document exclusively */
+  .printable-document-container {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #FFFFFF !important;
+    border: none !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    page-break-inside: auto;
+  }
+
+  .printable-document-content {
+    display: block !important;
+    font-family: 'JetBrains Mono', 'Courier New', Courier, monospace !important;
+    font-size: 10pt !important;
+    line-height: 1.45 !important;
+    color: #000000 !important;
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    page-break-inside: auto;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 15mm 15mm 15mm 15mm;
+  }
+}
+

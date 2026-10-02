@@ -30,7 +30,7 @@ const navItems = [
 
 export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
   return (
-    <aside style={{
+    <aside className="no-print" style={{
       width: '250px',
       minWidth: '250px',
       backgroundColor: 'var(--sidebar-bg, #F4EDE4)',

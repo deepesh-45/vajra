@@ -104,7 +104,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <>
-      <header style={{
+      <header className="no-print" style={{
         backgroundColor: '#FFFFFF',
         borderBottom: '1px solid #E2E8F0',
         display: 'flex',
