@@ -92,46 +92,60 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
   }, [edges]);
 
   // Single Direct Spine from Victim (Top) to Terminal Cashout (Bottom) for > 25 nodes
-  const initialSpineNodes = useMemo(() => {
-    if (!isLargeGraph || nodes.length === 0) return new Set<string>();
-
-    const spine = new Set<string>();
-    const roots = nodes.filter(n => n.hop === 0);
-    const rootAcct = roots.length > 0 ? roots[0].acct_no : nodes[0]?.acct_no;
-    if (!rootAcct) return spine;
-    spine.add(rootAcct);
-
-    // Group outgoing edges sorted descending by amount
-    const outEdges = new Map<string, EdgeData[]>();
-    edges.forEach(e => {
-      if (!outEdges.has(e.src_acct)) outEdges.set(e.src_acct, []);
-      outEdges.get(e.src_acct)!.push(e);
-    });
-    outEdges.forEach(list => list.sort((a, b) => b.amount_paise - a.amount_paise));
-
-    // Greedy highest-value trail down to cashout
-    let current = rootAcct;
-    const visited = new Set<string>([current]);
-
-    while (true) {
-      const outgoing = outEdges.get(current);
-      if (!outgoing || outgoing.length === 0) break;
-
-      const nextEdge = outgoing.find(e => !visited.has(e.dst_acct));
-      if (!nextEdge) break;
-
-      current = nextEdge.dst_acct;
-      visited.add(current);
-      spine.add(current);
-
-      const nodeObj = nodes.find(n => n.acct_no === current);
-      if (nodeObj && (nodeObj.hop >= 4 || nodeObj.held_paise > 0)) {
-        break; // reached cashout off-ramp
-      }
-      if (visited.size > 8) break;
+  const { spineOrderedNodes, initialSpineNodes } = useMemo(() => {
+    if (!isLargeGraph || nodes.length === 0) {
+      return { spineOrderedNodes: [] as NodeData[], initialSpineNodes: new Set<string>() };
     }
 
-    return spine;
+    const spineSet = new Set<string>();
+    const nodeMap = new Map<string, NodeData>();
+    nodes.forEach(n => nodeMap.set(n.acct_no, n));
+
+    const roots = nodes.filter(n => n.hop === 0);
+    const rootNode = roots.find(r => r.layer === 'Victim') || roots[0] || nodes[0];
+    if (!rootNode) return { spineOrderedNodes: [], initialSpineNodes: spineSet };
+
+    const spineList: NodeData[] = [rootNode];
+    spineSet.add(rootNode.acct_no);
+
+    const visited = new Set<string>([rootNode.acct_no]);
+    let currNode = rootNode;
+
+    for (let step = 0; step < 8; step++) {
+      const outgoing = (edges || [])
+        .filter(e => e.src_acct === currNode.acct_no && !visited.has(e.dst_acct))
+        .map(e => ({ edge: e, node: nodeMap.get(e.dst_acct) }))
+        .filter((x): x is { edge: EdgeData; node: NodeData } => Boolean(x.node && x.node.hop > currNode.hop))
+        .sort((a, b) => b.edge.amount_paise - a.edge.amount_paise);
+
+      if (outgoing.length === 0) {
+        // Fallback: any outgoing edge with highest amount
+        const anyOut = (edges || [])
+          .filter(e => e.src_acct === currNode.acct_no && !visited.has(e.dst_acct))
+          .map(e => ({ edge: e, node: nodeMap.get(e.dst_acct) }))
+          .filter((x): x is { edge: EdgeData; node: NodeData } => Boolean(x.node))
+          .sort((a, b) => b.edge.amount_paise - a.edge.amount_paise);
+
+        if (anyOut.length === 0) break;
+        const nextItem = anyOut[0];
+        visited.add(nextItem.node.acct_no);
+        spineSet.add(nextItem.node.acct_no);
+        spineList.push(nextItem.node);
+        currNode = nextItem.node;
+      } else {
+        const nextItem = outgoing[0];
+        visited.add(nextItem.node.acct_no);
+        spineSet.add(nextItem.node.acct_no);
+        spineList.push(nextItem.node);
+        currNode = nextItem.node;
+      }
+
+      if (currNode.hop >= 4 || currNode.layer?.toLowerCase().includes('terminal')) {
+        break;
+      }
+    }
+
+    return { spineOrderedNodes: spineList, initialSpineNodes: spineSet };
   }, [nodes, edges, isLargeGraph]);
 
   // Initialize expansion:
@@ -351,42 +365,129 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       };
     } else {
       // ----------------------------------------------------
-      // MODE B (> 25 nodes): Vertical Flow (Victim TOP, Cashout BOTTOM)
-      // Grows horizontally within each hop as nodes are expanded by user
+      // MODE B (> 25 nodes): Vertical Spine (Victim on Top, Cashout on Bottom)
+      // Any branch nodes expand horizontally to the RIGHT SIDE of their parent!
       // ----------------------------------------------------
-      const tierSpacingY = 165; // vertical distance between hops
-      const cardSpacingX = CARD_WIDTH + 28; // horizontal spacing between sibling cards
+      const spineList = spineOrderedNodes.length > 0 ? spineOrderedNodes : nodes.filter(n => initialSpineNodes.has(n.acct_no));
+      const spineAcctSet = new Set(spineList.map(s => s.acct_no));
+      const spineX = 260; // Horizontal anchor for the vertical spine
+      const cardW = CARD_WIDTH;
+      const cardH = CARD_HEIGHT;
+      const minTierGap = 190;
+      const slotH = cardH + 18; // 94px per row in branches
 
-      [0, 1, 2, 3, 4].forEach(hop => {
-        const group = hopGroups[hop];
-        if (!group || group.length === 0) return;
+      let currentSpineY = 120;
+      const stageBands: { name: string; desc: string; y: number; height: number; count: number }[] = [];
 
-        const count = group.length;
-        const tierWidth = count * cardSpacingX - 28;
-        const startX = 600 - tierWidth / 2; // centered horizontally around x=600
-        const y = 120 + hop * tierSpacingY;
+      spineList.forEach((spineNode, spineIdx) => {
+        const spineY = currentSpineY;
+        positions.set(spineNode.acct_no, { x: spineX, y: spineY, w: cardW, h: cardH });
 
-        group.forEach((node, idx) => {
-          const x = startX + idx * cardSpacingX;
-          positions.set(node.acct_no, { x, y, w: CARD_WIDTH, h: CARD_HEIGHT });
+        if (spineX < minX) minX = spineX;
+        if (spineX + cardW > maxX) maxX = spineX + cardW;
+        if (spineY < minY) minY = spineY;
+        if (spineY + cardH > maxY) maxY = spineY + cardH;
 
-          if (x < minX) minX = x;
-          if (x + CARD_WIDTH > maxX) maxX = x + CARD_WIDTH;
-          if (y < minY) minY = y;
-          if (y + CARD_HEIGHT > maxY) maxY = y + CARD_HEIGHT;
+        let tierMinY = spineY;
+        let tierMaxY = spineY + cardH;
+
+        // Collect all visible branch descendants for this spine tier
+        const nextSpineAcct = spineList[spineIdx + 1]?.acct_no;
+        interface BranchItem {
+          acct: string;
+          parentAcct: string;
+          depth: number;
+        }
+
+        const tierBranchNodes: BranchItem[] = [];
+        const queue: { acct: string; depth: number }[] = [];
+
+        if (expandedNodes.has(spineNode.acct_no)) {
+          const directKids = Array.from(childrenMap.get(spineNode.acct_no) || [])
+            .filter(c => c !== nextSpineAcct && osintNodes.some(n => n.acct_no === c));
+
+          directKids.forEach(kid => {
+            tierBranchNodes.push({ acct: kid, parentAcct: spineNode.acct_no, depth: 1 });
+            queue.push({ acct: kid, depth: 1 });
+          });
+        }
+
+        while (queue.length > 0) {
+          const curr = queue.shift()!;
+          if (expandedNodes.has(curr.acct)) {
+            const kids = Array.from(childrenMap.get(curr.acct) || [])
+              .filter(c => !spineAcctSet.has(c) && osintNodes.some(n => n.acct_no === c));
+
+            kids.forEach(kid => {
+              if (!tierBranchNodes.some(b => b.acct === kid)) {
+                tierBranchNodes.push({ acct: kid, parentAcct: curr.acct, depth: curr.depth + 1 });
+                queue.push({ acct: kid, depth: curr.depth + 1 });
+              }
+            });
+          }
+        }
+
+        // Layout tier branch nodes by depth level to the right
+        const maxDepth = tierBranchNodes.reduce((max, b) => Math.max(max, b.depth), 0);
+        for (let d = 1; d <= maxDepth; d++) {
+          const itemsAtDepth = tierBranchNodes.filter(b => b.depth === d);
+          const byParentAtDepth = new Map<string, string[]>();
+          itemsAtDepth.forEach(it => {
+            if (!byParentAtDepth.has(it.parentAcct)) byParentAtDepth.set(it.parentAcct, []);
+            byParentAtDepth.get(it.parentAcct)!.push(it.acct);
+          });
+
+          byParentAtDepth.forEach((kids, parentAcct) => {
+            const parentPos = positions.get(parentAcct) || { x: spineX, y: spineY, w: cardW, h: cardH };
+            const k = kids.length;
+
+            kids.forEach((childAcct, idx) => {
+              let childX: number;
+              let childY: number;
+
+              if (k <= 3) {
+                // Single column to the right, centered vertically around parent
+                childX = parentPos.x + cardW + 64;
+                const startY = parentPos.y - ((k - 1) * slotH) / 2;
+                childY = startY + idx * slotH;
+              } else {
+                // Multi-column grid (up to 3 rows per column) extending to the right
+                const subCol = Math.floor(idx / 3);
+                const subRow = idx % 3;
+                childX = parentPos.x + cardW + 64 + subCol * (cardW + 40);
+                childY = parentPos.y + (subRow - 1) * slotH;
+              }
+
+              positions.set(childAcct, { x: childX, y: childY, w: cardW, h: cardH });
+
+              if (childX < minX) minX = childX;
+              if (childX + cardW > maxX) maxX = childX + cardW;
+              if (childY < minY) minY = childY;
+              if (childY + cardH > maxY) maxY = childY + cardH;
+
+              if (childY < tierMinY) tierMinY = childY;
+              if (childY + cardH > tierMaxY) tierMaxY = childY + cardH;
+            });
+          });
+        }
+
+        stageBands.push({
+          name: spineIdx === 0 ? "STAGE 0: VICTIM ORIGIN (TOP)" : (spineIdx === spineList.length - 1 ? "STAGE 4: CASHOUT OFF-RAMPS (BOTTOM)" : stageMeta[spineNode.hop]?.name || `STAGE ${spineNode.hop}`),
+          desc: stageMeta[spineNode.hop]?.desc || "",
+          y: tierMinY - 14,
+          height: Math.max(110, tierMaxY - tierMinY + 28),
+          count: 1 + tierBranchNodes.length
         });
+
+        currentSpineY = Math.max(spineY + minTierGap, tierMaxY + 60);
       });
 
-      // Horizontal bands for stages in vertical mode
-      const stageBands = [0, 1, 2, 3, 4].map(hop => {
-        const y = 100 + hop * tierSpacingY;
-        return {
-          name: hop === 0 ? "STAGE 0: VICTIM ORIGIN (TOP)" : (hop === 4 ? "STAGE 4: CASHOUT OFF-RAMPS (BOTTOM)" : stageMeta[hop].name),
-          desc: stageMeta[hop].desc,
-          y,
-          height: 120,
-          count: hopGroups[hop]?.length || 0
-        };
+      // Fallback for any unplaced osintNodes
+      osintNodes.forEach(node => {
+        if (!positions.has(node.acct_no)) {
+          positions.set(node.acct_no, { x: spineX + cardW + 64, y: currentSpineY, w: cardW, h: cardH });
+          currentSpineY += slotH;
+        }
       });
 
       return {
@@ -396,7 +497,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         bounds: { minX, maxX, minY, maxY }
       };
     }
-  }, [osintNodes, isLargeGraph]);
+  }, [osintNodes, isLargeGraph, spineOrderedNodes, initialSpineNodes, expandedNodes, childrenMap]);
 
   // Fit View
   const fitToView = useCallback(() => {
@@ -533,18 +634,36 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         cp2x = dstX - cpDist;
         cp2y = dstY;
       } else {
-        // Vertical Mode: Source is bottom midpoint of parent, dest is top midpoint of child
-        srcX = p1.x + CARD_WIDTH / 2;
-        srcY = p1.y + CARD_HEIGHT;
-        dstX = p2.x + CARD_WIDTH / 2;
-        dstY = p2.y;
+        // Vertical Mode with Right-Branching:
+        // If child is to the right of parent, connect horizontally from right port to left port
+        const isHorizontalBranch = p2.x >= p1.x + CARD_WIDTH * 0.5;
 
-        const dy = dstY - srcY;
-        const cpDist = Math.max(25, dy * 0.45);
-        cp1x = srcX;
-        cp1y = srcY + cpDist;
-        cp2x = dstX;
-        cp2y = dstY - cpDist;
+        if (isHorizontalBranch) {
+          srcX = p1.x + CARD_WIDTH;
+          srcY = p1.y + CARD_HEIGHT / 2;
+          dstX = p2.x;
+          dstY = p2.y + CARD_HEIGHT / 2;
+
+          const dx = Math.max(20, dstX - srcX);
+          const cpDist = dx * 0.45;
+          cp1x = srcX + cpDist;
+          cp1y = srcY;
+          cp2x = dstX - cpDist;
+          cp2y = dstY;
+        } else {
+          // Vertical spine flow: bottom midpoint of parent to top midpoint of child
+          srcX = p1.x + CARD_WIDTH / 2;
+          srcY = p1.y + CARD_HEIGHT;
+          dstX = p2.x + CARD_WIDTH / 2;
+          dstY = p2.y;
+
+          const dy = Math.max(20, dstY - srcY);
+          const cpDist = dy * 0.45;
+          cp1x = srcX;
+          cp1y = srcY + cpDist;
+          cp2x = dstX;
+          cp2y = dstY - cpDist;
+        }
       }
 
       const isDirectlyFocused = focusedNodeConnections?.directEdgeIds.has(`${edge.src_acct}->${edge.dst_acct}`);
@@ -611,7 +730,6 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       const isExpanded = expandedNodes.has(node.acct_no);
       const allChildren = Array.from(childrenMap.get(node.acct_no) || []);
       const childCount = allChildren.length;
-      const unexpandedCount = allChildren.filter(c => !osintNodes.some(n => n.acct_no === c)).length;
 
       // Color Terminology Palette
       let theme = {
@@ -759,24 +877,28 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         ctx.fillText(`MOVED ${movedStr}`, x + 10, y + 65);
       }
 
-      // 4.7 OSINT Expand / Collapse Pill
+      // 4.7 Right Edge Expand/Collapse Toggle Button (+ / −)
       if (childCount > 0) {
-        const hasUnexpanded = unexpandedCount > 0;
-        const pillText = hasUnexpanded ? `⊕ SHOW ${unexpandedCount}` : (isExpanded ? '⊖ LESS' : `⊕ ${childCount}`);
-        const pillW = Math.max(54, ctx.measureText(pillText).width + 12);
-        const pillH = 16;
-        const pillX = x + w - pillW - 6;
-        const pillY = y + 57;
+        const btnRadius = 10;
+        const btnX = x + w;
+        const btnY = y + h / 2;
 
         ctx.save();
-        roundRect(ctx, pillX, pillY, pillW, pillH, 4);
-        ctx.fillStyle = hasUnexpanded ? '#2563EB' : (isExpanded ? '#E2E8F0' : theme.headerBg);
+        ctx.beginPath();
+        ctx.arc(btnX, btnY, btnRadius, 0, Math.PI * 2);
+        ctx.fillStyle = isExpanded ? '#334155' : '#2563EB';
         ctx.fill();
 
-        ctx.font = '700 8.5px Inter, sans-serif';
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.stroke();
+
+        // Draw + or − sign on right edge
+        ctx.font = '700 13px Inter, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillStyle = hasUnexpanded ? '#FFFFFF' : (isExpanded ? '#334155' : '#FFFFFF');
-        ctx.fillText(pillText, pillX + pillW / 2, pillY + pillH / 2 + 1);
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillText(isExpanded ? '−' : '+', btnX, btnY);
         ctx.restore();
       }
     });
@@ -785,7 +907,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
     ctx.restore();
   }, [osintNodes, osintEdges, nodePositions, pan, zoom, animTime, stageLanes, stageBands, bounds, focusedNodeConnections, edgeViewMode, expandedNodes, childrenMap, selectedNode, hoveredNode, isLargeGraph]);
 
-  // Click handler: Toggle expansion of children on node click or select node
+  // Click handler: Toggle expansion of children on node click or [+] button click
   const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -797,7 +919,10 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       const pos = nodePositions.get(node.acct_no);
       if (!pos) continue;
 
-      if (clickX >= pos.x && clickX <= pos.x + pos.w && clickY >= pos.y && clickY <= pos.y + pos.h) {
+      const isInsideCard = clickX >= pos.x && clickX <= pos.x + pos.w && clickY >= pos.y && clickY <= pos.y + pos.h;
+      const isNearPlusBtn = Math.hypot(clickX - (pos.x + pos.w), clickY - (pos.y + pos.h / 2)) <= 14;
+
+      if (isInsideCard || isNearPlusBtn) {
         // If node has children, toggle expansion
         const hasChildren = (childrenMap.get(node.acct_no)?.size || 0) > 0;
         if (hasChildren && isLargeGraph) {
@@ -851,9 +976,13 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       let found: NodeData | null = null;
       for (const node of osintNodes) {
         const pos = nodePositions.get(node.acct_no);
-        if (pos && mouseX >= pos.x && mouseX <= pos.x + pos.w && mouseY >= pos.y && mouseY <= pos.y + pos.h) {
-          found = node;
-          break;
+        if (pos) {
+          const isInsideCard = mouseX >= pos.x && mouseX <= pos.x + pos.w && mouseY >= pos.y && mouseY <= pos.y + pos.h;
+          const isNearPlusBtn = Math.hypot(mouseX - (pos.x + pos.w), mouseY - (pos.y + pos.h / 2)) <= 14;
+          if (isInsideCard || isNearPlusBtn) {
+            found = node;
+            break;
+          }
         }
       }
       setHoveredNode(found);
@@ -1217,7 +1346,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         color: '#475569',
         boxShadow: '0 2px 8px rgba(15, 23, 42, 0.06)'
       }}>
-        <span>💡 <strong>Click card / ⊕ SHOW</strong> to expand downstream branches · <strong>Drag</strong> to pan · <strong>Scroll</strong> to zoom</span>
+        <span>💡 <strong>Click [+] on right edge</strong> to expand branches to the right · <strong>Drag</strong> to pan · <strong>Scroll</strong> to zoom</span>
       </div>
     </div>
   );
