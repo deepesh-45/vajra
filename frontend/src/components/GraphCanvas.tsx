@@ -385,7 +385,8 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       const cardW = CARD_WIDTH;
       const cardH = CARD_HEIGHT;
       const slotH = cardH + 16;
-      const colWidth = cardW + 80;
+      const colGap = 480; // 6x previous 80px gap for spacious vertical layer separation
+      const colWidth = cardW + colGap; // 680px
 
       // 1. Layout Vertical Layer 0 (Spine from Victim on top down to Cashout on bottom)
       let currentSpineY = 120;
@@ -455,12 +456,12 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       const stageLanes = [];
       for (let L = 0; L <= maxLayer; L++) {
         const count = osintNodes.filter(n => (verticalLayerMap.get(n.acct_no) || 0) === L).length;
-        const colX = spineX + L * colWidth - 16;
+        const colX = spineX + L * colWidth - 24;
         stageLanes.push({
           name: L === 0 ? "PRIMARY SPINE (TOP ➔ CASHOUT)" : `VERTICAL LAYER ${L}`,
           desc: L === 0 ? "Single Direct Trail" : `Downstream Expansion ${L}`,
           x: colX,
-          width: cardW + 32,
+          width: cardW + 48,
           count
         });
       }
@@ -570,7 +571,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       let cp1x: number, cp1y: number, cp2x: number, cp2y: number;
 
       if (!isLargeGraph) {
-        // Horizontal Mode: Source is right midpoint, dest is left midpoint
+        // Horizontal Mode (<= 25 nodes): Source is right midpoint, dest is left midpoint
         srcX = p1.x + CARD_WIDTH;
         srcY = p1.y + CARD_HEIGHT / 2;
         dstX = p2.x;
@@ -583,33 +584,70 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         cp2x = dstX - cpDist;
         cp2y = dstY;
       } else {
-        // Vertical Mode with Vertical Layers (Columns):
-        if (p2.x > p1.x) {
-          // Connect horizontally from right port of parent to left port of child
-          srcX = p1.x + CARD_WIDTH;
-          srcY = p1.y + CARD_HEIGHT / 2;
-          dstX = p2.x;
-          dstY = p2.y + CARD_HEIGHT / 2;
+        // Vertical Mode with Vertical Layers (Columns) (> 25 nodes):
+        const srcLayer = verticalLayerMap.get(edge.src_acct) ?? 0;
+        const dstLayer = verticalLayerMap.get(edge.dst_acct) ?? 0;
+        const isDifferentLayers = srcLayer !== dstLayer || Math.abs(p1.x - p2.x) > 10;
 
-          const dx = Math.max(20, dstX - srcX);
-          const cpDist = dx * 0.45;
-          cp1x = srcX + cpDist;
-          cp1y = srcY;
-          cp2x = dstX - cpDist;
-          cp2y = dstY;
+        if (isDifferentLayers) {
+          // If two nodes belong to different layers:
+          // The connection MUST start or end from the center of the left or right edges of the box!
+          if (p2.x >= p1.x) {
+            // Forward connection: Right edge center of src -> Left edge center of dst
+            srcX = p1.x + CARD_WIDTH;
+            srcY = p1.y + CARD_HEIGHT / 2;
+            dstX = p2.x;
+            dstY = p2.y + CARD_HEIGHT / 2;
+
+            const dx = Math.max(40, dstX - srcX);
+            const cpDist = dx * 0.45;
+            cp1x = srcX + cpDist;
+            cp1y = srcY;
+            cp2x = dstX - cpDist;
+            cp2y = dstY;
+          } else {
+            // Backward connection: Left edge center of src -> Right edge center of dst
+            srcX = p1.x;
+            srcY = p1.y + CARD_HEIGHT / 2;
+            dstX = p2.x + CARD_WIDTH;
+            dstY = p2.y + CARD_HEIGHT / 2;
+
+            const dx = Math.max(40, srcX - dstX);
+            const cpDist = dx * 0.45;
+            cp1x = srcX - cpDist;
+            cp1y = srcY;
+            cp2x = dstX + cpDist;
+            cp2y = dstY;
+          }
         } else {
-          // Bottom midpoint of parent down to top midpoint of child (vertical spine)
-          srcX = p1.x + CARD_WIDTH / 2;
-          srcY = p1.y + CARD_HEIGHT;
-          dstX = p2.x + CARD_WIDTH / 2;
-          dstY = p2.y;
+          // Intra-layer connection (both nodes in the same vertical column/spine):
+          if (p2.y >= p1.y) {
+            // Downward flow in same column: Bottom edge center -> Top edge center
+            srcX = p1.x + CARD_WIDTH / 2;
+            srcY = p1.y + CARD_HEIGHT;
+            dstX = p2.x + CARD_WIDTH / 2;
+            dstY = p2.y;
 
-          const dy = Math.max(20, dstY - srcY);
-          const cpDist = dy * 0.45;
-          cp1x = srcX;
-          cp1y = srcY + cpDist;
-          cp2x = dstX;
-          cp2y = dstY - cpDist;
+            const dy = Math.max(20, dstY - srcY);
+            const cpDist = dy * 0.45;
+            cp1x = srcX;
+            cp1y = srcY + cpDist;
+            cp2x = dstX;
+            cp2y = dstY - cpDist;
+          } else {
+            // Upward flow in same column: Top edge center -> Bottom edge center
+            srcX = p1.x + CARD_WIDTH / 2;
+            srcY = p1.y;
+            dstX = p2.x + CARD_WIDTH / 2;
+            dstY = p2.y + CARD_HEIGHT;
+
+            const dy = Math.max(20, srcY - dstY);
+            const cpDist = dy * 0.45;
+            cp1x = srcX;
+            cp1y = srcY - cpDist;
+            cp2x = dstX;
+            cp2y = dstY + cpDist;
+          }
         }
       }
 
@@ -646,16 +684,27 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         ctx.fill();
       }
 
-      // Directional Arrow Head near destination
-      const arrowT = 0.88;
+      // Directional Arrow Head near destination port
+      const arrowT = 0.93;
       const au = 1 - arrowT;
       const ax = au * au * au * srcX + 3 * au * au * arrowT * cp1x + 3 * au * arrowT * arrowT * cp2x + arrowT * arrowT * arrowT * dstX;
       const ay = au * au * au * srcY + 3 * au * au * arrowT * cp1y + 3 * au * arrowT * arrowT * cp2y + arrowT * arrowT * arrowT * dstY;
 
-      ctx.fillStyle = isDirectlyFocused ? '#2563EB' : '#64748B';
+      // Tangent derivative along cubic Bezier to accurately align arrow head
+      const dxdt = 3 * au * au * (cp1x - srcX) + 6 * au * arrowT * (cp2x - cp1x) + 3 * arrowT * arrowT * (dstX - cp2x);
+      const dydt = 3 * au * au * (cp1y - srcY) + 6 * au * arrowT * (cp2y - cp1y) + 3 * arrowT * arrowT * (dstY - cp2y);
+      const angle = Math.atan2(dydt, dxdt);
+      const headLen = 6 / Math.sqrt(zoom);
+
+      ctx.save();
+      ctx.fillStyle = isDirectlyFocused ? '#2563EB' : (edge.amount_paise > 5000000 ? '#B45309' : '#64748B');
       ctx.beginPath();
-      ctx.arc(ax, ay, 2.5 / Math.sqrt(zoom), 0, Math.PI * 2);
+      ctx.moveTo(ax, ay);
+      ctx.lineTo(ax - headLen * Math.cos(angle - Math.PI / 6), ay - headLen * Math.sin(angle - Math.PI / 6));
+      ctx.lineTo(ax - headLen * Math.cos(angle + Math.PI / 6), ay - headLen * Math.sin(angle + Math.PI / 6));
+      ctx.closePath();
       ctx.fill();
+      ctx.restore();
     });
 
     // 4. Draw Large-Sized OSINT Entity Cards
