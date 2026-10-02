@@ -497,6 +497,62 @@ def trace(req: TraceRequest):
         raise HTTPException(status_code=404, detail=res["error"])
     return res
 
+@app.get("/api/accounts")
+def list_accounts(
+    tier: Optional[str] = None,
+    role: Optional[str] = None,
+    bank: Optional[str] = None,
+    search: Optional[str] = None,
+    min_risk: Optional[float] = None,
+    limit: int = 50,
+    offset: int = 0
+):
+    conn = get_db()
+    where_clauses = []
+    params = []
+    
+    if tier and tier.lower() != "all":
+        where_clauses.append("LOWER(tier) = LOWER(?)")
+        params.append(tier)
+    if role and role.lower() != "all":
+        where_clauses.append("LOWER(predicted_role) = LOWER(?)")
+        params.append(role)
+    if bank and bank.lower() != "all":
+        where_clauses.append("LOWER(primary_bank) = LOWER(?)")
+        params.append(bank)
+    if search:
+        where_clauses.append("acct_no ILIKE ?")
+        params.append(f"%{search.strip()}%")
+    if min_risk is not None:
+        where_clauses.append("risk_index >= ?")
+        params.append(min_risk)
+        
+    where_sql = f"WHERE {' AND '.join(where_clauses)}" if where_clauses else ""
+    
+    count_sql = f"SELECT count(*) FROM account_scores {where_sql};"
+    total_count = conn.execute(count_sql, params).fetchone()[0]
+    
+    query_sql = f"""
+        SELECT acct_no, primary_bank, risk_index, tier, predicted_role, score_velocity, score_topology, score_cashout,
+               COALESCE(isolation_anomaly_score, 0.0) AS isolation_anomaly_score,
+               COALESCE(anomaly_percentile, 0.0) AS anomaly_percentile,
+               COALESCE(is_anomaly, false) AS is_anomaly,
+               COALESCE(ml_prob, 0.0) AS ml_prob,
+               COALESCE(blended_score, risk_index) AS blended_score
+        FROM account_scores
+        {where_sql}
+        ORDER BY risk_index DESC, isolation_anomaly_score DESC
+        LIMIT ? OFFSET ?;
+    """
+    rows = conn.execute(query_sql, params + [limit, offset]).fetch_df().to_dict(orient="records")
+    
+    return {
+        "total": total_count,
+        "limit": limit,
+        "offset": offset,
+        "accounts": rows
+    }
+
 @app.get("/api/accounts/{acct_no}")
 def get_account_profile(acct_no: str):
     conn = get_db()

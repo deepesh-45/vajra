@@ -69,40 +69,68 @@ export const AccountsTab: React.FC<AccountsTabProps> = ({ data, onSelectVictim }
   const [officerNote, setOfficerNote] = useState<string | null>(null);
   const [accountProfile, setAccountProfile] = useState<AccountProfile | null>(null);
 
-  // Generate accounts list from live dataset top mules + sample victims
-  const defaultAccounts: AccountRow[] = React.useMemo(() => {
-    if (!data?.top_mules || data.top_mules.length === 0) {
-      return [
-        { acct_no: 'ICIC10005210', bank: 'ICICI Bank', ifsc: 'ICIC0005210', risk: 82, tier: 'High', role: 'Distributor', in_total: '₹24,20,000', out_total: '₹23,80,000', cluster: 'Cluster A-17', confidence: 94 },
-        { acct_no: 'SBIN10005001', bank: 'State Bank of India', ifsc: 'SBIN0005001', risk: 78, tier: 'High', role: 'Collector', in_total: '₹18,50,000', out_total: '₹18,10,000', cluster: 'Cluster A-17', confidence: 91 },
-        { acct_no: 'HDFC10004122', bank: 'HDFC Bank', ifsc: 'HDFC0004122', risk: 65, tier: 'Medium', role: 'Distributor', in_total: '₹12,40,000', out_total: '₹12,10,000', cluster: 'Cluster B-04', confidence: 88 },
-        { acct_no: 'AXIS10003411', bank: 'Axis Bank', ifsc: 'AXIS0003411', risk: 57, tier: 'Medium', role: 'Terminal Cash-Out', in_total: '₹7,60,000', out_total: '₹7,20,000', cluster: 'Cluster C-09', confidence: 85 },
-        { acct_no: 'PUNB10000052', bank: 'Punjab National Bank', ifsc: 'PUNB0000052', risk: 92, tier: 'Critical', role: 'Collector', in_total: '₹31,00,000', out_total: '₹30,50,000', cluster: 'Cluster A-17', confidence: 97 },
-        { acct_no: 'AIRP10000024', bank: 'Airtel Payments Bank', ifsc: 'AIRP0000024', risk: 29, tier: 'Low', role: 'Victim Account', in_total: '₹92,000', out_total: '₹86,000', cluster: 'Cluster E-11', confidence: 99 },
-        { acct_no: 'BARB10001928', bank: 'Bank of Baroda', ifsc: 'BARB0001928', risk: 79, tier: 'High', role: 'Cash-out', in_total: '₹11,20,000', out_total: '₹10,90,000', cluster: 'Cluster A-17', confidence: 92 },
-        { acct_no: 'KKBK10000812', bank: 'Kotak Mahindra Bank', ifsc: 'KKBK0000812', risk: 42, tier: 'Low', role: 'Regular Transfer', in_total: '₹3,20,000', out_total: '₹2,90,000', cluster: 'Cluster B-04', confidence: 82 },
-      ];
-    }
+  const [tierFilter, setTierFilter] = useState<string>('High');
+  const [bankFilter, setBankFilter] = useState<string>('All');
+  const [roleFilter, setRoleFilter] = useState<string>('All');
+  const [accountsList, setAccountsList] = useState<AccountRow[]>([]);
+  const [totalIndexedCount, setTotalIndexedCount] = useState<number>(426);
+  const [loadingAccounts, setLoadingAccounts] = useState<boolean>(false);
 
-    return data.top_mules.map((m, idx) => ({
-      acct_no: m.acct_no || `ACCT${10000000 + idx}`,
-      bank: m.primary_bank ? `${m.primary_bank} Bank` : 'Scheduled Commercial Bank',
-      ifsc: `${m.primary_bank || 'SBIN'}000${1000 + idx}`,
-      risk: Math.round(m.risk_index || 75),
-      tier: m.tier || 'High',
-      role: m.predicted_role ? m.predicted_role.charAt(0) + m.predicted_role.slice(1).toLowerCase() : 'Mule Node',
-      in_total: `₹${((m.risk_index || 70) * 32000).toLocaleString()}`,
-      out_total: `₹${((m.risk_index || 70) * 31500).toLocaleString()}`,
-      cluster: `Cluster ${(m.tier || 'A').charAt(0)}-0${(idx % 5) + 1}`,
-      confidence: Math.min(99, Math.round(85 + (idx % 12)))
-    }));
-  }, [data]);
-
+  // Fetch accounts from live /api/accounts endpoint
   useEffect(() => {
-    if (defaultAccounts.length > 0 && !selectedAccount) {
-      setSelectedAccount(defaultAccounts[0]);
-    }
-  }, [defaultAccounts, selectedAccount]);
+    setLoadingAccounts(true);
+    const params = new URLSearchParams();
+    if (tierFilter !== 'All') params.set('tier', tierFilter);
+    if (bankFilter !== 'All') params.set('bank', bankFilter);
+    if (roleFilter !== 'All') params.set('role', roleFilter);
+    if (searchQuery.trim()) params.set('search', searchQuery.trim());
+    params.set('limit', '100');
+
+    fetch(`/api/accounts?${params.toString()}`)
+      .then(res => res.json())
+      .then(data => {
+        setTotalIndexedCount(data.total || 0);
+        if (data.accounts && data.accounts.length > 0) {
+          const rows: AccountRow[] = data.accounts.map((m: any, idx: number) => ({
+            acct_no: m.acct_no,
+            bank: m.primary_bank ? `${m.primary_bank} Bank` : 'Commercial Bank',
+            ifsc: `${m.primary_bank || 'SBIN'}000${1000 + (idx % 900)}`,
+            risk: Math.round(m.risk_index || 75),
+            tier: m.tier || 'High',
+            role: m.predicted_role ? m.predicted_role.charAt(0) + m.predicted_role.slice(1).toLowerCase() : 'Mule Node',
+            in_total: `₹${((m.risk_index || 70) * 32000).toLocaleString()}`,
+            out_total: `₹${((m.risk_index || 70) * 31500).toLocaleString()}`,
+            cluster: `Cluster ${(m.tier || 'A').charAt(0)}-0${(idx % 5) + 1}`,
+            confidence: Math.min(99, Math.round(85 + (idx % 12)))
+          }));
+          setAccountsList(rows);
+          if (!selectedAccount && rows.length > 0) {
+            setSelectedAccount(rows[0]);
+          }
+        } else {
+          setAccountsList([]);
+        }
+      })
+      .catch(() => {
+        // Fallback to data.top_mules if offline
+        if (data?.top_mules) {
+          const rows: AccountRow[] = data.top_mules.map((m: any, idx: number) => ({
+            acct_no: m.acct_no,
+            bank: `${m.primary_bank || 'SBIN'} Bank`,
+            ifsc: `${m.primary_bank || 'SBIN'}000${1000 + idx}`,
+            risk: Math.round(m.risk_index || 75),
+            tier: m.tier || 'High',
+            role: m.predicted_role || 'Mule Node',
+            in_total: `₹${((m.risk_index || 70) * 32000).toLocaleString()}`,
+            out_total: `₹${((m.risk_index || 70) * 31500).toLocaleString()}`,
+            cluster: `Cluster A-0${(idx % 5) + 1}`,
+            confidence: 92
+          }));
+          setAccountsList(rows);
+        }
+      })
+      .finally(() => setLoadingAccounts(false));
+  }, [tierFilter, bankFilter, roleFilter, searchQuery]);
 
   // Fetch detailed account profile from API when an account is selected
   useEffect(() => {
@@ -117,15 +145,6 @@ export const AccountsTab: React.FC<AccountsTabProps> = ({ data, onSelectVictim }
       })
       .catch(() => setAccountProfile(null));
   }, [selectedAccount]);
-
-  const filteredAccounts = defaultAccounts.filter(a => {
-    const q = searchQuery.toLowerCase();
-    return a.acct_no.toLowerCase().includes(q) ||
-           a.bank.toLowerCase().includes(q) ||
-           a.ifsc.toLowerCase().includes(q) ||
-           a.role.toLowerCase().includes(q) ||
-           a.cluster.toLowerCase().includes(q);
-  });
 
   const maskAcct = (acc: string) => {
     if (showMasked) return acc;
@@ -170,38 +189,114 @@ export const AccountsTab: React.FC<AccountsTabProps> = ({ data, onSelectVictim }
           </p>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ position: 'relative', width: '320px' }}>
-            <Search size={16} color="#94A3B8" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+          {/* Tier Filter Pills */}
+          <div style={{ display: 'flex', gap: '3px', backgroundColor: '#F1F5F9', padding: '3px', borderRadius: '8px' }}>
+            {[
+              { id: 'High', label: 'High-Risk Mules (426)' },
+              { id: 'Medium', label: 'Medium Risk (17.3k)' },
+              { id: 'All', label: 'All Accounts (24.8k)' }
+            ].map(t => (
+              <button
+                key={t.id}
+                onClick={() => setTierFilter(t.id)}
+                style={{
+                  padding: '5px 10px',
+                  borderRadius: '6px',
+                  border: 'none',
+                  fontSize: '0.75rem',
+                  fontWeight: tierFilter === t.id ? 700 : 500,
+                  backgroundColor: tierFilter === t.id ? '#FFFFFF' : 'transparent',
+                  color: tierFilter === t.id ? (t.id === 'High' ? '#DC2626' : '#2563EB') : '#64748B',
+                  boxShadow: tierFilter === t.id ? '0 1px 2px rgba(0,0,0,0.08)' : 'none',
+                  cursor: 'pointer'
+                }}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Bank Filter Select */}
+          <select
+            value={bankFilter}
+            onChange={e => setBankFilter(e.target.value)}
+            style={{
+              padding: '7px 10px',
+              borderRadius: '8px',
+              border: '1px solid #CBD5E1',
+              backgroundColor: '#FFFFFF',
+              color: '#0F172A',
+              fontSize: '0.78rem',
+              fontWeight: 600,
+              cursor: 'pointer'
+            }}
+          >
+            <option value="All">All Banks</option>
+            <option value="AIRP">Airtel Payments Bank</option>
+            <option value="AXIS">Axis Bank</option>
+            <option value="BARB">Bank of Baroda</option>
+            <option value="HDFC">HDFC Bank</option>
+            <option value="ICIC">ICICI Bank</option>
+            <option value="IPOS">India Post Payments</option>
+            <option value="KKBK">Kotak Mahindra Bank</option>
+            <option value="PUNB">Punjab National Bank</option>
+            <option value="SBIN">State Bank of India</option>
+          </select>
+
+          {/* Role Filter Select */}
+          <select
+            value={roleFilter}
+            onChange={e => setRoleFilter(e.target.value)}
+            style={{
+              padding: '7px 10px',
+              borderRadius: '8px',
+              border: '1px solid #CBD5E1',
+              backgroundColor: '#FFFFFF',
+              color: '#0F172A',
+              fontSize: '0.78rem',
+              fontWeight: 600,
+              cursor: 'pointer'
+            }}
+          >
+            <option value="All">All Roles</option>
+            <option value="DISTRIBUTOR">Distributor (Fan-out)</option>
+            <option value="COLLECTOR">Collector (Mule)</option>
+            <option value="TERMINAL">Terminal (Cash-out)</option>
+          </select>
+
+          {/* Search Box */}
+          <div style={{ position: 'relative', width: '240px' }}>
+            <Search size={14} color="#94A3B8" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }} />
             <input
               type="text"
-              placeholder="Search account, bank or IFSC..."
+              placeholder="Filter account or IFSC..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               style={{
                 width: '100%',
-                padding: '9px 12px 9px 36px',
+                padding: '7px 10px 7px 30px',
                 borderRadius: '8px',
                 backgroundColor: '#FFFFFF',
-                border: '1px solid #E2E8F0',
+                border: '1px solid #CBD5E1',
                 color: '#0F172A',
-                fontSize: '0.875rem',
+                fontSize: '0.8125rem',
                 outline: 'none',
-                boxShadow: '0 1px 2px rgba(15,23,42,0.04)'
+                boxShadow: '0 1px 2px rgba(15,23,42,0.03)'
               }}
             />
           </div>
 
           <div style={{
-            padding: '8px 14px',
+            padding: '6px 12px',
             borderRadius: '8px',
             backgroundColor: '#EFF6FF',
             border: '1px solid #DBEAFE',
-            fontSize: '0.8125rem',
-            fontWeight: 600,
+            fontSize: '0.78rem',
+            fontWeight: 700,
             color: '#1D4ED8'
           }}>
-            {filteredAccounts.length} flagged for review
+            {loadingAccounts ? 'Loading...' : `${totalIndexedCount.toLocaleString()} Accounts Indexed`}
           </div>
         </div>
       </div>
@@ -296,7 +391,7 @@ export const AccountsTab: React.FC<AccountsTabProps> = ({ data, onSelectVictim }
                 </tr>
               </thead>
               <tbody>
-                {filteredAccounts.map((a, idx) => {
+                {accountsList.map((a, idx) => {
                   const isSelected = selectedAccount?.acct_no === a.acct_no;
                   const isHigh = a.tier === 'Critical' || a.tier === 'High';
                   const isMed = a.tier === 'Medium';
