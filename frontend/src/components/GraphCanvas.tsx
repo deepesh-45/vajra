@@ -14,6 +14,28 @@ interface GraphCanvasProps {
   onToggleClustering?: () => void;
   isolatedPathNodeIds?: Set<string> | null;
   layoutMode?: 'flow' | 'force';
+  onNavigateToLegal?: (victim: string) => void;
+  currentVictim?: string;
+  onSearchVictim?: (victim: string) => void;
+}
+
+// OSINT Entity Card Dimensions
+const CARD_WIDTH = 210;
+const CARD_HEIGHT = 76;
+const CARD_RADIUS = 8;
+
+function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, radius: number) {
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.lineTo(x + width - radius, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+  ctx.lineTo(x + width, y + height - radius);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+  ctx.lineTo(x + radius, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+  ctx.lineTo(x, y + radius);
+  ctx.quadraticCurveTo(x, y, x + radius, y);
+  ctx.closePath();
 }
 
 export const GraphCanvas: React.FC<GraphCanvasProps> = ({
@@ -25,25 +47,67 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
   minTimestamp: _minTimestamp = 0,
   timeMode = 'cumulative',
   activeMotif = 'all',
-  clustersCollapsed = true,
-  onToggleClustering,
+  clustersCollapsed: _clustersCollapsed = true,
+  onToggleClustering: _onToggleClustering,
   isolatedPathNodeIds = null,
-  layoutMode = 'flow'
+  layoutMode: _layoutMode = 'flow',
+  onNavigateToLegal,
+  currentVictim,
+  onSearchVictim
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
+  // Fullscreen by default when opening the graph page
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(true);
+  const [searchInput, setSearchInput] = useState<string>(currentVictim || '');
+
+  useEffect(() => {
+    if (currentVictim) setSearchInput(currentVictim);
+  }, [currentVictim]);
+
   // Pan & Zoom
   const [zoom, setZoom] = useState<number>(0.85);
-  const [pan, setPan] = useState<{ x: number; y: number }>({ x: 60, y: 50 });
+  const [pan, setPan] = useState<{ x: number; y: number }>({ x: 50, y: 70 });
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [dragStart, setDragStart] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [hoveredNode, setHoveredNode] = useState<NodeData | null>(null);
   const [animTime, setAnimTime] = useState<number>(0);
-  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [edgeViewMode, setEdgeViewMode] = useState<'focused' | 'all'>('focused');
 
-  // Animation frame loop for currency particles
+  // OSINT Dynamic Expansion State (Nodes expand on click to eliminate clutter)
+  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
+
+  // Adjacency maps for OSINT hierarchical expansion
+  const { childrenMap } = useMemo(() => {
+    const cMap = new Map<string, Set<string>>();
+    edges.forEach(e => {
+      if (!cMap.has(e.src_acct)) cMap.set(e.src_acct, new Set());
+      cMap.get(e.src_acct)!.add(e.dst_acct);
+    });
+    return { childrenMap: cMap };
+  }, [edges]);
+
+  // Initialize expansion: Roots (Victim) & Layer 1 expanded by default
+  useEffect(() => {
+    if (nodes.length === 0) return;
+    const initial = new Set<string>();
+
+    if (nodes.length <= 16) {
+      // Small graphs: expand all
+      nodes.forEach(n => initial.add(n.acct_no));
+    } else {
+      // Large graphs: expand victim and Layer 1 nodes so initial fraud flow is visible
+      nodes.forEach(n => {
+        if (n.hop <= 1) {
+          initial.add(n.acct_no);
+        }
+      });
+    }
+    setExpandedNodes(initial);
+  }, [nodes]);
+
+  // Animation loop for currency flow particles
   useEffect(() => {
     let animId: number;
     const animate = () => {
@@ -60,7 +124,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       const activeTag = (e.target as HTMLElement)?.tagName;
       if (['INPUT', 'TEXTAREA'].includes(activeTag)) return;
 
-      if (e.key === 'Escape' && isFullscreen) {
+      if (e.key === 'Escape') {
         setIsFullscreen(false);
       } else if (e.key === 'f' || e.key === 'F') {
         setIsFullscreen(prev => !prev);
@@ -68,9 +132,9 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isFullscreen]);
+  }, []);
 
-  // Window resize handler with initial mount sizing
+  // Window resize handler with DPR scaling
   useEffect(() => {
     const handleResize = () => {
       const canvas = canvasRef.current;
@@ -83,19 +147,17 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [isFullscreen]);
 
-  // Filter edges based on temporal slider, active motifs, and isolation
+  // Filter edges based on temporal slider & motifs
   const visibleEdges = useMemo(() => {
     return edges.filter(e => {
-      // 1. Time Filtering
       if (timeMode === 'cumulative') {
         if (e.ts_epoch > maxTimestamp) return false;
       } else {
         if (Math.abs(e.ts_epoch - maxTimestamp) > 14400) return false;
       }
 
-      // 2. Motif Filtering
       if (activeMotif === 'fan-out') {
         if (e.hop > 2 || (e.hop === 2 && e.amount_paise > 5000000)) return false;
       } else if (activeMotif === 'fan-in') {
@@ -104,7 +166,6 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         if (e.hop === 0) return false;
       }
 
-      // 3. Isolated Path Filtering
       if (isolatedPathNodeIds) {
         if (!isolatedPathNodeIds.has(e.src_acct) || !isolatedPathNodeIds.has(e.dst_acct)) {
           return false;
@@ -115,120 +176,54 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
     });
   }, [edges, maxTimestamp, timeMode, activeMotif, isolatedPathNodeIds]);
 
-  // Intelligent Supernode Clustering (Eliminates the 500-node hairball)
-  const { displayNodes, displayEdges, clusterMap } = useMemo(() => {
-    if (!clustersCollapsed) {
-      return {
-        displayNodes: nodes,
-        displayEdges: visibleEdges,
-        clusterMap: new Map<string, string>()
-      };
-    }
+  // OSINT Node Visibility Computation (Nodes expand on click, collapse to clean clutter)
+  const { osintNodes, osintEdges } = useMemo(() => {
+    const visibleAccts = new Set<string>();
 
-    const cMap = new Map<string, string>();
-    const hopNodeCounts: Record<number, number> = {};
-    nodes.forEach(n => {
-      hopNodeCounts[n.hop] = (hopNodeCounts[n.hop] || 0) + 1;
-    });
+    // 1. Always include root nodes (Victim / Hop 0)
+    const roots = nodes.filter(n => n.hop === 0);
+    roots.forEach(r => visibleAccts.add(r.acct_no));
 
-    const supernodes: NodeData[] = [];
-    const regularNodes: NodeData[] = [];
+    // 2. Breadth-First traversal: add children only if parent is expanded
+    const queue = roots.map(r => r.acct_no);
+    const visited = new Set<string>(queue);
 
-    // Group dense intermediate layering stages into structured regional/bank mule rings
-    [2, 3].forEach(hop => {
-      const hopNodes = nodes.filter(n => n.hop === hop);
-      if (hopNodes.length > 10) {
-        // Group by bank or sub-clusters of ~25 accounts to make multiple manageable clusters
-        const clusterSize = 25;
-        const numClusters = Math.ceil(hopNodes.length / clusterSize);
-
-        for (let c = 0; c < numClusters; c++) {
-          const slice = hopNodes.slice(c * clusterSize, (c + 1) * clusterSize);
-          const clusterId = `SUPERNODE_HOP${hop}_C${c + 1}`;
-          const primaryBank = slice[0]?.bank || 'Mule Ring';
-
-          const totalHeld = slice.reduce((sum, n) => sum + n.held_paise, 0);
-          const totalIn = slice.reduce((sum, n) => sum + n.taint_in_paise, 0);
-          const totalOut = slice.reduce((sum, n) => sum + n.taint_out_paise, 0);
-
-          const sn: NodeData = {
-            acct_id: 990000 + hop * 100 + c,
-            acct_no: clusterId,
-            bank: `${primaryBank} Ring #${c + 1}`,
-            ifsc: 'CLUSTER',
-            layer: hop === 2 ? 'L2 Layering Ring' : 'L3 Aggregator Pool',
-            hop,
-            taint_in_paise: totalIn,
-            taint_out_paise: totalOut,
-            held_paise: totalHeld,
-            first_seen_epoch: slice[0]?.first_seen_epoch || 0,
-            clusterId,
-            isSupernode: true,
-            subNodeCount: slice.length
-          };
-
-          supernodes.push(sn);
-          slice.forEach(n => cMap.set(n.acct_no, clusterId));
+    while (queue.length > 0) {
+      const curr = queue.shift()!;
+      if (expandedNodes.has(curr)) {
+        const children = childrenMap.get(curr);
+        if (children) {
+          children.forEach(childAcct => {
+            visibleAccts.add(childAcct);
+            if (!visited.has(childAcct)) {
+              visited.add(childAcct);
+              queue.push(childAcct);
+            }
+          });
         }
       }
-    });
+    }
 
-    nodes.forEach(n => {
-      if (!cMap.has(n.acct_no)) {
-        regularNodes.push(n);
-      }
-    });
-
-    const finalNodes = [...regularNodes, ...supernodes];
-    const routedEdges: EdgeData[] = [];
-    const edgeKeySet = new Set<string>();
-
-    visibleEdges.forEach(e => {
-      const src = cMap.get(e.src_acct) || e.src_acct;
-      const dst = cMap.get(e.dst_acct) || e.dst_acct;
-      if (src === dst) return; // Hide internal cluster loop churn
-
-      const key = `${src}->${dst}`;
-      if (!edgeKeySet.has(key)) {
-        edgeKeySet.add(key);
-        routedEdges.push({
-          ...e,
-          src_acct: src,
-          dst_acct: dst
-        });
-      }
-    });
+    // Filter nodes and edges
+    const filteredNodes = nodes.filter(n => visibleAccts.has(n.acct_no));
+    const filteredEdges = visibleEdges.filter(e => visibleAccts.has(e.src_acct) && visibleAccts.has(e.dst_acct));
 
     return {
-      displayNodes: finalNodes,
-      displayEdges: routedEdges,
-      clusterMap: cMap
+      osintNodes: filteredNodes.length > 0 ? filteredNodes : nodes,
+      osintEdges: filteredEdges
     };
-  }, [nodes, visibleEdges, clustersCollapsed]);
+  }, [nodes, visibleEdges, expandedNodes, childrenMap]);
 
-  // Compute active nodes reached
-  const activeNodeIds = useMemo(() => {
-    const ids = new Set<string>();
-    const victim = displayNodes.find(n => n.hop === 0);
-    if (victim) ids.add(victim.acct_no);
-
-    displayEdges.forEach(e => {
-      ids.add(e.src_acct);
-      ids.add(e.dst_acct);
-    });
-    return ids;
-  }, [displayNodes, displayEdges]);
-
-  // Compute nodes connected to the currently selected or hovered node (for clean focus routing)
+  // Focused connections when an account is selected or hovered
   const focusedNodeConnections = useMemo(() => {
     const activeTarget = selectedNode || hoveredNode;
     if (!activeTarget) return null;
 
-    const targetAcct = clusterMap.get(activeTarget.acct_no) || activeTarget.acct_no;
+    const targetAcct = activeTarget.acct_no;
     const connectedNodeIds = new Set<string>([targetAcct]);
     const directEdgeIds = new Set<string>();
 
-    displayEdges.forEach(e => {
+    osintEdges.forEach(e => {
       if (e.src_acct === targetAcct) {
         connectedNodeIds.add(e.dst_acct);
         directEdgeIds.add(`${e.src_acct}->${e.dst_acct}`);
@@ -239,378 +234,472 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
     });
 
     return { connectedNodeIds, directEdgeIds, targetAcct };
-  }, [selectedNode, hoveredNode, displayEdges, clusterMap]);
+  }, [selectedNode, hoveredNode, osintEdges]);
 
-  // Overlap-Free Dynamic Grid Layout Engine (Strict Collision Avoidance)
-  const { nodePositions, bounds, stageLanes } = useMemo(() => {
-    const positions = new Map<string, { x: number; y: number; r: number; bankCode: string }>();
+  // Overlap-Free OSINT Card Layout Engine (Horizontal Hierarchical DAG)
+  const { nodePositions, stageLanes, bounds } = useMemo(() => {
+    const positions = new Map<string, { x: number; y: number; w: number; h: number }>();
     const hopGroups: Record<number, NodeData[]> = { 0: [], 1: [], 2: [], 3: [], 4: [] };
 
-    displayNodes.forEach(n => {
+    osintNodes.forEach(n => {
       const hop = Math.min(4, Math.max(0, n.hop));
       if (!hopGroups[hop]) hopGroups[hop] = [];
       hopGroups[hop].push(n);
     });
 
     const stageMeta = [
-      { name: "STAGE 0: INFILTRATION", desc: "Victim Breach Source" },
-      { name: "STAGE 1: SMURF DISPATCH", desc: "Primary Splitter Hub" },
-      { name: "STAGE 2: LAYERING MULES", desc: "Layering & Churn Rings" },
-      { name: "STAGE 3: AGGREGATOR FUNNEL", desc: "Consolidation Accounts" },
-      { name: "STAGE 4: CASHOUT EXITS", desc: "Terminal Off-Ramps & ATMs" }
+      { name: "STAGE 0: VICTIM ORIGIN", desc: "Complainant Account" },
+      { name: "STAGE 1: COLLECTOR HUBS", desc: "Primary Inflow Splitting" },
+      { name: "STAGE 2: SMURFING DISPERSAL", desc: "Layering & Churn Rings" },
+      { name: "STAGE 3: AGGREGATION", desc: "Consolidation Funnels" },
+      { name: "STAGE 4: CASHOUT OFF-RAMPS", desc: "Terminal ATMs & P2P" }
     ];
 
-    // Compute generous stage lane dimensions based on node count
-    const laneConfigs: { subCols: number; colSpacing: number; laneWidth: number; startX: number }[] = [];
-    let cumulativeX = 80;
+    const laneConfigs: { subCols: number; laneWidth: number; startX: number }[] = [];
+    let cumulativeX = 60;
 
     [0, 1, 2, 3, 4].forEach(hop => {
       const count = hopGroups[hop]?.length || 0;
       let subCols = 1;
+      if (count > 24) subCols = 3;
+      else if (count > 8) subCols = 2;
 
-      if (count > 80) subCols = 5;
-      else if (count > 36) subCols = 4;
-      else if (count > 14) subCols = 3;
-      else if (count > 3) subCols = 2;
-
-      // Safe clearance: each column is spaced 140px apart horizontally
-      const colSpacing = subCols > 1 ? 140 : 0;
-      const laneWidth = Math.max(240, subCols * 140 + 80);
-
-      laneConfigs.push({
-        subCols,
-        colSpacing,
-        laneWidth,
-        startX: cumulativeX
-      });
-
-      // Space between lanes: 90px clear corridor for inter-stage conduit flow
-      cumulativeX += laneWidth + 90;
+      const laneWidth = subCols * CARD_WIDTH + (subCols - 1) * 24 + 60;
+      laneConfigs.push({ subCols, laneWidth, startX: cumulativeX });
+      cumulativeX += laneWidth + 110; // 110px clear inter-stage conduit
     });
 
+    const rowSpacing = CARD_HEIGHT + 24; // 100px vertical spacing between cards
     let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-    const rowSpacing = 72; // Safe vertical spacing: 72px (radius ~14px, clearance > 44px)
 
     [0, 1, 2, 3, 4].forEach(hop => {
       const group = hopGroups[hop];
       if (!group || group.length === 0) return;
-
       const conf = laneConfigs[hop];
 
       group.forEach((node, idx) => {
         const colIdx = idx % conf.subCols;
         const rowIdx = Math.floor(idx / conf.subCols);
+        const stagger = (colIdx % 2) * (rowSpacing * 0.45);
 
-        // Hexagonal stagger: alternate columns vertically by half a row
-        const stagger = (colIdx % 2) * (rowSpacing * 0.5);
+        const x = conf.startX + 28 + colIdx * (CARD_WIDTH + 24);
+        const y = 140 + rowIdx * rowSpacing + stagger;
 
-        const x = conf.startX + 50 + colIdx * (conf.subCols > 1 ? conf.colSpacing : 0);
-        const y = 130 + rowIdx * rowSpacing + stagger;
+        positions.set(node.acct_no, { x, y, w: CARD_WIDTH, h: CARD_HEIGHT });
 
-        // Radius
-        let r = 14;
-        if (node.isSupernode) r = 26;
-        else if (hop === 0) r = 18;
-        else if (node.held_paise > 10000000) r = 16;
-        else if (node.held_paise > 1000000) r = 15;
-        else r = 13;
-
-        const bankCode = node.isSupernode
-          ? `${node.subNodeCount}`
-          : (node.bank ? node.bank.slice(0, 2).toUpperCase() : 'AC');
-
-        positions.set(node.acct_no, { x, y, r, bankCode });
-      });
-
-      // Pairwise collision repulsion pass to ensure mathematical non-overlap
-      for (let pass = 0; pass < 6; pass++) {
-        for (let i = 0; i < group.length; i++) {
-          for (let j = i + 1; j < group.length; j++) {
-            const pA = positions.get(group[i].acct_no)!;
-            const pB = positions.get(group[j].acct_no)!;
-            const minDist = pA.r + pB.r + 32; // Strict 32px clear margin
-            const dx = pB.x - pA.x;
-            const dy = pB.y - pA.y;
-            const dist = Math.hypot(dx, dy);
-
-            if (dist < minDist && dist > 0.0001) {
-              const push = (minDist - dist) / 2;
-              const nx = dx / dist;
-              const ny = dy / dist;
-              pA.x -= nx * push;
-              pA.y -= ny * push;
-              pB.x += nx * push;
-              pB.y += ny * push;
-            }
-          }
-        }
-      }
-
-      // Record bounds
-      group.forEach(node => {
-        const p = positions.get(node.acct_no)!;
-        if (p.x < minX) minX = p.x;
-        if (p.x > maxX) maxX = p.x;
-        if (p.y < minY) minY = p.y;
-        if (p.y > maxY) maxY = p.y;
+        if (x < minX) minX = x;
+        if (x + CARD_WIDTH > maxX) maxX = x + CARD_WIDTH;
+        if (y < minY) minY = y;
+        if (y + CARD_HEIGHT > maxY) maxY = y + CARD_HEIGHT;
       });
     });
 
     const stageLanes = [0, 1, 2, 3, 4].map(hop => ({
       name: stageMeta[hop].name,
       desc: stageMeta[hop].desc,
-      x: laneConfigs[hop].startX - 20,
-      w: laneConfigs[hop].laneWidth
+      x: laneConfigs[hop].startX,
+      width: laneConfigs[hop].laneWidth,
+      count: hopGroups[hop]?.length || 0
     }));
 
     return {
       nodePositions: positions,
-      bounds: {
-        minX: isFinite(minX) ? minX : 0,
-        maxX: isFinite(maxX) ? maxX : 2000,
-        minY: isFinite(minY) ? minY : 0,
-        maxY: isFinite(maxY) ? maxY : 850
-      },
-      stageLanes
+      stageLanes,
+      bounds: { minX, maxX, minY, maxY }
     };
-  }, [displayNodes]);
+  }, [osintNodes]);
 
-  // Auto-fit function to center and frame all nodes
+  // Fit View
   const fitToView = useCallback(() => {
     const canvas = canvasRef.current;
-    if (!canvas || displayNodes.length === 0) return;
+    if (!canvas || !bounds || bounds.minX === Infinity) return;
     const rect = canvas.getBoundingClientRect();
-    const graphWidth = (bounds.maxX - bounds.minX) + 180;
-    const graphHeight = (bounds.maxY - bounds.minY) + 180;
+    const width = rect.width;
+    const height = rect.height;
 
-    const scaleX = rect.width / graphWidth;
-    const scaleY = rect.height / graphHeight;
-    const fitZoom = Math.max(0.18, Math.min(1.1, Math.min(scaleX, scaleY) * 0.92));
+    const graphW = bounds.maxX - bounds.minX + 80;
+    const graphH = bounds.maxY - bounds.minY + 80;
 
-    const centerX = (bounds.minX + bounds.maxX) / 2;
-    const centerY = (bounds.minY + bounds.maxY) / 2;
+    const scaleX = (width - 120) / Math.max(100, graphW);
+    const scaleY = (height - 180) / Math.max(100, graphH);
+    const newZoom = Math.min(1.4, Math.max(0.28, Math.min(scaleX, scaleY)));
 
-    setZoom(fitZoom);
+    setZoom(newZoom);
     setPan({
-      x: rect.width / 2 - centerX * fitZoom,
-      y: rect.height / 2 - centerY * fitZoom
+      x: (width - graphW * newZoom) / 2 - bounds.minX * newZoom + 40,
+      y: (height - graphH * newZoom) / 2 - bounds.minY * newZoom + 40
     });
-  }, [displayNodes.length, bounds]);
+  }, [bounds]);
 
+  // Initial fit to view on load
   useEffect(() => {
-    if (displayNodes.length > 0) {
-      const timer = setTimeout(fitToView, 60);
+    if (osintNodes.length > 0) {
+      const timer = setTimeout(fitToView, 120);
       return () => clearTimeout(timer);
     }
-  }, [displayNodes.length, clustersCollapsed, isFullscreen, fitToView]);
+  }, [osintNodes.length, isFullscreen, fitToView]);
 
-  // Main Canvas Rendering Engine
+  // Canvas Drawing Routine
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const dpr = window.devicePixelRatio || 1;
     const rect = canvas.getBoundingClientRect();
-    if (canvas.width !== Math.floor(rect.width * dpr) || canvas.height !== Math.floor(rect.height * dpr)) {
-      canvas.width = Math.floor(rect.width * dpr);
-      canvas.height = Math.floor(rect.height * dpr);
-    }
-    // Reset transform to DPR on each frame to prevent exponential scaling accumulation
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const dpr = window.devicePixelRatio || 1;
+    ctx.save();
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, rect.width, rect.height);
 
-    // Warm ivory background
+    // 1. Draw Subtle Architectural Background Grid
     ctx.fillStyle = '#FBF7F0';
     ctx.fillRect(0, 0, rect.width, rect.height);
+
+    // Grid dots
+    ctx.save();
+    ctx.fillStyle = 'rgba(210, 191, 168, 0.45)';
+    const gridSize = 32 * zoom;
+    const offsetX = pan.x % gridSize;
+    const offsetY = pan.y % gridSize;
+    for (let x = offsetX; x < rect.width; x += gridSize) {
+      for (let y = offsetY; y < rect.height; y += gridSize) {
+        ctx.fillRect(x, y, 1.2, 1.2);
+      }
+    }
+    ctx.restore();
 
     ctx.save();
     ctx.translate(pan.x, pan.y);
     ctx.scale(zoom, zoom);
 
-    // 1. Draw Architectural Layer Stage Bands (Sugiyama DAG Lanes)
-    if (layoutMode === 'flow') {
-      const bandHeight = Math.max(720, (bounds.maxY - bounds.minY) + 180);
+    // 2. Draw Stage Corridor Backgrounds
+    stageLanes.forEach(lane => {
+      const laneH = Math.max(700, (bounds.maxY - bounds.minY) + 260);
+      ctx.fillStyle = 'rgba(245, 238, 229, 0.55)';
+      roundRect(ctx, lane.x, 80, lane.width, laneH, 10);
+      ctx.fill();
+      ctx.strokeStyle = '#E8D8C3';
+      ctx.lineWidth = 1;
+      ctx.stroke();
 
-      stageLanes.forEach(lane => {
-        ctx.fillStyle = '#F5EEE5';
-        ctx.strokeStyle = '#E8D8C3';
-        ctx.lineWidth = 1 / zoom;
-        ctx.beginPath();
-        if (ctx.roundRect) {
-          ctx.roundRect(lane.x, 35, lane.w, bandHeight, 10);
-        } else {
-          ctx.rect(lane.x, 35, lane.w, bandHeight);
-        }
-        ctx.fill();
-        ctx.stroke();
+      // Lane Header Title
+      ctx.fillStyle = '#34271E';
+      ctx.font = '700 11.5px Inter, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(lane.name, lane.x + 16, 106);
 
-        ctx.fillStyle = '#34271E';
-        ctx.font = '700 11px JetBrains Mono, monospace';
-        ctx.textAlign = 'left';
-        ctx.fillText(lane.name, lane.x + 16, 58);
+      ctx.fillStyle = '#8C7764';
+      ctx.font = '500 9.5px Inter, sans-serif';
+      ctx.fillText(`${lane.desc} (${lane.count} visible)`, lane.x + 16, 122);
+    });
 
-        ctx.fillStyle = '#8C7764';
-        ctx.font = '500 10px Inter, sans-serif';
-        ctx.fillText(lane.desc, lane.x + 16, 75);
-      });
-    }
+    const isFocusActive = !!focusedNodeConnections;
 
-    // 2. Intelligent Edge Rendering (Eliminates the Black/Red Hairball Wall)
-    const isFocusActive = focusedNodeConnections !== null;
-
-    displayEdges.forEach((edge, edgeIdx) => {
+    // 3. Draw Directed Curvature Bezier Edges between Card Ports
+    osintEdges.forEach(edge => {
       const p1 = nodePositions.get(edge.src_acct);
       const p2 = nodePositions.get(edge.dst_acct);
       if (!p1 || !p2) return;
 
-      const edgeKey = `${edge.src_acct}->${edge.dst_acct}`;
-      const isDirectlyFocused = isFocusActive && focusedNodeConnections.directEdgeIds.has(edgeKey);
-      const isTainted = edge.taint_paise > 0;
+      // Source port: Right edge midpoint of parent card
+      const srcX = p1.x + CARD_WIDTH;
+      const srcY = p1.y + CARD_HEIGHT / 2;
 
-      // In 'focused' mode when a node is hovered/selected, dim irrelevant edges to 8% opacity!
-      if (edgeViewMode === 'focused' && isFocusActive && !isDirectlyFocused) {
-        ctx.strokeStyle = 'rgba(211, 226, 211, 0.25)';
-        ctx.lineWidth = 0.8 / Math.sqrt(zoom);
-      } else if (isDirectlyFocused) {
-        // High-contrast illuminated focused path (monochromatic sage/terracotta-rose)
-        ctx.strokeStyle = isTainted ? '#7D4747' : '#2B583E';
-        ctx.lineWidth = 3.5 / Math.sqrt(zoom);
-      } else if (isTainted) {
-        // Normal tainted path
-        ctx.strokeStyle = isFocusActive ? 'rgba(125, 71, 71, 0.2)' : 'rgba(125, 71, 71, 0.7)';
-        ctx.lineWidth = Math.min(3.5, Math.max(1.2, Math.log10(Math.max(10, edge.amount_paise / 1000)))) / Math.sqrt(zoom);
-      } else {
-        // Neutral background flow
-        ctx.strokeStyle = 'rgba(186, 205, 186, 0.35)';
-        ctx.lineWidth = 1 / Math.sqrt(zoom);
-      }
+      // Destination port: Left edge midpoint of child card
+      const dstX = p2.x;
+      const dstY = p2.y + CARD_HEIGHT / 2;
 
+      const isDirectlyFocused = focusedNodeConnections?.directEdgeIds.has(`${edge.src_acct}->${edge.dst_acct}`);
+      const isDimmed = isFocusActive && !isDirectlyFocused && edgeViewMode === 'focused';
+
+      const dx = dstX - srcX;
+      const cpDist = Math.max(30, dx * 0.45);
+      const cp1x = srcX + cpDist;
+      const cp1y = srcY;
+      const cp2x = dstX - cpDist;
+      const cp2y = dstY;
+
+      // Draw Base Flow Curve
       ctx.beginPath();
-      // Smooth horizontal Cubic Bezier curve
-      const dx = (p2.x - p1.x) * 0.5;
-      ctx.moveTo(p1.x, p1.y);
-      ctx.bezierCurveTo(p1.x + dx, p1.y, p2.x - dx, p2.y, p2.x, p2.y);
+      ctx.moveTo(srcX, srcY);
+      ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, dstX, dstY);
+
+      if (isDirectlyFocused) {
+        ctx.strokeStyle = '#2563EB';
+        ctx.lineWidth = 3.5 / Math.sqrt(zoom);
+      } else if (isDimmed) {
+        ctx.strokeStyle = 'rgba(210, 191, 168, 0.25)';
+        ctx.lineWidth = 1 / Math.sqrt(zoom);
+      } else {
+        ctx.strokeStyle = edge.amount_paise > 5000000 ? '#B45309' : '#8C7764';
+        ctx.lineWidth = Math.min(3.5, Math.max(1.5, Math.log10(edge.amount_paise / 10000 + 1))) / Math.sqrt(zoom);
+      }
       ctx.stroke();
 
-      // Fluid Currency Particles (Render on focused path or primary flows)
-      const renderParticle = isDirectlyFocused || (!isFocusActive && isTainted && (edgeIdx % 3 === 0 || edge.taint_paise > 5000000));
-      if (renderParticle) {
-        const t = (animTime + ((edgeIdx * 19) % 100) / 100) % 1.0;
+      // Streaming Animated Currency Particle
+      if (!isDimmed) {
+        const t = (animTime + (edge.hop * 0.2)) % 1.0;
         const u = 1 - t;
-        const tt = t * t;
-        const uu = u * u;
-        const cp1x = p1.x + dx;
-        const cp2x = p2.x - dx;
-        const px = uu * u * p1.x + 3 * uu * t * cp1x + 3 * u * tt * cp2x + tt * t * p2.x;
-        const py = uu * u * p1.y + 3 * uu * t * p1.y + 3 * u * tt * p2.y + tt * t * p2.y;
+        const px = u * u * u * srcX + 3 * u * u * t * cp1x + 3 * u * t * t * cp2x + t * t * t * dstX;
+        const py = u * u * u * srcY + 3 * u * u * t * cp1y + 3 * u * t * t * cp2y + t * t * t * dstY;
 
-        ctx.fillStyle = isDirectlyFocused ? '#2B583E' : '#7D4747';
+        ctx.fillStyle = isDirectlyFocused ? '#2563EB' : '#D97706';
         ctx.beginPath();
-        ctx.arc(px, py, (isDirectlyFocused ? 4 : 2.5) / Math.sqrt(zoom), 0, Math.PI * 2);
+        ctx.arc(px, py, (isDirectlyFocused ? 4.5 : 3.0) / Math.sqrt(zoom), 0, Math.PI * 2);
         ctx.fill();
       }
 
-      // Small directional indicator arrow on focused edges
-      if (isDirectlyFocused || (!isFocusActive && edge.amount_paise > 2000000)) {
-        const arrowT = 0.65;
-        const u = 1 - arrowT;
-        const cp1x = p1.x + dx;
-        const cp2x = p2.x - dx;
-        const ax = u * u * u * p1.x + 3 * u * u * arrowT * cp1x + 3 * u * arrowT * arrowT * cp2x + arrowT * arrowT * arrowT * p2.x;
-        const ay = u * u * u * p1.y + 3 * u * u * arrowT * p1.y + 3 * u * arrowT * arrowT * p2.y + arrowT * arrowT * arrowT * p2.y;
+      // Directional Arrow Head near destination
+      const arrowT = 0.88;
+      const au = 1 - arrowT;
+      const ax = au * au * au * srcX + 3 * au * au * arrowT * cp1x + 3 * au * arrowT * arrowT * cp2x + arrowT * arrowT * arrowT * dstX;
+      const ay = au * au * au * srcY + 3 * au * au * arrowT * cp1y + 3 * au * arrowT * arrowT * cp2y + arrowT * arrowT * arrowT * dstY;
 
-        ctx.fillStyle = isDirectlyFocused ? '#2B583E' : '#779380';
-        ctx.beginPath();
-        ctx.arc(ax, ay, 2.5 / Math.sqrt(zoom), 0, Math.PI * 2);
-        ctx.fill();
-      }
+      ctx.fillStyle = isDirectlyFocused ? '#2563EB' : '#8C7764';
+      ctx.beginPath();
+      ctx.arc(ax, ay, 2.5 / Math.sqrt(zoom), 0, Math.PI * 2);
+      ctx.fill();
     });
 
-    // 3. Draw Clean Overlap-Free Nodes
-    displayNodes.forEach(node => {
+    // 4. Draw Large-Sized OSINT Entity Cards
+    osintNodes.forEach(node => {
       const pos = nodePositions.get(node.acct_no);
       if (!pos) return;
 
-      // Viewport culling
       const screenX = pos.x * zoom + pan.x;
       const screenY = pos.y * zoom + pan.y;
-      if (screenX < -90 || screenX > rect.width + 90 || screenY < -90 || screenY > rect.height + 90) {
-        return;
+      if (screenX < -260 || screenX > rect.width + 260 || screenY < -120 || screenY > rect.height + 120) {
+        return; // Viewport Culling
       }
 
-      const isTarget = focusedNodeConnections?.targetAcct === node.acct_no;
+      const isTarget = selectedNode?.acct_no === node.acct_no;
+      const isHovered = hoveredNode?.acct_no === node.acct_no;
       const isConnected = isFocusActive && focusedNodeConnections.connectedNodeIds.has(node.acct_no);
       const isDimmed = isFocusActive && !isConnected && edgeViewMode === 'focused';
 
-      // Monochromatic Pastel Node Progression
-      let baseColor = '#2B583E'; // L1 Deep Sage
-      if (node.isSupernode) baseColor = '#2B583E'; // Supernode
-      else if (node.hop === 0) baseColor = '#547361'; // Victim (Misty Sage)
-      else if (node.hop === 1) baseColor = '#2A5A40'; // L1 Smurfing Dispatch (Pastel Deep Mint)
-      else if (node.hop === 2) baseColor = '#3E6D52'; // L2 Layering Mule (Pastel Laurel)
-      else if (node.hop === 3) baseColor = '#59836B'; // L3 Aggregator (Pastel Celadon)
-      else baseColor = '#203A2B'; // L4 Cashout Exit (Pastel Forest Slate)
+      const isExpanded = expandedNodes.has(node.acct_no);
+      const childCount = childrenMap.get(node.acct_no)?.size || 0;
 
-      // Supernode Outer Dashed Ring
+      // Color Terminology Palette based on OSINT Investigative Standards
+      let theme = {
+        border: '#2563EB',
+        headerBg: '#1E40AF',
+        bodyBg: '#EFF6FF',
+        badgeText: 'VICTIM COMPLAINANT'
+      };
+
       if (node.isSupernode) {
+        theme = {
+          border: '#059669',
+          headerBg: '#065F46',
+          bodyBg: '#ECFDF5',
+          badgeText: `SYNDICATE CLUSTER (${node.subNodeCount})`
+        };
+      } else if (node.hop === 0) {
+        theme = {
+          border: '#2563EB',
+          headerBg: '#1E40AF',
+          bodyBg: '#EFF6FF',
+          badgeText: 'VICTIM COMPLAINANT'
+        };
+      } else if (node.hop === 1) {
+        theme = {
+          border: '#D97706',
+          headerBg: '#B45309',
+          bodyBg: '#FFFBEB',
+          badgeText: 'L1 COLLECTOR MULE'
+        };
+      } else if (node.hop === 2) {
+        theme = {
+          border: '#7C3AED',
+          headerBg: '#6D28D9',
+          bodyBg: '#F5F3FF',
+          badgeText: 'L2 SMURFING SPLITTER'
+        };
+      } else if (node.hop === 3) {
+        theme = {
+          border: '#DC2626',
+          headerBg: '#991B1B',
+          bodyBg: '#FEF2F2',
+          badgeText: 'L3 TERMINAL MULE'
+        };
+      } else {
+        theme = {
+          border: '#374151',
+          headerBg: '#1F2937',
+          bodyBg: '#F3F4F6',
+          badgeText: 'DRAINAGE CASHOUT'
+        };
+      }
+
+      const { x, y, w, h } = pos;
+
+      // 4.1 Focus Glow / Drop Shadow
+      if (isTarget) {
         ctx.save();
-        ctx.setLineDash([4, 4]);
-        ctx.strokeStyle = isDimmed ? 'rgba(70, 116, 85, 0.3)' : '#467455';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(pos.x, pos.y, pos.r + 7, 0, Math.PI * 2);
+        ctx.shadowColor = 'rgba(37, 99, 235, 0.45)';
+        ctx.shadowBlur = 14;
+        ctx.strokeStyle = '#1D4ED8';
+        ctx.lineWidth = 3;
+        roundRect(ctx, x - 3, y - 3, w + 6, h + 6, CARD_RADIUS + 2);
         ctx.stroke();
+        ctx.restore();
+      } else if (isHovered) {
+        ctx.save();
+        ctx.shadowColor = 'rgba(52, 39, 30, 0.25)';
+        ctx.shadowBlur = 10;
         ctx.restore();
       }
 
-      // Outer focus halo
-      if (isTarget) {
-        ctx.beginPath();
-        ctx.arc(pos.x, pos.y, pos.r + 8, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(43, 88, 62, 0.25)';
-        ctx.fill();
+      // 4.2 Card Body Background
+      ctx.save();
+      roundRect(ctx, x, y, w, h, CARD_RADIUS);
+      ctx.fillStyle = isDimmed ? '#F3F4F6' : theme.bodyBg;
+      ctx.fill();
+      ctx.strokeStyle = isDimmed ? '#D1D5DB' : theme.border;
+      ctx.lineWidth = (isTarget || isHovered) ? 2.5 : 1.5;
+      if (node.isSupernode) ctx.setLineDash([5, 3]);
+      ctx.stroke();
+      ctx.restore();
+
+      // 4.3 Card Header Strip (21px high)
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(x + CARD_RADIUS, y);
+      ctx.lineTo(x + w - CARD_RADIUS, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + CARD_RADIUS);
+      ctx.lineTo(x + w, y + 21);
+      ctx.lineTo(x, y + 21);
+      ctx.lineTo(x, y + CARD_RADIUS);
+      ctx.quadraticCurveTo(x, y, x + CARD_RADIUS, y);
+      ctx.closePath();
+      ctx.fillStyle = isDimmed ? '#9CA3AF' : theme.headerBg;
+      ctx.fill();
+      ctx.restore();
+
+      // Header Left: Bank Tag
+      const bankTag = node.isSupernode ? 'CLUSTER' : (node.bank || 'BANK').slice(0, 5).toUpperCase();
+      ctx.font = '700 9px JetBrains Mono, monospace';
+      ctx.fillStyle = '#FFFFFF';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(`[${bankTag}]`, x + 8, y + 11);
+
+      // Header Right: Role Tag
+      ctx.font = '700 8.5px Inter, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+      ctx.fillText(theme.badgeText, x + w - 8, y + 11);
+
+      // 4.4 Card Body (Account Number & Subtitle)
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      ctx.font = '700 12.5px JetBrains Mono, monospace';
+      ctx.fillStyle = isDimmed ? '#9CA3AF' : '#111827';
+      const labelText = node.isSupernode ? node.bank : node.acct_no;
+      ctx.fillText(labelText, x + 10, y + 28);
+
+      ctx.font = '500 9px Inter, sans-serif';
+      ctx.fillStyle = isDimmed ? '#9CA3AF' : '#4B5563';
+      const ifscText = node.isSupernode ? `${node.subNodeCount} Mules Grouped` : `${node.ifsc || 'Branch Account'}`;
+      ctx.fillText(ifscText, x + 10, y + 43);
+
+      // 4.5 Divider
+      ctx.beginPath();
+      ctx.moveTo(x, y + 55);
+      ctx.lineTo(x + w, y + 55);
+      ctx.strokeStyle = isDimmed ? '#E5E7EB' : 'rgba(0, 0, 0, 0.08)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // 4.6 Card Footer: Financial Lien Status
+      ctx.textBaseline = 'middle';
+      if (node.held_paise > 0) {
+        ctx.font = '700 9px Inter, sans-serif';
+        ctx.fillStyle = isDimmed ? '#9CA3AF' : '#059669';
+        const heldStr = `₹${(node.held_paise / 100).toLocaleString('en-IN')}`;
+        ctx.fillText(`🔒 ${heldStr} HELD`, x + 10, y + 65);
+      } else {
+        ctx.font = '500 8.5px Inter, sans-serif';
+        ctx.fillStyle = isDimmed ? '#9CA3AF' : '#6B7280';
+        const movedStr = `₹${(node.taint_in_paise / 100).toLocaleString('en-IN')}`;
+        ctx.fillText(`MOVED ${movedStr}`, x + 10, y + 65);
       }
 
-      // Outer Taint/Hold Ring
-      ctx.beginPath();
-      ctx.arc(pos.x, pos.y, pos.r + 2, 0, Math.PI * 2);
-      ctx.strokeStyle = isDimmed
-        ? 'rgba(186, 205, 186, 0.3)'
-        : (node.held_paise > 0 ? '#286641' : '#BACDBA');
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
+      // 4.7 OSINT Expand / Collapse Pill
+      if (childCount > 0) {
+        const pillW = isExpanded ? 36 : 56;
+        const pillH = 15;
+        const pillX = x + w - pillW - 6;
+        const pillY = y + 58;
 
-      // Main Node Circle
-      ctx.beginPath();
-      ctx.arc(pos.x, pos.y, pos.r, 0, Math.PI * 2);
-      ctx.fillStyle = isDimmed ? 'rgba(226, 236, 226, 0.5)' : baseColor;
-      ctx.fill();
-      ctx.lineWidth = isTarget ? 3 : 1.5;
-      ctx.strokeStyle = isTarget ? '#142419' : '#FFFFFF';
-      ctx.stroke();
+        ctx.save();
+        roundRect(ctx, pillX, pillY, pillW, pillH, 4);
+        ctx.fillStyle = isExpanded ? '#E5E7EB' : theme.headerBg;
+        ctx.fill();
 
-      // Center Bank Initial / Supernode Count (Clean, No Clutter!)
-      ctx.font = node.isSupernode ? '700 11px JetBrains Mono, monospace' : '700 9px JetBrains Mono, monospace';
-      ctx.fillStyle = isDimmed ? 'rgba(255, 255, 255, 0.5)' : '#FFFFFF';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(pos.bankCode, pos.x, pos.y);
-
-      // Elevated Account Label (Shown when selected, hovered, or supernode)
-      if (isTarget || node.isSupernode) {
-        ctx.textBaseline = 'alphabetic';
-        ctx.font = node.isSupernode ? '700 11px Inter, sans-serif' : '700 10.5px JetBrains Mono, monospace';
-        ctx.fillStyle = '#142419';
+        ctx.font = '700 8.5px Inter, sans-serif';
         ctx.textAlign = 'center';
-
-        const labelText = node.isSupernode ? node.bank : node.acct_no;
-        ctx.fillText(labelText, pos.x, pos.y + pos.r + 14);
+        ctx.fillStyle = isExpanded ? '#374151' : '#FFFFFF';
+        ctx.fillText(isExpanded ? '⊖ LESS' : `⊕ ${childCount} MORE`, pillX + pillW / 2, pillY + pillH / 2 + 1);
+        ctx.restore();
       }
     });
 
     ctx.restore();
-  }, [displayNodes, displayEdges, activeNodeIds, nodePositions, pan, zoom, animTime, clustersCollapsed, layoutMode, stageLanes, bounds, focusedNodeConnections, edgeViewMode]);
+    ctx.restore();
+  }, [osintNodes, osintEdges, nodePositions, pan, zoom, animTime, stageLanes, bounds, focusedNodeConnections, edgeViewMode, expandedNodes, childrenMap, selectedNode, hoveredNode]);
+
+  // Click handler: Expand / Collapse OSINT subtrees or Select Node
+  const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const clickX = (e.clientX - rect.left - pan.x) / zoom;
+    const clickY = (e.clientY - rect.top - pan.y) / zoom;
+
+    for (const node of osintNodes) {
+      const pos = nodePositions.get(node.acct_no);
+      if (!pos) continue;
+
+      if (clickX >= pos.x && clickX <= pos.x + pos.w && clickY >= pos.y && clickY <= pos.y + pos.h) {
+        // Toggle expansion if node has children
+        const hasChildren = (childrenMap.get(node.acct_no)?.size || 0) > 0;
+        if (hasChildren) {
+          setExpandedNodes(prev => {
+            const next = new Set(prev);
+            if (next.has(node.acct_no)) {
+              next.delete(node.acct_no);
+            } else {
+              next.add(node.acct_no);
+            }
+            return next;
+          });
+        }
+
+        onSelectNode(node);
+        return;
+      }
+    }
+
+    onSelectNode(null);
+  };
+
+  // Expand All / Collapse All OSINT Controls
+  const handleExpandAll = () => {
+    const all = new Set<string>();
+    nodes.forEach(n => all.add(n.acct_no));
+    setExpandedNodes(all);
+  };
+
+  const handleCollapseToL1 = () => {
+    const initial = new Set<string>();
+    nodes.forEach(n => {
+      if (n.hop <= 1) initial.add(n.acct_no);
+    });
+    setExpandedNodes(initial);
+  };
 
   // Pan Handlers
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -631,16 +720,14 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       return;
     }
 
-    // Hover detection
     const mouseX = (e.clientX - rect.left - pan.x) / zoom;
     const mouseY = (e.clientY - rect.top - pan.y) / zoom;
 
     let found: NodeData | null = null;
-    for (const node of displayNodes) {
+    for (const node of osintNodes) {
       const pos = nodePositions.get(node.acct_no);
       if (!pos) continue;
-      const dist = Math.hypot(pos.x - mouseX, pos.y - mouseY);
-      if (dist <= pos.r + 6) {
+      if (mouseX >= pos.x && mouseX <= pos.x + pos.w && mouseY >= pos.y && mouseY <= pos.y + pos.h) {
         found = node;
         break;
       }
@@ -652,7 +739,6 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
     setIsDragging(false);
   };
 
-  // Zoom towards cursor
   const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
     e.preventDefault();
     const canvas = canvasRef.current;
@@ -663,43 +749,13 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
     const mouseY = e.clientY - rect.top;
 
     const zoomFactor = e.deltaY < 0 ? 1.15 : 0.87;
-    const newZoom = Math.max(0.18, Math.min(4.5, zoom * zoomFactor));
+    const newZoom = Math.max(0.2, Math.min(3.8, zoom * zoomFactor));
 
     setPan({
       x: mouseX - (mouseX - pan.x) * (newZoom / zoom),
       y: mouseY - (mouseY - pan.y) * (newZoom / zoom)
     });
     setZoom(newZoom);
-  };
-
-  // Node Click Selection / Supernode Double Click
-  const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    const clickX = (e.clientX - rect.left - pan.x) / zoom;
-    const clickY = (e.clientY - rect.top - pan.y) / zoom;
-
-    for (const node of displayNodes) {
-      const pos = nodePositions.get(node.acct_no);
-      if (!pos) continue;
-      const dist = Math.hypot(pos.x - clickX, pos.y - clickY);
-      if (dist <= pos.r + 6) {
-        if (node.isSupernode && onToggleClustering) {
-          onToggleClustering();
-        } else {
-          onSelectNode(node);
-        }
-        return;
-      }
-    }
-    onSelectNode(null);
-  };
-
-  const handleDoubleClick = () => {
-    if (hoveredNode && hoveredNode.isSupernode && onToggleClustering) {
-      onToggleClustering();
-    }
   };
 
   return (
@@ -710,14 +766,13 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         top: isFullscreen ? 0 : 'auto',
         left: isFullscreen ? 0 : 'auto',
         width: isFullscreen ? '100vw' : '100%',
-        height: isFullscreen ? '100vh' : '620px',
+        height: isFullscreen ? '100vh' : '650px',
         zIndex: isFullscreen ? 9999 : 1,
-        borderRadius: isFullscreen ? 0 : '12px',
-        border: isFullscreen ? 'none' : '1px solid var(--border)',
+        borderRadius: isFullscreen ? 0 : '8px',
+        border: isFullscreen ? 'none' : '1px solid #D2BFA8',
         overflow: 'hidden',
-        background: 'var(--bg)',
-        userSelect: 'none',
-        boxShadow: isFullscreen ? 'none' : 'var(--shadow-sm)'
+        backgroundColor: '#FBF7F0',
+        userSelect: 'none'
       }}
     >
       <canvas
@@ -727,7 +782,6 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         onMouseUp={handleMouseUp}
         onWheel={handleWheel}
         onClick={handleClick}
-        onDoubleClick={handleDoubleClick}
         style={{
           width: '100%',
           height: '100%',
@@ -736,169 +790,389 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         }}
       />
 
-      {/* Floating HUD Controls Overlay (Clean, Elegant Government Intelligence Style) */}
+      {/* Floating Top OSINT HUD (Glassmorphism Intelligence Bar) */}
       <div style={{
         position: 'absolute',
-        top: isFullscreen ? '20px' : '14px',
-        right: isFullscreen ? '24px' : '14px',
+        top: '16px',
+        left: '20px',
+        right: '20px',
         display: 'flex',
         alignItems: 'center',
-        gap: '6px',
-        backgroundColor: 'rgba(255, 255, 255, 0.96)',
-        padding: '5px 8px',
-        borderRadius: '6px',
-        boxShadow: 'var(--shadow-sm)',
-        border: '1px solid var(--border)',
-        backdropFilter: 'blur(4px)'
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '12px',
+        backgroundColor: 'rgba(245, 238, 229, 0.94)',
+        padding: '8px 16px',
+        borderRadius: '8px',
+        border: '1px solid #D2BFA8',
+        boxShadow: '0 4px 16px rgba(52, 39, 30, 0.08)',
+        backdropFilter: 'blur(8px)',
+        zIndex: 10
       }}>
-        {/* Focused Flow vs All Edges Filter */}
-        <button
-          onClick={() => setEdgeViewMode(edgeViewMode === 'focused' ? 'all' : 'focused')}
-          title={edgeViewMode === 'focused' ? "Showing Clean Focused Paths (Click to show all raw edges)" : "Showing All Edges (Click to show clean focused paths)"}
-          style={{
-            padding: '5px 10px',
-            borderRadius: '4px',
-            border: '1px solid var(--border)',
-            backgroundColor: edgeViewMode === 'focused' ? 'var(--surface-pista)' : '#FFFFFF',
-            fontSize: '11px',
-            fontWeight: 600,
-            color: edgeViewMode === 'focused' ? 'var(--primary)' : 'var(--text)'
-          }}
-        >
-          {edgeViewMode === 'focused' ? '✓ Focused Trails' : 'All Edges'}
-        </button>
+        {/* Brand & Scale Indicators */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#34271E' }}>
+              Vajra OSINT Graph Explorer
+            </span>
+            <span style={{
+              fontSize: '0.6875rem',
+              padding: '2px 6px',
+              borderRadius: '4px',
+              backgroundColor: '#34271E',
+              color: '#FBF7F0',
+              fontWeight: 600
+            }}>
+              Sub-ms Traversal
+            </span>
+          </div>
 
-        {/* Supernodes Toggle Button */}
-        {onToggleClustering && (
+          <span style={{ color: '#D2BFA8' }}>|</span>
+
+          <span style={{ fontSize: '0.75rem', color: '#5C4634' }}>
+            <strong>{osintNodes.length}</strong> of <strong>{nodes.length}</strong> Nodes Visible · <strong>{osintEdges.length}</strong> Flows
+          </span>
+        </div>
+
+        {/* Color Terminology Legend */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.6875rem', fontWeight: 600 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span style={{ width: '8px', height: '8px', borderRadius: '2px', backgroundColor: '#1E40AF' }} />
+            <span style={{ color: '#1E40AF' }}>Victim</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span style={{ width: '8px', height: '8px', borderRadius: '2px', backgroundColor: '#B45309' }} />
+            <span style={{ color: '#B45309' }}>L1 Collector</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span style={{ width: '8px', height: '8px', borderRadius: '2px', backgroundColor: '#6D28D9' }} />
+            <span style={{ color: '#6D28D9' }}>L2 Smurfing</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span style={{ width: '8px', height: '8px', borderRadius: '2px', backgroundColor: '#991B1B' }} />
+            <span style={{ color: '#991B1B' }}>L3 Mule</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span style={{ width: '8px', height: '8px', borderRadius: '2px', backgroundColor: '#1F2937' }} />
+            <span style={{ color: '#1F2937' }}>Cashout</span>
+          </div>
+        </div>
+
+        {/* HUD Quick Search & Action Controls */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {onSearchVictim && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginRight: '6px' }}>
+              <input
+                type="text"
+                placeholder="Trace Acct..."
+                value={searchInput}
+                onChange={e => setSearchInput(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && searchInput.trim()) {
+                    onSearchVictim(searchInput.trim());
+                  }
+                }}
+                style={{
+                  padding: '4px 8px',
+                  borderRadius: '4px',
+                  border: '1px solid #D2BFA8',
+                  backgroundColor: '#FFFFFF',
+                  color: '#34271E',
+                  fontSize: '0.75rem',
+                  fontFamily: 'monospace',
+                  width: '130px'
+                }}
+              />
+              <button
+                onClick={() => {
+                  if (searchInput.trim()) onSearchVictim(searchInput.trim());
+                }}
+                style={{
+                  padding: '4px 8px',
+                  borderRadius: '4px',
+                  border: '1px solid #D2BFA8',
+                  backgroundColor: '#34271E',
+                  color: '#FBF7F0',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                Trace
+              </button>
+            </div>
+          )}
+
           <button
-            onClick={onToggleClustering}
-            title={clustersCollapsed ? "Expand All Mule Rings" : "Cluster Dense Mule Rings into Supernodes"}
+            onClick={handleExpandAll}
+            title="Expand all downstream nodes across all hops"
             style={{
               padding: '5px 10px',
               borderRadius: '4px',
-              border: '1px solid var(--border)',
-              backgroundColor: clustersCollapsed ? 'var(--surface-pista)' : '#FFFFFF',
-              fontSize: '11px',
+              border: '1px solid #D2BFA8',
+              backgroundColor: '#FBF7F0',
+              color: '#34271E',
+              fontSize: '0.75rem',
               fontWeight: 600,
-              color: clustersCollapsed ? 'var(--primary)' : 'var(--text)'
+              cursor: 'pointer'
             }}
           >
-            {clustersCollapsed ? 'Rings Grouped' : 'Expand All'}
+            ⊕ Expand All
           </button>
-        )}
 
-        <button
-          onClick={fitToView}
-          title="Fit All Nodes in View (F)"
-          style={{
-            padding: '5px 10px',
-            borderRadius: '4px',
-            border: '1px solid var(--border)',
-            backgroundColor: '#F5EEE5',
-            fontSize: '11px',
-            fontWeight: 600,
-            color: 'var(--text)'
-          }}
-        >
-          Fit View
-        </button>
+          <button
+            onClick={handleCollapseToL1}
+            title="Collapse deep branches to Layer 1 for clean investigation"
+            style={{
+              padding: '5px 10px',
+              borderRadius: '4px',
+              border: '1px solid #D2BFA8',
+              backgroundColor: '#FBF7F0',
+              color: '#34271E',
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              cursor: 'pointer'
+            }}
+          >
+            ⊖ Smart Collapse
+          </button>
 
-        <button
-          onClick={() => setZoom(z => Math.min(4.5, z * 1.25))}
-          title="Zoom In"
-          style={{ padding: '5px 8px', borderRadius: '4px', border: '1px solid var(--border)', backgroundColor: '#F5EEE5', fontSize: '12px', fontWeight: 700 }}
-        >
-          +
-        </button>
-        <button
-          onClick={() => setZoom(z => Math.max(0.18, z / 1.25))}
-          title="Zoom Out"
-          style={{ padding: '5px 8px', borderRadius: '4px', border: '1px solid var(--border)', backgroundColor: '#F5EEE5', fontSize: '12px', fontWeight: 700 }}
-        >
-          −
-        </button>
+          <button
+            onClick={fitToView}
+            title="Fit entire graph into view"
+            style={{
+              padding: '5px 10px',
+              borderRadius: '4px',
+              border: '1px solid #D2BFA8',
+              backgroundColor: '#FBF7F0',
+              color: '#34271E',
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              cursor: 'pointer'
+            }}
+          >
+            Fit View
+          </button>
 
-        <div style={{ width: '1px', height: '14px', backgroundColor: 'var(--border)', margin: '0 2px' }} />
+          <button
+            onClick={() => setEdgeViewMode(m => m === 'focused' ? 'all' : 'focused')}
+            title="Toggle between focused connection trail vs all links"
+            style={{
+              padding: '5px 10px',
+              borderRadius: '4px',
+              border: '1px solid #D2BFA8',
+              backgroundColor: edgeViewMode === 'focused' ? '#E8D8C3' : '#FBF7F0',
+              color: '#34271E',
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              cursor: 'pointer'
+            }}
+          >
+            {edgeViewMode === 'focused' ? '🎯 Focused Trails' : '🌐 All Trails'}
+          </button>
 
-        {/* Fullscreen Button */}
-        <button
-          onClick={() => setIsFullscreen(!isFullscreen)}
-          title={isFullscreen ? "Exit Fullscreen (Esc)" : "Expand to Full Screen View"}
-          style={{
-            padding: '5px 10px',
-            borderRadius: '4px',
-            border: isFullscreen ? '1px solid var(--primary)' : '1px solid var(--border)',
-            backgroundColor: isFullscreen ? 'var(--primary)' : '#FFFFFF',
-            fontSize: '11px',
-            fontWeight: 600,
-            color: isFullscreen ? '#FFFFFF' : 'var(--text)'
-          }}
-        >
-          {isFullscreen ? '✕ Exit [Esc]' : '⛶ Fullscreen'}
-        </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+            <button
+              onClick={() => setZoom(z => Math.min(3.8, z * 1.25))}
+              style={{
+                padding: '4px 8px',
+                borderRadius: '4px',
+                border: '1px solid #D2BFA8',
+                backgroundColor: '#FBF7F0',
+                color: '#34271E',
+                fontSize: '0.8125rem',
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
+            >
+              +
+            </button>
+            <button
+              onClick={() => setZoom(z => Math.max(0.2, z / 1.25))}
+              style={{
+                padding: '4px 8px',
+                borderRadius: '4px',
+                border: '1px solid #D2BFA8',
+                backgroundColor: '#FBF7F0',
+                color: '#34271E',
+                fontSize: '0.8125rem',
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
+            >
+              −
+            </button>
+          </div>
 
-        <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', marginLeft: '4px' }}>
-          {Math.round(zoom * 100)}%
-        </span>
+          <div style={{ width: '1px', height: '16px', backgroundColor: '#D2BFA8', margin: '0 4px' }} />
+
+          {/* Fullscreen Toggle */}
+          <button
+            onClick={() => setIsFullscreen(!isFullscreen)}
+            title={isFullscreen ? "Exit Fullscreen (Esc)" : "Expand to Full Screen"}
+            style={{
+              padding: '5px 12px',
+              borderRadius: '4px',
+              border: 'none',
+              backgroundColor: isFullscreen ? '#34271E' : '#E8D8C3',
+              color: isFullscreen ? '#FBF7F0' : '#34271E',
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              cursor: 'pointer'
+            }}
+          >
+            {isFullscreen ? '✕ Exit [Esc]' : '⛶ Fullscreen'}
+          </button>
+        </div>
       </div>
 
-      {/* Scale & Stage Information Bar */}
-      <div style={{
-        position: 'absolute',
-        bottom: '14px',
-        left: '14px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '6px',
-        backgroundColor: 'rgba(255, 255, 255, 0.95)',
-        padding: '5px 12px',
-        borderRadius: '6px',
-        border: '1px solid var(--border)',
-        fontSize: '11px',
-        color: 'var(--text-muted)'
-      }}>
-        <span><strong>{displayNodes.length} Accounts</strong> · <strong>{displayEdges.length} Flows</strong> (Sugiyama DAG)</span>
-        <span style={{ color: 'var(--text-muted)', margin: '0 4px' }}>•</span>
-        <span>Hover node to illuminate connected trail · Double-click cluster to expand</span>
-      </div>
-
-      {/* Floating Tooltip — Completely clean, no on-canvas text collisions */}
-      {hoveredNode && (
+      {/* Floating OSINT Forensic Drawer (When a node is selected in fullscreen) */}
+      {selectedNode && isFullscreen && (
         <div style={{
           position: 'absolute',
-          bottom: '14px',
-          right: '14px',
-          backgroundColor: '#111D16',
-          color: '#FBF7F0',
-          padding: '10px 14px',
-          borderRadius: '6px',
-          fontSize: '11.5px',
-          boxShadow: 'var(--shadow-md)',
+          top: '80px',
+          right: '20px',
+          width: '320px',
+          backgroundColor: '#F5EEE5',
+          borderRadius: '8px',
+          border: '1px solid #D2BFA8',
+          boxShadow: '0 8px 24px rgba(52, 39, 30, 0.15)',
+          padding: '16px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '3px',
-          pointerEvents: 'none',
-          zIndex: 20,
-          border: '1px solid #22372B'
+          gap: '12px',
+          zIndex: 20
         }}>
-          <div style={{ fontWeight: 700, fontFamily: 'var(--font-mono)', color: '#A7F3D0' }}>
-            {hoveredNode.acct_no}
-          </div>
-          <div style={{ color: '#EBF4EC' }}>
-            {hoveredNode.bank} · Stage {hoveredNode.hop} ({hoveredNode.layer})
-          </div>
-          {hoveredNode.isSupernode && (
-            <div style={{ color: '#FDE68A', fontWeight: 600 }}>
-              Grouped Mule Ring ({hoveredNode.subNodeCount} Accounts) · Double-click to expand
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <span style={{
+                fontSize: '0.6875rem',
+                fontWeight: 700,
+                color: '#5C4634',
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em'
+              }}>
+                OSINT Forensic Entity
+              </span>
+              <div style={{ fontSize: '1rem', fontWeight: 700, fontFamily: 'monospace', color: '#34271E' }}>
+                {selectedNode.acct_no}
+              </div>
             </div>
-          )}
-          {hoveredNode.held_paise > 0 && (
-            <div style={{ color: '#6EE7B7', fontWeight: 600 }}>
-              Recoverable Stolen Funds: ₹{(hoveredNode.held_paise / 100).toLocaleString('en-IN')}
+            <button
+              onClick={() => onSelectNode(null)}
+              style={{
+                border: 'none',
+                backgroundColor: 'transparent',
+                color: '#8C7764',
+                cursor: 'pointer',
+                fontSize: '1rem',
+                padding: '2px 6px'
+              }}
+            >
+              ✕
+            </button>
+          </div>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '8px',
+            padding: '10px',
+            backgroundColor: '#FBF7F0',
+            borderRadius: '6px',
+            border: '1px solid #D2BFA8',
+            fontSize: '0.75rem'
+          }}>
+            <div>
+              <span style={{ color: '#8C7764' }}>Primary Bank:</span>
+              <div style={{ fontWeight: 600, color: '#34271E' }}>{selectedNode.bank}</div>
             </div>
-          )}
+            <div>
+              <span style={{ color: '#8C7764' }}>Stage Hop:</span>
+              <div style={{ fontWeight: 600, color: '#34271E' }}>Stage {selectedNode.hop}</div>
+            </div>
+            <div>
+              <span style={{ color: '#8C7764' }}>Tainted Inflow:</span>
+              <div style={{ fontWeight: 600, color: '#34271E' }}>
+                ₹{(selectedNode.taint_in_paise / 100).toLocaleString('en-IN')}
+              </div>
+            </div>
+            <div>
+              <span style={{ color: '#8C7764' }}>Recoverable Lien:</span>
+              <div style={{ fontWeight: 700, color: selectedNode.held_paise > 0 ? '#059669' : '#8C7764' }}>
+                ₹{(selectedNode.held_paise / 100).toLocaleString('en-IN')}
+              </div>
+            </div>
+          </div>
+
+          {/* Action buttons */}
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {childrenMap.has(selectedNode.acct_no) && (
+              <button
+                onClick={() => {
+                  setExpandedNodes(prev => {
+                    const next = new Set(prev);
+                    if (next.has(selectedNode.acct_no)) next.delete(selectedNode.acct_no);
+                    else next.add(selectedNode.acct_no);
+                    return next;
+                  });
+                }}
+                style={{
+                  flex: 1,
+                  padding: '8px',
+                  borderRadius: '4px',
+                  backgroundColor: '#E8D8C3',
+                  border: '1px solid #D2BFA8',
+                  color: '#34271E',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                {expandedNodes.has(selectedNode.acct_no) ? '⊖ Collapse Children' : '⊕ Expand Children'}
+              </button>
+            )}
+
+            {onNavigateToLegal && (
+              <button
+                onClick={() => onNavigateToLegal(selectedNode.acct_no)}
+                style={{
+                  flex: 1,
+                  padding: '8px',
+                  borderRadius: '4px',
+                  backgroundColor: '#34271E',
+                  color: '#FBF7F0',
+                  border: 'none',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                Draft Notice →
+              </button>
+            )}
+          </div>
         </div>
       )}
+
+      {/* Floating Bottom Scale & Help Bar */}
+      <div style={{
+        position: 'absolute',
+        bottom: '16px',
+        left: '20px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        backgroundColor: 'rgba(245, 238, 229, 0.94)',
+        padding: '6px 14px',
+        borderRadius: '6px',
+        border: '1px solid #D2BFA8',
+        fontSize: '0.75rem',
+        color: '#5C4634',
+        boxShadow: '0 2px 8px rgba(52, 39, 30, 0.06)'
+      }}>
+        <span>💡 <strong>Click card</strong> to toggle downstream branch expansion · <strong>Drag</strong> to pan canvas · <strong>Scroll</strong> to zoom</span>
+      </div>
     </div>
   );
 };

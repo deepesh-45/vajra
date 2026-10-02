@@ -767,6 +767,12 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
                 onToggleClustering={() => setClustersCollapsed(!clustersCollapsed)}
                 isolatedPathNodeIds={isolatedPathNodeIds}
                 layoutMode={layoutMode}
+                onNavigateToLegal={onNavigateToLegal}
+                currentVictim={victimInput}
+                onSearchVictim={(acct) => {
+                  setVictimInput(acct);
+                  fetchTrace(acct);
+                }}
               />
             </div>
 

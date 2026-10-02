@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   LayoutDashboard,
-  Search,
   Users,
   Network,
   FileText,
@@ -17,7 +16,7 @@ interface SidebarProps {
 
 const navItems = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-  { id: 'investigate', label: 'Investigate', icon: Search },
+  { id: 'investigate', label: 'Graph Explorer', icon: Network },
   { id: 'accounts', label: 'Accounts', icon: Users },
   { id: 'syndicates', label: 'Syndicates', icon: Network },
   { id: 'legal', label: 'Reports', icon: FileText },
