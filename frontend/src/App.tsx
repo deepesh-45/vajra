@@ -50,8 +50,20 @@ export const App: React.FC = () => {
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
 
+  // Automatically collapse sidebar when opening graph/investigate screen
+  useEffect(() => {
+    if (activeTab === 'investigate') {
+      setSidebarCollapsed(true);
+    }
+  }, [activeTab]);
+
   const datasetName = overviewData?.dataset_name || 'VoidHacks8_MuleAccount_2M_Transactions.csv';
   const totalRows = overviewData?.total_transactions || 2000000;
+  const isInvestigate = activeTab === 'investigate';
+
+  const utilityText = isInvestigate
+    ? `Active Trail: ${selectedVictim}`
+    : null;
 
   return (
     <div className="app-root" style={{
@@ -71,7 +83,7 @@ export const App: React.FC = () => {
         onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
 
-      {/* Right Column: Header on Top + Scrollable Main Content */}
+      {/* Right Column: Header on Top + Main Content */}
       <div className="app-main-column" style={{
         display: 'flex',
         flexDirection: 'column',
@@ -92,19 +104,22 @@ export const App: React.FC = () => {
           onSelectAccount={handleSelectVictim}
           isSidebarCollapsed={sidebarCollapsed}
           onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
+          utilityText={utilityText}
         />
 
-        {/* Main Content Area with Animated Light Ambient Background */}
-        <main className="app-content animated-ambient-bg" style={{
+        {/* Main Content Area */}
+        <main className={`app-content ${isInvestigate ? '' : 'animated-ambient-bg'}`} style={{
           flex: 1,
           minWidth: 0,
-          padding: '24px 28px',
-          overflowY: 'auto',
-          position: 'relative'
+          padding: isInvestigate ? 0 : '24px 28px',
+          overflowY: isInvestigate ? 'hidden' : 'auto',
+          overflowX: 'hidden',
+          position: 'relative',
+          height: 'calc(100vh - 62px)'
         }}>
-          <div className="ambient-orb-1" />
-          <div className="ambient-orb-2" />
-          <div style={{ position: 'relative', zIndex: 1 }}>
+          {!isInvestigate && <div className="ambient-orb-1" />}
+          {!isInvestigate && <div className="ambient-orb-2" />}
+          <div style={{ position: 'relative', zIndex: 1, height: isInvestigate ? '100%' : 'auto', width: '100%' }}>
           {activeTab === 'overview' && (
             <OverviewTab
               data={overviewData}

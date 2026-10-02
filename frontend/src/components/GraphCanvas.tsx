@@ -15,8 +15,6 @@ interface GraphCanvasProps {
   isolatedPathNodeIds?: Set<string> | null;
   layoutMode?: 'flow' | 'force';
   onNavigateToLegal?: (victim: string) => void;
-  currentVictim?: string;
-  onSearchVictim?: (victim: string) => void;
 }
 
 // OSINT Entity Card Dimensions
@@ -51,20 +49,10 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
   onToggleClustering: _onToggleClustering,
   isolatedPathNodeIds = null,
   layoutMode: _layoutMode = 'flow',
-  onNavigateToLegal,
-  currentVictim,
-  onSearchVictim
+  onNavigateToLegal
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
-
-  // Fullscreen by default when opening the graph page
-  const [isFullscreen, setIsFullscreen] = useState<boolean>(true);
-  const [searchInput, setSearchInput] = useState<string>(currentVictim || '');
-
-  useEffect(() => {
-    if (currentVictim) setSearchInput(currentVictim);
-  }, [currentVictim]);
 
   // Pan & Zoom
   const [zoom, setZoom] = useState<number>(0.85);
@@ -130,36 +118,21 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
     return () => cancelAnimationFrame(animId);
   }, []);
 
-  // Keyboard shortcut listener (Esc to exit fullscreen, F to toggle)
+  // Container resize observer with high-DPR canvas scaling
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const activeTag = (e.target as HTMLElement)?.tagName;
-      if (['INPUT', 'TEXTAREA'].includes(activeTag)) return;
-
-      if (e.key === 'Escape') {
-        setIsFullscreen(false);
-      } else if (e.key === 'f' || e.key === 'F') {
-        setIsFullscreen(prev => !prev);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
-  // Window resize handler with DPR scaling
-  useEffect(() => {
-    const handleResize = () => {
+    const container = containerRef.current;
+    if (!container) return;
+    const ro = new ResizeObserver(() => {
       const canvas = canvasRef.current;
       if (!canvas) return;
-      const rect = canvas.getBoundingClientRect();
+      const rect = container.getBoundingClientRect();
       const dpr = window.devicePixelRatio || 1;
       canvas.width = Math.floor(rect.width * dpr);
       canvas.height = Math.floor(rect.height * dpr);
-    };
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [isFullscreen]);
+    });
+    ro.observe(container);
+    return () => ro.disconnect();
+  }, []);
 
   // Filter edges based on temporal slider & motifs
   const visibleEdges = useMemo(() => {
@@ -349,7 +322,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       const timer = setTimeout(fitToView, 120);
       return () => clearTimeout(timer);
     }
-  }, [osintNodes.length, isFullscreen, fitToView]);
+  }, [osintNodes.length, fitToView]);
 
   // Canvas Drawing Routine
   useEffect(() => {
@@ -774,14 +747,9 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
     <div
       ref={containerRef}
       style={{
-        position: isFullscreen ? 'fixed' : 'relative',
-        top: isFullscreen ? 0 : 'auto',
-        left: isFullscreen ? 0 : 'auto',
-        width: isFullscreen ? '100vw' : '100%',
-        height: isFullscreen ? '100vh' : '650px',
-        zIndex: isFullscreen ? 9999 : 1,
-        borderRadius: isFullscreen ? 0 : '8px',
-        border: isFullscreen ? 'none' : '1px solid #D2BFA8',
+        position: 'relative',
+        width: '100%',
+        height: '100%',
         overflow: 'hidden',
         backgroundColor: '#F8FAFC',
         userSelect: 'none'
@@ -802,199 +770,131 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         }}
       />
 
-      {/* Floating Top OSINT HUD (Glassmorphism Intelligence Bar) */}
+      {/* Floating Graph HUD Controls */}
       <div style={{
         position: 'absolute',
-        top: '16px',
-        left: '20px',
-        right: '20px',
+        top: '12px',
+        left: '14px',
+        right: '14px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         flexWrap: 'wrap',
         gap: '12px',
-        backgroundColor: 'rgba(245, 238, 229, 0.94)',
-        padding: '8px 16px',
+        backgroundColor: 'rgba(255, 255, 255, 0.94)',
+        padding: '7px 14px',
         borderRadius: '8px',
-        border: '1px solid #D2BFA8',
-        boxShadow: '0 4px 16px rgba(52, 39, 30, 0.08)',
+        border: '1px solid #E2E8F0',
+        boxShadow: '0 2px 8px rgba(15, 23, 42, 0.06)',
         backdropFilter: 'blur(8px)',
         zIndex: 10
       }}>
-        {/* Brand & Scale Indicators */}
+        {/* Left: Visible Nodes and Trail Count + Legend */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#0F172A' }}>
-                Money Trail Graph Explorer
-              </span>
-            </div>
-            <span style={{
-              fontSize: '0.6875rem',
-              padding: '2px 6px',
-              borderRadius: '4px',
-              backgroundColor: '#0F172A',
-              color: '#F8FAFC',
-              fontWeight: 600
-            }}>
-              Sub-ms Traversal
-            </span>
-          </div>
-
-          <span style={{ color: '#D2BFA8' }}>|</span>
-
-          <span style={{ fontSize: '0.75rem', color: '#5C4634' }}>
-            <strong>{osintNodes.length}</strong> of <strong>{nodes.length}</strong> Nodes Visible · <strong>{osintEdges.length}</strong> Flows
+          <span style={{ fontSize: '0.78rem', color: '#334155', fontWeight: 600 }}>
+            <strong style={{ color: '#2563EB' }}>{osintNodes.length}</strong> of <strong>{nodes.length}</strong> Accounts Visible · <strong>{osintEdges.length}</strong> Flows
           </span>
-        </div>
-
-        {/* Color Terminology Legend */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.6875rem', fontWeight: 600 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '2px', backgroundColor: '#1E40AF' }} />
-            <span style={{ color: '#1E40AF' }}>Victim</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '2px', backgroundColor: '#B45309' }} />
-            <span style={{ color: '#B45309' }}>L1 Collector</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '2px', backgroundColor: '#6D28D9' }} />
-            <span style={{ color: '#6D28D9' }}>L2 Smurfing</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '2px', backgroundColor: '#991B1B' }} />
-            <span style={{ color: '#991B1B' }}>L3 Mule</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '2px', backgroundColor: '#1F2937' }} />
-            <span style={{ color: '#1F2937' }}>Cashout</span>
-          </div>
-        </div>
-
-        {/* HUD Quick Search & Action Controls */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          {onSearchVictim && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginRight: '6px' }}>
-              <input
-                type="text"
-                placeholder="Trace Acct..."
-                value={searchInput}
-                onChange={e => setSearchInput(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key === 'Enter' && searchInput.trim()) {
-                    onSearchVictim(searchInput.trim());
-                  }
-                }}
-                style={{
-                  padding: '4px 8px',
-                  borderRadius: '4px',
-                  border: '1px solid #D2BFA8',
-                  backgroundColor: '#FFFFFF',
-                  color: '#0F172A',
-                  fontSize: '0.75rem',
-                  fontFamily: 'monospace',
-                  width: '130px'
-                }}
-              />
-              <button
-                onClick={() => {
-                  if (searchInput.trim()) onSearchVictim(searchInput.trim());
-                }}
-                style={{
-                  padding: '4px 8px',
-                  borderRadius: '4px',
-                  border: '1px solid #D2BFA8',
-                  backgroundColor: '#0F172A',
-                  color: '#F8FAFC',
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  cursor: 'pointer'
-                }}
-              >
-                Trace
-              </button>
+          <span style={{ color: '#CBD5E1' }}>|</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.72rem', fontWeight: 600 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span style={{ width: '8px', height: '8px', borderRadius: '2px', backgroundColor: '#1E40AF' }} />
+              <span style={{ color: '#1E40AF' }}>Victim</span>
             </div>
-          )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span style={{ width: '8px', height: '8px', borderRadius: '2px', backgroundColor: '#B45309' }} />
+              <span style={{ color: '#B45309' }}>L1 Smurf</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span style={{ width: '8px', height: '8px', borderRadius: '2px', backgroundColor: '#6D28D9' }} />
+              <span style={{ color: '#6D28D9' }}>L2 Layer</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span style={{ width: '8px', height: '8px', borderRadius: '2px', backgroundColor: '#991B1B' }} />
+              <span style={{ color: '#991B1B' }}>L3 Mule</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span style={{ width: '8px', height: '8px', borderRadius: '2px', backgroundColor: '#1F2937' }} />
+              <span style={{ color: '#1F2937' }}>Cash-Out</span>
+            </div>
+          </div>
+        </div>
 
+        {/* Right: Quick Graph Actions */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <button
             onClick={handleExpandAll}
             title="Expand all downstream nodes across all hops"
             style={{
-              padding: '5px 10px',
-              borderRadius: '4px',
-              border: '1px solid #D2BFA8',
+              padding: '4px 9px',
+              borderRadius: '6px',
+              border: '1px solid #E2E8F0',
               backgroundColor: '#F8FAFC',
               color: '#0F172A',
-              fontSize: '0.75rem',
+              fontSize: '0.72rem',
               fontWeight: 600,
               cursor: 'pointer'
             }}
           >
             ⊕ Expand All
           </button>
-
           <button
             onClick={handleCollapseToL1}
             title="Collapse deep branches to Layer 1 for clean investigation"
             style={{
-              padding: '5px 10px',
-              borderRadius: '4px',
-              border: '1px solid #D2BFA8',
+              padding: '4px 9px',
+              borderRadius: '6px',
+              border: '1px solid #E2E8F0',
               backgroundColor: '#F8FAFC',
               color: '#0F172A',
-              fontSize: '0.75rem',
+              fontSize: '0.72rem',
               fontWeight: 600,
               cursor: 'pointer'
             }}
           >
             ⊖ Smart Collapse
           </button>
-
           <button
             onClick={fitToView}
             title="Fit entire graph into view"
             style={{
-              padding: '5px 10px',
-              borderRadius: '4px',
-              border: '1px solid #D2BFA8',
+              padding: '4px 9px',
+              borderRadius: '6px',
+              border: '1px solid #E2E8F0',
               backgroundColor: '#F8FAFC',
               color: '#0F172A',
-              fontSize: '0.75rem',
+              fontSize: '0.72rem',
               fontWeight: 600,
               cursor: 'pointer'
             }}
           >
             Fit View
           </button>
-
           <button
             onClick={() => setEdgeViewMode(m => m === 'focused' ? 'all' : 'focused')}
             title="Toggle between focused connection trail vs all links"
             style={{
-              padding: '5px 10px',
-              borderRadius: '4px',
-              border: '1px solid #D2BFA8',
-              backgroundColor: edgeViewMode === 'focused' ? '#E2E8F0' : '#F8FAFC',
-              color: '#0F172A',
-              fontSize: '0.75rem',
+              padding: '4px 9px',
+              borderRadius: '6px',
+              border: '1px solid #E2E8F0',
+              backgroundColor: edgeViewMode === 'focused' ? '#EFF6FF' : '#F8FAFC',
+              color: edgeViewMode === 'focused' ? '#1D4ED8' : '#0F172A',
+              fontSize: '0.72rem',
               fontWeight: 600,
               cursor: 'pointer'
             }}
           >
-            {edgeViewMode === 'focused' ? '🎯 Focused Trails' : '🌐 All Trails'}
+            {edgeViewMode === 'focused' ? '🎯 Focused' : '🌐 All Trails'}
           </button>
-
           <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
             <button
               onClick={() => setZoom(z => Math.min(3.8, z * 1.25))}
               style={{
                 padding: '4px 8px',
-                borderRadius: '4px',
-                border: '1px solid #D2BFA8',
+                borderRadius: '5px',
+                border: '1px solid #E2E8F0',
                 backgroundColor: '#F8FAFC',
                 color: '#0F172A',
-                fontSize: '0.8125rem',
+                fontSize: '0.75rem',
                 fontWeight: 700,
                 cursor: 'pointer'
               }}
@@ -1005,11 +905,11 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
               onClick={() => setZoom(z => Math.max(0.2, z / 1.25))}
               style={{
                 padding: '4px 8px',
-                borderRadius: '4px',
-                border: '1px solid #D2BFA8',
+                borderRadius: '5px',
+                border: '1px solid #E2E8F0',
                 backgroundColor: '#F8FAFC',
                 color: '#0F172A',
-                fontSize: '0.8125rem',
+                fontSize: '0.75rem',
                 fontWeight: 700,
                 cursor: 'pointer'
               }}
@@ -1017,36 +917,18 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
               −
             </button>
           </div>
-
-          <div style={{ width: '1px', height: '16px', backgroundColor: '#D2BFA8', margin: '0 4px' }} />
-
-          {/* Fullscreen Toggle */}
-          <button
-            onClick={() => setIsFullscreen(!isFullscreen)}
-            title={isFullscreen ? "Exit Fullscreen (Esc)" : "Expand to Full Screen"}
-            style={{
-              padding: '5px 12px',
-              borderRadius: '4px',
-              border: 'none',
-              backgroundColor: isFullscreen ? '#0F172A' : '#E2E8F0',
-              color: isFullscreen ? '#F8FAFC' : '#0F172A',
-              fontSize: '0.75rem',
-              fontWeight: 600,
-              cursor: 'pointer'
-            }}
-          >
-            {isFullscreen ? '✕ Exit [Esc]' : '⛶ Fullscreen'}
-          </button>
         </div>
       </div>
 
-      {/* Floating OSINT Forensic Drawer (When a node is selected in fullscreen) */}
-      {selectedNode && isFullscreen && (
+      {/* Floating OSINT Forensic Drawer (When a node is selected) */}
+      {selectedNode && (
         <div style={{
           position: 'absolute',
-          top: '80px',
-          right: '20px',
+          top: '54px',
+          right: '14px',
           width: '320px',
+          maxHeight: 'calc(100% - 68px)',
+          overflowY: 'auto',
           backgroundColor: '#FFFFFF',
           borderRadius: '12px',
           border: '1px solid #E2E8F0',

@@ -8,8 +8,7 @@ import {
   FileText,
   Database,
   Settings,
-  ShieldCheck,
-  ChevronLeft
+  ShieldCheck
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -35,7 +34,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   activeTab,
   setActiveTab,
   isCollapsed = false,
-  onToggleCollapse
+  onToggleCollapse: _onToggleCollapse
 }) => {
   return (
     <aside className="no-print" style={{
@@ -140,37 +139,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </div>
             )}
           </div>
-
-          {/* Quick Collapse Arrow Button */}
-          {!isCollapsed && onToggleCollapse && (
-            <button
-              onClick={onToggleCollapse}
-              title="Collapse Sidebar"
-              style={{
-                width: '26px',
-                height: '26px',
-                borderRadius: '6px',
-                backgroundColor: 'rgba(255, 255, 255, 0.7)',
-                border: '1px solid #E2D7C8',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#64748B',
-                cursor: 'pointer',
-                transition: 'all 0.15s ease'
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.backgroundColor = '#FFFFFF';
-                e.currentTarget.style.color = '#0F172A';
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.7)';
-                e.currentTarget.style.color = '#64748B';
-              }}
-            >
-              <ChevronLeft size={16} />
-            </button>
-          )}
         </div>
 
         {/* Navigation Items with Colorful Icons */}
