@@ -151,7 +151,7 @@ export const LoadDataTab: React.FC<LoadDataTabProps> = ({
       id: 'voidhacks',
       title: '2M National Bank Network',
       path: 'data/raw/VoidHacks8_MuleAccount_2M_Transactions.csv',
-      desc: '2,000,000 txns across 24,873 accounts. Full multi-state fraud network.',
+      desc: '2,000,000 txns across 24,873 accounts. Full network.',
       tag: 'Full Scale',
       icon: Database,
       iconColor: '#2563EB',
@@ -163,7 +163,7 @@ export const LoadDataTab: React.FC<LoadDataTabProps> = ({
       id: 'smurfing',
       title: 'Fast Smurfing (< 5 Min)',
       path: 'synthetic_data/scenario_1_fast_smurfing.csv',
-      desc: 'Stolen funds rapidly split into small amounts within minutes to evade bank limits.',
+      desc: 'Stolen funds rapidly split within minutes.',
       tag: 'Rapid Split',
       icon: Zap,
       iconColor: '#059669',
@@ -175,7 +175,7 @@ export const LoadDataTab: React.FC<LoadDataTabProps> = ({
       id: 'investment',
       title: 'Investment Scam Ring',
       path: 'synthetic_data/scenario_2_investment_scam.csv',
-      desc: 'Task fraud funnel with collector accounts and distributor cashouts.',
+      desc: 'Task fraud funnel with collectors & distributors.',
       tag: 'Task Fraud',
       icon: Users,
       iconColor: '#D97706',
@@ -187,7 +187,7 @@ export const LoadDataTab: React.FC<LoadDataTabProps> = ({
       id: 'cyclic',
       title: 'Cyclic Mule Ring',
       path: 'synthetic_data/scenario_3_cyclic_ring.csv',
-      desc: 'Circular round-trip transfers between shell accounts to disguise origin.',
+      desc: 'Circular round-trip transfers disguise origin.',
       tag: 'Circular Loop',
       icon: Repeat,
       iconColor: '#DC2626',
@@ -199,7 +199,7 @@ export const LoadDataTab: React.FC<LoadDataTabProps> = ({
       id: 'capacity',
       title: '500-Node Large Syndicate',
       path: 'synthetic_data/scenario_4_mega_capacity_stress_test_500nodes.csv',
-      desc: 'High-volume criminal syndicate with 500 interconnected mule accounts.',
+      desc: 'High-volume syndicate with 500 mule accounts.',
       tag: 'High Capacity',
       icon: Network,
       iconColor: '#7C3AED',
@@ -211,7 +211,7 @@ export const LoadDataTab: React.FC<LoadDataTabProps> = ({
       id: 'sample',
       title: 'Curated Forensic Sample',
       path: 'synthetic_data/sample_custom_export.csv',
-      desc: 'Quick-start verified sample with confirmed mule roles and bank statements.',
+      desc: 'Quick-start sample with confirmed mule roles.',
       tag: 'Sample Set',
       icon: FileCheck,
       iconColor: '#0891B2',
@@ -231,46 +231,52 @@ export const LoadDataTab: React.FC<LoadDataTabProps> = ({
       color: '#0F172A',
       paddingBottom: '24px'
     }}>
-      {/* Upload / Status Toast */}
+      {/* Floating Status Toast: Fixed position so it never shifts or resizes any box */}
       {uploadStatus && (
         <div style={{
-          padding: '10px 16px',
+          position: 'fixed',
+          bottom: '24px',
+          right: '24px',
+          padding: '12px 18px',
           borderRadius: '8px',
-          backgroundColor: '#EFF6FF',
-          border: '2px solid #2563EB',
-          color: '#1D4ED8',
+          backgroundColor: '#0F172A',
+          color: '#FFFFFF',
           fontSize: '13px',
           fontWeight: 600,
           display: 'flex',
           alignItems: 'center',
-          gap: '8px',
-          boxShadow: '0 2px 6px rgba(37,99,235,0.15)'
+          gap: '10px',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
+          zIndex: 9999
         }}>
-          <CheckCircle2 size={16} color="#2563EB" />
+          <CheckCircle2 size={16} color="#34D399" />
           <span>{uploadStatus}</span>
         </div>
       )}
 
-      {/* TOP SECTION: Case Information (Left) + Pre-Configured Scenarios (Right - replacing hero image) */}
+      {/* 2x2 Fixed-Dimension Grid: All 4 boxes have IDENTICAL width & height (340px) */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: '1fr 1.35fr',
-        gap: '16px',
-        alignItems: 'stretch'
+        gridTemplateColumns: 'repeat(2, 1fr)',
+        gridTemplateRows: 'repeat(2, 340px)',
+        gap: '16px'
       }}>
-        {/* Left Column: Case Information & Explore Action */}
+        {/* BOX 1 (Top-Left): Case Information & Explore Action */}
         <div style={{
           backgroundColor: '#FFFFFF',
           borderRadius: '10px',
           border: '2px solid #D5C7B5',
-          padding: '20px 22px',
+          padding: '16px 18px',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
-          gap: '14px',
-          boxShadow: '0 1px 3px rgba(60, 45, 30, 0.04)'
+          boxShadow: '0 1px 3px rgba(60, 45, 30, 0.04)',
+          height: '340px',
+          maxHeight: '340px',
+          overflow: 'hidden',
+          boxSizing: 'border-box'
         }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {/* Status Chip */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{
@@ -292,22 +298,22 @@ export const LoadDataTab: React.FC<LoadDataTabProps> = ({
 
             <div>
               <h1 style={{
-                fontSize: '1.45rem',
+                fontSize: '1.35rem',
                 fontWeight: 800,
                 letterSpacing: '-0.02em',
                 color: '#0F172A',
                 margin: '0 0 4px 0',
                 lineHeight: 1.2
               }}>
-                Case Management & Data Ingestion
+                Case Management & Ingestion
               </h1>
               <p style={{
-                fontSize: '0.8125rem',
+                fontSize: '0.8rem',
                 color: '#64748B',
-                lineHeight: 1.45,
+                lineHeight: 1.4,
                 margin: 0
               }}>
-                Select a pre-configured banking scenario on the right or upload new bank statements below to trace fund movements.
+                Select a scenario or upload bank statements to trace fund movements.
               </p>
             </div>
           </div>
@@ -315,36 +321,46 @@ export const LoadDataTab: React.FC<LoadDataTabProps> = ({
           {/* Active Case File Summary */}
           <div style={{
             backgroundColor: '#FAF7F2',
-            border: '2px solid #D5C7B5',
+            border: '1.5px solid #D5C7B5',
             borderRadius: '8px',
-            padding: '12px 14px',
+            padding: '10px 14px',
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '12px',
-            flexWrap: 'wrap'
+            flexDirection: 'column',
+            gap: '8px',
+            overflow: 'hidden'
           }}>
             <div>
-              <span style={{ fontSize: '10.5px', fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              <span style={{ fontSize: '10px', fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                 Active Case File
               </span>
-              <p style={{ fontSize: '12.5px', fontWeight: 700, color: '#0F172A', margin: '2px 0 0 0', fontFamily: 'var(--font-mono)' }}>
+              <p style={{
+                fontSize: '12px',
+                fontWeight: 700,
+                color: '#0F172A',
+                margin: '2px 0 0 0',
+                fontFamily: 'var(--font-mono)',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+              }}
+              title={currentDatasetFilename}
+              >
                 {currentDatasetFilename}
               </p>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', borderTop: '1px solid #E2E8F0', paddingTop: '6px' }}>
               <div>
-                <span style={{ fontSize: '10.5px', color: '#64748B' }}>Transactions:</span>
-                <p style={{ fontSize: '12.5px', fontWeight: 700, color: '#2563EB', margin: 0 }}>
+                <span style={{ fontSize: '10px', color: '#64748B' }}>Transactions: </span>
+                <span style={{ fontSize: '12px', fontWeight: 700, color: '#2563EB' }}>
                   {totalTxns}
-                </p>
+                </span>
               </div>
-              <div style={{ borderLeft: '1px solid #D5C7B5', paddingLeft: '14px' }}>
-                <span style={{ fontSize: '10.5px', color: '#64748B' }}>Accounts:</span>
-                <p style={{ fontSize: '12.5px', fontWeight: 700, color: '#0F172A', margin: 0 }}>
+              <div style={{ borderLeft: '1px solid #D5C7B5', paddingLeft: '16px' }}>
+                <span style={{ fontSize: '10px', color: '#64748B' }}>Accounts: </span>
+                <span style={{ fontSize: '12px', fontWeight: 700, color: '#0F172A' }}>
                   {totalAccts}
-                </p>
+                </span>
               </div>
             </div>
           </div>
@@ -357,11 +373,11 @@ export const LoadDataTab: React.FC<LoadDataTabProps> = ({
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '8px',
-                padding: '9px 18px',
+                padding: '8px 16px',
                 borderRadius: '8px',
                 backgroundColor: '#2563EB',
                 color: '#FFFFFF',
-                fontSize: '13px',
+                fontSize: '12.5px',
                 fontWeight: 600,
                 border: 'none',
                 cursor: 'pointer',
@@ -371,14 +387,14 @@ export const LoadDataTab: React.FC<LoadDataTabProps> = ({
               onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#1D4ED8')}
               onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#2563EB')}
             >
-              <Network size={15} color="#FFFFFF" />
+              <Network size={14} color="#FFFFFF" />
               <span>Explore Money Trail</span>
-              <ArrowRight size={14} />
+              <ArrowRight size={13} />
             </button>
           </div>
         </div>
 
-        {/* Right Column: Pre-Configured Investigation Scenarios (Replaces Image) */}
+        {/* BOX 2 (Top-Right): Pre-Configured Investigation Scenarios */}
         <div style={{
           backgroundColor: '#FFFFFF',
           borderRadius: '10px',
@@ -386,14 +402,18 @@ export const LoadDataTab: React.FC<LoadDataTabProps> = ({
           padding: '16px 18px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '12px',
-          boxShadow: '0 1px 3px rgba(60, 45, 30, 0.04)'
+          gap: '10px',
+          boxShadow: '0 1px 3px rgba(60, 45, 30, 0.04)',
+          height: '340px',
+          maxHeight: '340px',
+          overflow: 'hidden',
+          boxSizing: 'border-box'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div style={{
-                width: '28px',
-                height: '28px',
+                width: '26px',
+                height: '26px',
                 borderRadius: '6px',
                 backgroundColor: '#EFF6FF',
                 display: 'flex',
@@ -401,20 +421,20 @@ export const LoadDataTab: React.FC<LoadDataTabProps> = ({
                 justifyContent: 'center',
                 color: '#2563EB'
               }}>
-                <FolderOpen size={16} />
+                <FolderOpen size={15} />
               </div>
               <div>
-                <h2 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>
-                  Pre-Configured Investigation Scenarios
+                <h2 style={{ fontSize: '0.92rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>
+                  Pre-Configured Scenarios
                 </h2>
-                <span style={{ fontSize: '0.72rem', color: '#64748B' }}>
-                  Click any scenario to load and trace immediately
+                <span style={{ fontSize: '0.7rem', color: '#64748B' }}>
+                  Click to load and trace immediately
                 </span>
               </div>
             </div>
 
             <span style={{
-              fontSize: '11px',
+              fontSize: '10.5px',
               fontWeight: 600,
               backgroundColor: '#FAF7F2',
               border: '1px solid #D5C7B5',
@@ -422,15 +442,17 @@ export const LoadDataTab: React.FC<LoadDataTabProps> = ({
               padding: '2px 8px',
               borderRadius: '6px'
             }}>
-              6 Scenarios Ready
+              6 Ready
             </span>
           </div>
 
-          {/* 6 Scenarios Grid */}
+          {/* 6 Scenarios Grid: Fixed height rows with ellipsis */}
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: '8px'
+            gap: '8px',
+            flex: 1,
+            minHeight: 0
           }}>
             {scenarios.map(scen => {
               const isSelected = selectedPresetFile === scen.path || currentDatasetFilename.includes(scen.id);
@@ -447,8 +469,12 @@ export const LoadDataTab: React.FC<LoadDataTabProps> = ({
                     cursor: uploading ? 'wait' : 'pointer',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '4px',
-                    transition: 'all 0.12s ease'
+                    justifyContent: 'center',
+                    gap: '3px',
+                    height: '74px',
+                    boxSizing: 'border-box',
+                    overflow: 'hidden',
+                    transition: 'background-color 0.12s, border-color 0.12s'
                   }}
                   onMouseEnter={e => {
                     if (!isSelected) {
@@ -463,12 +489,12 @@ export const LoadDataTab: React.FC<LoadDataTabProps> = ({
                     }
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '4px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px', minWidth: 0 }}>
                       <div style={{
-                        width: '22px',
-                        height: '22px',
-                        borderRadius: '5px',
+                        width: '20px',
+                        height: '20px',
+                        borderRadius: '4px',
                         backgroundColor: scen.iconBg,
                         color: scen.iconColor,
                         display: 'flex',
@@ -476,27 +502,42 @@ export const LoadDataTab: React.FC<LoadDataTabProps> = ({
                         justifyContent: 'center',
                         flexShrink: 0
                       }}>
-                        <Icon size={12} />
+                        <Icon size={11} />
                       </div>
-                      <span style={{ fontSize: '11.5px', fontWeight: 700, color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <span style={{
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        color: '#0F172A',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
+                      }}>
                         {scen.title}
                       </span>
                     </div>
 
                     <span style={{
-                      fontSize: '9.5px',
+                      fontSize: '9px',
                       fontWeight: 600,
                       backgroundColor: scen.tagBg,
                       color: scen.tagColor,
-                      padding: '1px 5px',
-                      borderRadius: '4px',
+                      padding: '1px 4px',
+                      borderRadius: '3px',
                       flexShrink: 0
                     }}>
                       {scen.tag}
                     </span>
                   </div>
 
-                  <p style={{ fontSize: '10.5px', color: '#64748B', margin: 0, lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <p style={{
+                    fontSize: '10px',
+                    color: '#64748B',
+                    margin: 0,
+                    lineHeight: 1.25,
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
+                  }}>
                     {scen.desc}
                   </p>
                 </div>
@@ -504,30 +545,26 @@ export const LoadDataTab: React.FC<LoadDataTabProps> = ({
             })}
           </div>
         </div>
-      </div>
 
-      {/* BOTTOM SECTION: Shifted Left Upload Box + Overview Metrics & Risk Categories on Right */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: '1fr 1.35fr',
-        gap: '16px',
-        alignItems: 'stretch'
-      }}>
-        {/* Left Column (Shifted Left): Upload Bank Statement */}
+        {/* BOX 3 (Bottom-Left): Upload Bank Statement */}
         <div style={{
           backgroundColor: '#FFFFFF',
           borderRadius: '10px',
           border: '2px solid #D5C7B5',
-          padding: '18px 20px',
+          padding: '16px 18px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '12px',
-          boxShadow: '0 1px 3px rgba(60, 45, 30, 0.04)'
+          gap: '10px',
+          boxShadow: '0 1px 3px rgba(60, 45, 30, 0.04)',
+          height: '340px',
+          maxHeight: '340px',
+          overflow: 'hidden',
+          boxSizing: 'border-box'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
             <div style={{
-              width: '28px',
-              height: '28px',
+              width: '26px',
+              height: '26px',
               borderRadius: '6px',
               backgroundColor: '#EFF6FF',
               display: 'flex',
@@ -535,13 +572,13 @@ export const LoadDataTab: React.FC<LoadDataTabProps> = ({
               justifyContent: 'center',
               color: '#2563EB'
             }}>
-              <UploadCloud size={16} />
+              <UploadCloud size={15} />
             </div>
             <div>
-              <h2 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>
+              <h2 style={{ fontSize: '0.92rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>
                 Upload Bank Statement
               </h2>
-              <span style={{ fontSize: '0.72rem', color: '#64748B' }}>
+              <span style={{ fontSize: '0.7rem', color: '#64748B' }}>
                 Load evidence CSV or Excel export
               </span>
             </div>
@@ -557,12 +594,12 @@ export const LoadDataTab: React.FC<LoadDataTabProps> = ({
               backgroundColor: isDragOver ? '#EFF6FF' : '#FAF7F2',
               border: isDragOver ? '2px dashed #2563EB' : '2px dashed #D5C7B5',
               borderRadius: '8px',
-              padding: '28px 16px',
+              padding: '18px 14px',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '8px',
+              gap: '6px',
               textAlign: 'center',
               cursor: uploading ? 'wait' : 'pointer',
               transition: 'all 0.15s ease',
@@ -570,24 +607,24 @@ export const LoadDataTab: React.FC<LoadDataTabProps> = ({
             }}
           >
             <div style={{
-              width: '42px',
-              height: '42px',
+              width: '38px',
+              height: '38px',
               borderRadius: '8px',
               backgroundColor: '#EFF6FF',
               color: '#2563EB',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 2px 5px rgba(37,99,235,0.12)'
+              boxShadow: '0 2px 4px rgba(37,99,235,0.12)'
             }}>
-              <UploadCloud size={20} />
+              <UploadCloud size={18} />
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-              <p style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>
+              <p style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>
                 Drag & drop bank statement CSV here
               </p>
-              <p style={{ fontSize: '0.72rem', color: '#64748B', margin: 0 }}>
+              <p style={{ fontSize: '0.7rem', color: '#64748B', margin: 0 }}>
                 or click to browse from computer
               </p>
             </div>
@@ -605,7 +642,7 @@ export const LoadDataTab: React.FC<LoadDataTabProps> = ({
 
             <span style={{
               marginTop: '4px',
-              fontSize: '10.5px',
+              fontSize: '10px',
               color: '#2563EB',
               backgroundColor: '#EFF6FF',
               border: '1px solid #DBEAFE',
@@ -618,57 +655,65 @@ export const LoadDataTab: React.FC<LoadDataTabProps> = ({
           </div>
         </div>
 
-        {/* Right Column: Overview Metrics & Risk Categories Block */}
+        {/* BOX 4 (Bottom-Right): Overview Metrics & Risk Categories Block */}
         <div style={{
           backgroundColor: '#FFFFFF',
           borderRadius: '10px',
           border: '2px solid #D5C7B5',
-          padding: '16px 18px',
+          padding: '14px 16px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '12px',
-          boxShadow: '0 1px 3px rgba(60, 45, 30, 0.04)'
+          justifyContent: 'space-between',
+          gap: '8px',
+          boxShadow: '0 1px 3px rgba(60, 45, 30, 0.04)',
+          height: '340px',
+          maxHeight: '340px',
+          overflow: 'hidden',
+          boxSizing: 'border-box'
         }}>
-          {/* Top 4 Key Metric Cards (2x2 Grid) */}
+          {/* Top 4 Key Metric Cards (2x2 Grid with equal heights) */}
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: '8px'
+            gap: '8px',
+            flexShrink: 0
           }}>
-            {/* Card 1: Transactions */}
+            {/* Metric Card 1: Transactions */}
             <div style={{
               backgroundColor: '#FAF7F2',
               borderRadius: '8px',
               border: '1.5px solid #D5C7B5',
-              padding: '8px 12px',
+              padding: '6px 10px',
               display: 'flex',
               flexDirection: 'column',
-              gap: '2px'
+              justifyContent: 'space-between',
+              height: '66px',
+              boxSizing: 'border-box'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                   <div style={{
-                    width: '22px',
-                    height: '22px',
-                    borderRadius: '5px',
+                    width: '20px',
+                    height: '20px',
+                    borderRadius: '4px',
                     backgroundColor: '#EFF6FF',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center'
                   }}>
-                    <ArrowLeftRight size={12} color="#2563EB" />
+                    <ArrowLeftRight size={11} color="#2563EB" />
                   </div>
-                  <span style={{ fontSize: '0.72rem', fontWeight: 600, color: '#64748B' }}>
+                  <span style={{ fontSize: '0.7rem', fontWeight: 600, color: '#64748B' }}>
                     Total Transactions
                   </span>
                 </div>
-                <span style={{ fontSize: '0.65rem', fontWeight: 600, color: '#16A34A' }}>
+                <span style={{ fontSize: '0.625rem', fontWeight: 600, color: '#16A34A' }}>
                   ▲ +8.3%
                 </span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginTop: '2px' }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
                 <span style={{
-                  fontSize: '1.2rem',
+                  fontSize: '1.15rem',
                   fontWeight: 800,
                   color: '#0F172A',
                   lineHeight: 1,
@@ -676,44 +721,46 @@ export const LoadDataTab: React.FC<LoadDataTabProps> = ({
                 }}>
                   {totalTxns}
                 </span>
-                <span style={{ fontSize: '0.65rem', color: '#94A3B8' }}>Verified</span>
+                <span style={{ fontSize: '0.625rem', color: '#94A3B8' }}>Verified</span>
               </div>
             </div>
 
-            {/* Card 2: Accounts */}
+            {/* Metric Card 2: Accounts */}
             <div style={{
               backgroundColor: '#FAF7F2',
               borderRadius: '8px',
               border: '1.5px solid #D5C7B5',
-              padding: '8px 12px',
+              padding: '6px 10px',
               display: 'flex',
               flexDirection: 'column',
-              gap: '2px'
+              justifyContent: 'space-between',
+              height: '66px',
+              boxSizing: 'border-box'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                   <div style={{
-                    width: '22px',
-                    height: '22px',
-                    borderRadius: '5px',
+                    width: '20px',
+                    height: '20px',
+                    borderRadius: '4px',
                     backgroundColor: '#ECFDF5',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center'
                   }}>
-                    <Landmark size={12} color="#059669" />
+                    <Landmark size={11} color="#059669" />
                   </div>
-                  <span style={{ fontSize: '0.72rem', fontWeight: 600, color: '#64748B' }}>
+                  <span style={{ fontSize: '0.7rem', fontWeight: 600, color: '#64748B' }}>
                     Total Accounts
                   </span>
                 </div>
-                <span style={{ fontSize: '0.65rem', fontWeight: 600, color: '#16A34A' }}>
+                <span style={{ fontSize: '0.625rem', fontWeight: 600, color: '#16A34A' }}>
                   ▲ +5.1%
                 </span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginTop: '2px' }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
                 <span style={{
-                  fontSize: '1.2rem',
+                  fontSize: '1.15rem',
                   fontWeight: 800,
                   color: '#0F172A',
                   lineHeight: 1,
@@ -721,44 +768,46 @@ export const LoadDataTab: React.FC<LoadDataTabProps> = ({
                 }}>
                   {totalAccts}
                 </span>
-                <span style={{ fontSize: '0.65rem', color: '#94A3B8' }}>Active ledger</span>
+                <span style={{ fontSize: '0.625rem', color: '#94A3B8' }}>Active ledger</span>
               </div>
             </div>
 
-            {/* Card 3: Flagged for Review */}
+            {/* Metric Card 3: Flagged for Review */}
             <div style={{
               backgroundColor: '#FAF7F2',
               borderRadius: '8px',
               border: '1.5px solid #D5C7B5',
-              padding: '8px 12px',
+              padding: '6px 10px',
               display: 'flex',
               flexDirection: 'column',
-              gap: '2px'
+              justifyContent: 'space-between',
+              height: '66px',
+              boxSizing: 'border-box'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                   <div style={{
-                    width: '22px',
-                    height: '22px',
-                    borderRadius: '5px',
+                    width: '20px',
+                    height: '20px',
+                    borderRadius: '4px',
                     backgroundColor: '#FEF2F2',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center'
                   }}>
-                    <Flag size={12} color="#DC2626" />
+                    <Flag size={11} color="#DC2626" />
                   </div>
-                  <span style={{ fontSize: '0.72rem', fontWeight: 600, color: '#64748B' }}>
-                    Flagged for Review
+                  <span style={{ fontSize: '0.7rem', fontWeight: 600, color: '#64748B' }}>
+                    Flagged Review
                   </span>
                 </div>
-                <span style={{ fontSize: '0.65rem', fontWeight: 600, color: '#DC2626' }}>
+                <span style={{ fontSize: '0.625rem', fontWeight: 600, color: '#DC2626' }}>
                   High Risk
                 </span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginTop: '2px' }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
                 <span style={{
-                  fontSize: '1.2rem',
+                  fontSize: '1.15rem',
                   fontWeight: 800,
                   color: '#DC2626',
                   lineHeight: 1,
@@ -766,44 +815,46 @@ export const LoadDataTab: React.FC<LoadDataTabProps> = ({
                 }}>
                   {flaggedCount}
                 </span>
-                <span style={{ fontSize: '0.65rem', color: '#94A3B8' }}>Needs action</span>
+                <span style={{ fontSize: '0.625rem', color: '#94A3B8' }}>Needs action</span>
               </div>
             </div>
 
-            {/* Card 4: Suspicious Groups */}
+            {/* Metric Card 4: Suspicious Groups */}
             <div style={{
               backgroundColor: '#FAF7F2',
               borderRadius: '8px',
               border: '1.5px solid #D5C7B5',
-              padding: '8px 12px',
+              padding: '6px 10px',
               display: 'flex',
               flexDirection: 'column',
-              gap: '2px'
+              justifyContent: 'space-between',
+              height: '66px',
+              boxSizing: 'border-box'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                   <div style={{
-                    width: '22px',
-                    height: '22px',
-                    borderRadius: '5px',
+                    width: '20px',
+                    height: '20px',
+                    borderRadius: '4px',
                     backgroundColor: '#F5F3FF',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center'
                   }}>
-                    <Network size={12} color="#7C3AED" />
+                    <Network size={11} color="#7C3AED" />
                   </div>
-                  <span style={{ fontSize: '0.72rem', fontWeight: 600, color: '#64748B' }}>
-                    Suspicious Groups
+                  <span style={{ fontSize: '0.7rem', fontWeight: 600, color: '#64748B' }}>
+                    Mule Groups
                   </span>
                 </div>
-                <span style={{ fontSize: '0.65rem', fontWeight: 600, color: '#7C3AED' }}>
+                <span style={{ fontSize: '0.625rem', fontWeight: 600, color: '#7C3AED' }}>
                   Clustered
                 </span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginTop: '2px' }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
                 <span style={{
-                  fontSize: '1.2rem',
+                  fontSize: '1.15rem',
                   fontWeight: 800,
                   color: '#0F172A',
                   lineHeight: 1,
@@ -811,28 +862,30 @@ export const LoadDataTab: React.FC<LoadDataTabProps> = ({
                 }}>
                   {syndicatesCount}
                 </span>
-                <span style={{ fontSize: '0.65rem', color: '#94A3B8' }}>Mule rings</span>
+                <span style={{ fontSize: '0.625rem', color: '#94A3B8' }}>Rings</span>
               </div>
             </div>
           </div>
 
-          {/* Bottom Sub-Block: Risk Categories */}
+          {/* Bottom Sub-Block: Risk Categories with fixed height */}
           <div style={{
             backgroundColor: '#FAF7F2',
             borderRadius: '8px',
             border: '1.5px solid #D5C7B5',
-            padding: '10px 12px',
+            padding: '8px 12px',
             display: 'flex',
             flexDirection: 'column',
-            gap: '8px'
+            justifyContent: 'space-between',
+            height: '110px',
+            boxSizing: 'border-box'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Shield size={14} color="#2563EB" />
-                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#0F172A' }}>
+                <Shield size={13} color="#2563EB" />
+                <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#0F172A' }}>
                   Risk Categories
                 </span>
-                <span style={{ fontSize: '0.6875rem', color: '#64748B' }}>
+                <span style={{ fontSize: '0.65rem', color: '#64748B' }}>
                   ({riskViewMode})
                 </span>
               </div>
@@ -845,31 +898,31 @@ export const LoadDataTab: React.FC<LoadDataTabProps> = ({
                     display: 'flex',
                     alignItems: 'center',
                     gap: '4px',
-                    padding: '2px 8px',
+                    padding: '2px 7px',
                     borderRadius: '5px',
                     backgroundColor: '#FFFFFF',
                     border: '1px solid #D5C7B5',
                     color: '#334155',
-                    fontSize: '0.6875rem',
+                    fontSize: '0.65rem',
                     fontWeight: 600,
                     cursor: 'pointer'
                   }}
                 >
                   <span>{riskViewMode}</span>
-                  <ChevronDown size={11} color="#64748B" />
+                  <ChevronDown size={10} color="#64748B" />
                 </button>
 
                 {showRiskDropdown && (
                   <div style={{
                     position: 'absolute',
                     right: 0,
-                    top: '110%',
+                    bottom: '105%',
                     backgroundColor: '#FFFFFF',
                     border: '1px solid #D5C7B5',
                     borderRadius: '6px',
                     boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
                     zIndex: 30,
-                    minWidth: '110px',
+                    minWidth: '105px',
                     padding: '3px'
                   }}>
                     {(['Accounts', 'Transactions', 'Volume'] as const).map(mode => (
@@ -881,7 +934,7 @@ export const LoadDataTab: React.FC<LoadDataTabProps> = ({
                         }}
                         style={{
                           padding: '5px 8px',
-                          fontSize: '0.7rem',
+                          fontSize: '0.68rem',
                           fontWeight: riskViewMode === mode ? 700 : 500,
                           color: riskViewMode === mode ? '#2563EB' : '#334155',
                           backgroundColor: riskViewMode === mode ? '#EFF6FF' : 'transparent',
@@ -903,7 +956,8 @@ export const LoadDataTab: React.FC<LoadDataTabProps> = ({
               borderRadius: '4px',
               overflow: 'hidden',
               display: 'flex',
-              backgroundColor: '#E2E8F0'
+              backgroundColor: '#E2E8F0',
+              margin: '2px 0'
             }}>
               <div style={{ width: '28.7%', backgroundColor: '#34D399' }} title="Low: 28.7%" />
               <div style={{ width: '69.6%', backgroundColor: '#FBBF24' }} title="Medium: 69.6%" />
@@ -915,46 +969,45 @@ export const LoadDataTab: React.FC<LoadDataTabProps> = ({
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: '6px',
-              paddingTop: '1px'
+              gap: '4px'
             }}>
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '0.65rem', color: '#64748B' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '0.625rem', color: '#64748B' }}>
                   <div style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: '#34D399' }} />
                   <span>Low</span>
                 </div>
-                <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#0F172A', marginTop: '1px' }}>
-                  {tierStats.low} <span style={{ fontSize: '0.625rem', fontWeight: 400, color: '#94A3B8' }}>({tierStats.lowPct})</span>
+                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#0F172A', marginTop: '1px' }}>
+                  {tierStats.low}
                 </div>
               </div>
 
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '0.65rem', color: '#64748B' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '0.625rem', color: '#64748B' }}>
                   <div style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: '#FBBF24' }} />
                   <span>Medium</span>
                 </div>
-                <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#0F172A', marginTop: '1px' }}>
-                  {tierStats.med} <span style={{ fontSize: '0.625rem', fontWeight: 400, color: '#94A3B8' }}>({tierStats.medPct})</span>
+                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#0F172A', marginTop: '1px' }}>
+                  {tierStats.med}
                 </div>
               </div>
 
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '0.65rem', color: '#64748B' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '0.625rem', color: '#64748B' }}>
                   <div style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: '#F87171' }} />
                   <span>High</span>
                 </div>
-                <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#DC2626', marginTop: '1px' }}>
-                  {tierStats.high} <span style={{ fontSize: '0.625rem', fontWeight: 400, color: '#94A3B8' }}>({tierStats.highPct})</span>
+                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#DC2626', marginTop: '1px' }}>
+                  {tierStats.high}
                 </div>
               </div>
 
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '0.65rem', color: '#64748B' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '0.625rem', color: '#64748B' }}>
                   <div style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: '#1E293B' }} />
                   <span>Critical</span>
                 </div>
-                <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#0F172A', marginTop: '1px' }}>
-                  {tierStats.crit} <span style={{ fontSize: '0.625rem', fontWeight: 400, color: '#94A3B8' }}>({tierStats.critPct})</span>
+                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#0F172A', marginTop: '1px' }}>
+                  {tierStats.crit}
                 </div>
               </div>
             </div>
