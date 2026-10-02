@@ -60,6 +60,14 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
   // Pan & Zoom
   const [zoom, setZoom] = useState<number>(0.85);
   const [pan, setPan] = useState<{ x: number; y: number }>({ x: 50, y: 70 });
+  const zoomRef = useRef(zoom);
+  const panRef = useRef(pan);
+  useEffect(() => {
+    zoomRef.current = zoom;
+  }, [zoom]);
+  useEffect(() => {
+    panRef.current = pan;
+  }, [pan]);
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [dragStart, setDragStart] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [hoveredNode, setHoveredNode] = useState<NodeData | null>(null);
@@ -1002,24 +1010,133 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
 
   const handleMouseUp = () => setIsDragging(false);
 
-  const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
-    e.preventDefault();
-    const factor = e.deltaY < 0 ? 1.15 : 0.87;
+  // Native non-passive Wheel & Gesture Event Listeners for Butter-Smooth Trackpad Pinch & Pan (Mac & Windows)
+  useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
 
-    setZoom(prevZoom => {
-      const nextZoom = Math.min(3.8, Math.max(0.2, prevZoom * factor));
-      setPan(prevPan => ({
-        x: mouseX - (mouseX - prevPan.x) * (nextZoom / prevZoom),
-        y: mouseY - (mouseY - prevPan.y) * (nextZoom / prevZoom)
-      }));
-      return nextZoom;
-    });
-  };
+    let isGestureActive = false;
+    let gestureStartZoom = 1;
+
+    // Safari macOS Trackpad Pinch Gestures
+    const handleGestureStart = (e: any) => {
+      e.preventDefault();
+      isGestureActive = true;
+      gestureStartZoom = zoomRef.current;
+    };
+
+    const handleGestureChange = (e: any) => {
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+      const currentZoom = zoomRef.current;
+      const currentPan = panRef.current;
+
+      const targetZoom = Math.min(3.8, Math.max(0.2, gestureStartZoom * e.scale));
+      const nextZoom = currentZoom + (targetZoom - currentZoom) * 0.25;
+      const clampedZoom = Math.min(3.8, Math.max(0.2, nextZoom));
+
+      if (Math.abs(clampedZoom - currentZoom) > 0.0001) {
+        const nextPan = {
+          x: mouseX - (mouseX - currentPan.x) * (clampedZoom / currentZoom),
+          y: mouseY - (mouseY - currentPan.y) * (clampedZoom / currentZoom)
+        };
+        zoomRef.current = clampedZoom;
+        panRef.current = nextPan;
+        setZoom(clampedZoom);
+        setPan(nextPan);
+      }
+    };
+
+    const handleGestureEnd = (e: any) => {
+      e.preventDefault();
+      isGestureActive = false;
+    };
+
+    // Cross-Platform Wheel & Trackpad Pinch Handler (Mac, Windows, Linux)
+    const handleWheelNative = (e: WheelEvent) => {
+      // Prevent browser from zooming entire webpage viewport
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (isGestureActive) return;
+
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+      const currentZoom = zoomRef.current;
+      const currentPan = panRef.current;
+
+      // 1. Trackpad Pinch Gesture (Mac & Windows Precision Touchpads send e.ctrlKey = true)
+      if (e.ctrlKey) {
+        // Normalize delta across high-DPR Mac and Windows touchpads
+        // Clamp per-event delta to eliminate sudden runaway jumps
+        const clampedDelta = Math.sign(e.deltaY) * Math.min(25, Math.abs(e.deltaY));
+        const pinchSensitivity = 0.003;
+        // Bounded per-tick multiplier (0.95 - 1.05) gives natural, comfortable trackpad feel
+        const factor = Math.min(1.05, Math.max(0.95, Math.exp(-clampedDelta * pinchSensitivity)));
+
+        const nextZoom = Math.min(3.8, Math.max(0.2, currentZoom * factor));
+        if (Math.abs(nextZoom - currentZoom) > 0.0001) {
+          const nextPan = {
+            x: mouseX - (mouseX - currentPan.x) * (nextZoom / currentZoom),
+            y: mouseY - (mouseY - currentPan.y) * (nextZoom / currentZoom)
+          };
+          zoomRef.current = nextZoom;
+          panRef.current = nextPan;
+          setZoom(nextZoom);
+          setPan(nextPan);
+        }
+        return;
+      }
+
+      // 2. Physical Mouse Scroll Wheel (Notched wheel with deltaMode lines or discrete 40+ integer steps)
+      const isMouseWheel = e.deltaMode !== 0 || (Number.isInteger(e.deltaY) && Math.abs(e.deltaY) >= 40 && Math.abs(e.deltaX) === 0);
+      if (isMouseWheel) {
+        let delta = e.deltaY;
+        if (e.deltaMode === 1) delta *= 16;
+        else if (e.deltaMode === 2) delta *= 80;
+
+        const clampedDelta = Math.sign(delta) * Math.min(50, Math.abs(delta));
+        const wheelSensitivity = 0.0015;
+        const factor = Math.min(1.08, Math.max(0.92, Math.exp(-clampedDelta * wheelSensitivity)));
+
+        const nextZoom = Math.min(3.8, Math.max(0.2, currentZoom * factor));
+        if (Math.abs(nextZoom - currentZoom) > 0.0001) {
+          const nextPan = {
+            x: mouseX - (mouseX - currentPan.x) * (nextZoom / currentZoom),
+            y: mouseY - (mouseY - currentPan.y) * (nextZoom / currentZoom)
+          };
+          zoomRef.current = nextZoom;
+          panRef.current = nextPan;
+          setZoom(nextZoom);
+          setPan(nextPan);
+        }
+        return;
+      }
+
+      // 3. Trackpad Two-Finger Pan (Mac & Windows two-finger sliding gesture)
+      const nextPan = {
+        x: currentPan.x - e.deltaX,
+        y: currentPan.y - e.deltaY
+      };
+      panRef.current = nextPan;
+      setPan(nextPan);
+    };
+
+    canvas.addEventListener('wheel', handleWheelNative, { passive: false });
+    canvas.addEventListener('gesturestart', handleGestureStart as any, { passive: false });
+    canvas.addEventListener('gesturechange', handleGestureChange as any, { passive: false });
+    canvas.addEventListener('gestureend', handleGestureEnd as any, { passive: false });
+
+    return () => {
+      canvas.removeEventListener('wheel', handleWheelNative);
+      canvas.removeEventListener('gesturestart', handleGestureStart as any);
+      canvas.removeEventListener('gesturechange', handleGestureChange as any);
+      canvas.removeEventListener('gestureend', handleGestureEnd as any);
+    };
+  }, []);
 
   return (
     <div
@@ -1038,7 +1155,6 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
-        onWheel={handleWheel}
         onClick={handleClick}
         style={{
           width: '100%',
@@ -1357,7 +1473,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         color: '#475569',
         boxShadow: '0 2px 8px rgba(15, 23, 42, 0.06)'
       }}>
-        <span>💡 <strong>Click [+] on right edge</strong> to expand next layer · <strong>Drag</strong> to pan · <strong>Scroll</strong> to zoom</span>
+        <span>💡 <strong>Click [+] on right edge</strong> to expand next layer · <strong>2-finger swipe or drag</strong> to pan · <strong>Pinch trackpad or mouse wheel</strong> to zoom</span>
       </div>
     </div>
   );
