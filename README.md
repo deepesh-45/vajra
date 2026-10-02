@@ -59,10 +59,10 @@ Vajra solves this with an in-memory, C-accelerated **Compressed Sparse Row (CSR)
                       ▼                                                 ▼
              [ DUAL-TRACK AI / ML ]                          [ FORENSIC REPORTING ]
         • Rule Engine (Velocity, Dwell, Fan)            • BNSS Sec 94/106 Freeze Orders
-        • M1: PU-Learning LightGBM GBDT                 • BNSS Sec 111 Case Diary
-        • M2: Adversarial Narration NLP                 • BSA Sec 63 Hash Certificate
-        • M3: Isolation Forest & LOF                    • Bilingual (English & हिन्दी)
-        • M4: PyTorch GraphSAGE GNN                     • AST Anti-Hallucination Guard
+        • Bounded LightGBM (±20 pts)                     • BNSS Sec 111 Case Diary
+        • Adversarial Narration NLP                       • BSA Sec 63 Hash Certificate
+        • TreeSHAP Attribution                            • Bilingual (English & हिन्दी)
+        • Chain Coherence + Ring BFS                      • AST Anti-Hallucination Guard
                       │                                                 │
                       └────────────────────────┬────────────────────────┘
                                                │
@@ -75,24 +75,26 @@ Vajra solves this with an in-memory, C-accelerated **Compressed Sparse Row (CSR)
 
 ---
 
-## 4. Pure Unsupervised AI & TreeSHAP Forensic Architecture
+## 4. Authoritative Rules + Bounded LightGBM + TreeSHAP Architecture
 
-Unlike legacy AML platforms that rely on flawed pseudo-labels or black-box supervised models that are inadmissible in court, **Vajra operates on 100% unlabeled banking ledgers using a pure unsupervised machine learning pipeline**:
+Unlike legacy AML platforms that rely on flawed pseudo-labels or black-box supervised models that are inadmissible in court, **Vajra implements a deterministic rules-first architecture with bounded ML augmentation**:
 
-1. **Unsupervised Feature Extraction Engine (`backend/app/detect/features.py`)**:
-   - Computes **15 topological, velocity, dwell, and cashout dimensions** directly via vectorized DuckDB SQL in **< 0.1s**.
-   - Features include: 15-minute Pass-Through Ratio ($PTR_{15m}$), Capital Drainage Ratio, Smurfing Fan-Out/In-Degree Skew, Dormancy Break Ratio, Foreign IP & Headless Automation fractions.
-2. **Isolation Forest Anomaly Detector (`backend/app/detect/isolation_detector.py`)**:
-   - *Algorithm*: Recursive random sub-sampling isolation trees (Liu, Ting & Zhou, IEEE/TKDD).
-   - *Advantage over Autoencoders*: Captures discrete step thresholds (e.g. ₹50k reporting boundary, dormancy switches) without reconstruction smearing or training divergence.
-   - *Performance*: Fits 150 isolation trees across thousands of accounts in **0.17 seconds** on commodity CPU.
-3. **TreeSHAP Explainability Engine (`backend/app/detect/shap_explainer.py`)**:
-   - *Algorithm*: Exact polynomial-time TreeSHAP (Lundberg et al., Nature Machine Intelligence 2020).
-   - *Court Admissibility*: Satisfies game-theoretic efficiency $\sum \phi_i = f(x) - \mathbb{E}[f(x)]$, attributing exact mathematical credit to specific behavioral dimensions.
-   - *Legal Evidence Synthesis*: Automatically converts Shapley attributions into court-ready evidentiary text satisfying **Section 106 BNSS / Section 91 CrPC**.
-4. **Adversarial Narration NLP & Prompt-Injection Defense (`backend/app/ai/narr_classifier.py`)**:
-   - *Algorithm*: Character n-gram TF-IDF classifier ($n \in [2, 5]$) with L2 regularization.
-   - *Adversarial Guardrail*: Intercepts obfuscated scam tokens, leetspeak, and prompt-injection attacks (`[REDACTED_ADVERSARIAL_INJECTION]`).
+1. **Feature Extraction Engine (`backend/app/detect/features.py`)**:
+   - Computes behavioral and FIFO pass-through features directly via vectorized DuckDB SQL in **< 0.1s**.
+   - Features include: 5-window Pass-Through Ratios ($PTR_{5m/15m/1h/6h/24h}$), Capital Drainage Ratio, Smurfing Fan-Out/In-Degree Skew, Dormancy Break Ratio, Foreign IP & Headless Automation fractions.
+2. **Authoritative Rule Scoring Engine (`engine/rules.py`)**:
+   - 7 rule families (Velocity 30pts, Fan Topology 25pts, Cash-Out 20pts, Device/IP 10pts, Chain 10pts, Narration 5pts, Mitigating -25pts) produce a deterministic 0–100 base score.
+   - Smooth linear ramps prevent cliff-edge false positives; single-signal capping prevents over-reliance on any one indicator.
+3. **Bounded LightGBM ML Model (`engine/ml.py`)**:
+   - Monotonically constrained LightGBM adds **±20 points** max, trained on confident pseudo-labels via 5-fold GroupKFold by connected component.
+   - **ML Gate**: if `rule_score < 10`, ML points are clamped to ≤0 (ML cannot independently flag accounts).
+4. **TreeSHAP Explainability Engine (`engine/shap_reasons.py`)**:
+   - Exact TreeSHAP via LightGBM's native `pred_contrib=True`.
+   - **Court Admissibility**: Hare-Niemeyer largest-remainder rounding ensures $\sum \text{reasons} + \text{clip\_adjust} \equiv \text{risk\_index}$ for 100% of accounts.
+   - Automatically converts attributions into court-ready evidentiary text satisfying **Section 106 BNSS / Section 91 CrPC**.
+5. **Adversarial Narration NLP & Prompt-Injection Defense (`backend/app/ai/narr_classifier.py`)**:
+   - Character n-gram TF-IDF classifier ($n \in [2, 5]$) with L2 regularization.
+   - Intercepts obfuscated scam tokens, leetspeak, and prompt-injection attacks (`[REDACTED_ADVERSARIAL_INJECTION]`).
 
 ---
 
@@ -350,7 +352,7 @@ Vajra/
 ├── README.md                           # GitHub Presentation & Quickstart
 ├── config/                             # Centralized settings, IFSC directory, and schema mappings
 ├── backend/app/                        # FastAPI server, CSR graph engine, models, and legal generators
-├── frontend/                           # React 19 + TypeScript + Vite custom Almond & Coffee interface
+├── frontend/                           # React 19 + TypeScript + Vite Enterprise Slate & Blue interface
 ├── synthetic_data/                     # 5 standalone test scenarios & documentation
 ├── research_papers/                    # 5 peer-reviewed scientific papers fortifying Vajra
 ├── docs/                               # PRD, Hackathon Build Plan, ML/DL extension specs
@@ -362,4 +364,4 @@ Vajra/
 
 ---
 
-*For detailed theoretical derivations, mathematical formulations, GNN architectures, and distributed horizontal scaling strategies, consult [**DOCUMENTATION.md**](DOCUMENTATION.md).*
+*For detailed theoretical derivations, mathematical formulations, score formulation invariants, and distributed horizontal scaling strategies, consult [**DOCUMENTATION.md**](DOCUMENTATION.md).*

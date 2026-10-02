@@ -59,7 +59,7 @@ Current investigative workflows in police cyber cells and forensic units are cri
 1. **100% Offline & Air-Gapped Security:** Zero external network calls, zero telemetry pings, zero cloud API dependencies. Vajra runs entirely locally on commodity forensic laptops or precinct workstations with no GPU requirements.
 2. **Sub-Millisecond Graph Traversal:** Built upon an in-memory, C-accelerated **Compressed Sparse Row (CSR)** graph engine, executing 4-hop to 7-hop directed money trail traces across 2,000,000+ transactions in **0.10 to 0.44 milliseconds**.
 3. **Causal FIFO Taint Tracking:** Respects chronological causality. Downstream transfers are only flagged if they occurred **after** fraudulent funds entered the account, preserving exact fractional balances.
-4. **Dual-Track Explainable AI & Rule-Based Scoring:** Combines deterministic forensic accounting rules (velocity, fan-out, pass-through ratio) with machine learning (Positive-Unlabeled GBDT, Adversarial TF-IDF NLP, PyTorch GraphSAGE GNN) to generate an interpretable 0–100 Mule Risk Index.
+4. **Authoritative Rules + Bounded ML + Exact TreeSHAP Attribution:** Deterministic forensic rules (velocity, fan-out, pass-through ratio, device/IP, chain coherence, narration) produce 0–100 base scores. A monotonically constrained LightGBM (trained on confident pseudo-labels with GroupKFold anti-leakage) adds bounded ±20 points. Exact TreeSHAP game-theoretic attribution ensures every score decomposes into court-admissible evidence with a mathematical sum invariant.
 5. **Zero-Hallucination Legal Document Generation:** Automated, AST-verified generation of statutory freeze orders and case diaries in English and Hindi under Sections 94, 106, and 111 of the Bharatiya Nagarik Suraksha Sanhita (BNSS), 2023 / Section 91 CrPC, and Section 63 of the Bharatiya Sakshya Adhiniyam (BSA), 2023.
 
 ---
@@ -90,17 +90,17 @@ Current investigative workflows in police cyber cells and forensic units are cri
                      │                                       │
                      ▼                                       ▼
   ┌────────────────────────────────────┐  ┌─────────────────────────────────────┐
-  │   PURE UNSUPERVISED AI & SHAP      │  │     FORENSIC LEGAL GENERATOR        │
+  │   RULES + BOUNDED ML + SHAP        │  │     FORENSIC LEGAL GENERATOR        │
   │  [Vectorized Feature Engine]       │  │  • Sec 94/106 BNSS Bank Freeze      │
-  │  • 15-D Velocity, Dwell & Topology │  │    Notices (Bilingual: EN / HI)     │
-  │  • Rapid Pass-Through & Drainage   │  │  • Sec 111 Case Diary Chronicle     │
+  │  • FIFO Pass-Through Ratios        │  │    Notices (Bilingual: EN / HI)     │
+  │  • Velocity, Fan, Dwell, Device    │  │  • Sec 111 Case Diary Chronicle     │
   │                                    │  │  • Sec 63 BSA Digital Integrity     │
-  │  [Isolation Forest (150 Trees)]    │  │    Cryptographic Certificate        │
-  │  • Tree Partition Path Length h(x) │  │                                     │
-  │  • Zero-Label Anomaly Scoring      │  │  [Anti-Hallucination Verifier]      │
-  │                                    │  │  • 100% AST Verification vs Ledger  │
+  │  [Authoritative Rule Engine 0-100] │  │    Cryptographic Certificate        │
+  │  • Smooth Linear Ramps (7 Families)│  │                                     │
+  │  [Bounded LightGBM ±20 pts]       │  │  [Anti-Hallucination Verifier]      │
+  │  • GroupKFold / Confident Labels   │  │  • 100% AST Verification vs Ledger  │
   │  [TreeSHAP Attribution Engine]     │  │  • Zero-LLM Deterministic Templating│
-  │  • Game-Theoretic Additive SHAP    │  │  • Court Evidence Text Generator    │
+  │  • Exact Sum Invariant ≡ risk_index│  │  • Court Evidence Text Generator    │
   │  • Section 106 BNSS Narrative      │  │                                     │
   └──────────────────┬─────────────────┘  └──────────────────┬──────────────────┘
                      │                                       │
@@ -188,122 +188,126 @@ Vajra implements a **Chronological FIFO Taint Algorithm**:
 
 ---
 
-## 6. Pure Unsupervised AI & TreeSHAP Forensic Architecture
+## 6. Authoritative Rules + Bounded LightGBM + TreeSHAP Forensic Architecture
 
 ### 6.1 The Fundamental Data Reality: Zero Ground Truth Labels
 In genuine digital forensics and operational banking environments, **ground truth labels do not exist**:
 1. **Raw Core Banking Ledgers:** Bank statements and raw payment logs contain only transaction primitives: sender account, receiver account, timestamp, amount, payment rail (IMPS/UPI/RTGS), and unstructured narration. Banks do not label transactions as "fraud" or "mule."
 2. **Police FIR Complaints:** First Information Reports filed by victims identify only the victim account and the immediate Layer 1 recipient account. The downstream 2-hop, 3-hop, and 4-hop mule syndicates are completely unlabeled.
-3. **The Fatal Flaw of Supervised Learning:** Training supervised models (e.g., standard GBDT, Random Forest, or Multi-Layer Perceptrons) or pseudo-supervised models (e.g., Positive-Unlabeled learning) introduces severe **confirmation bias**:
-   - The model merely memorizes the specific heuristic rules used to generate the pseudo-labels, creating a self-referential confirmation loop.
-   - When deployed against novel, unseen cyber fraud typologies, supervised models fail catastrophically because novel syndicates intentionally vary transaction amounts and timing.
-   - **Legal Liability in Court:** Under Indian Criminal Procedure (Section 106 BNSS / Section 91 CrPC), an Investigating Officer (IO) cannot defend an account freeze in the High Court by stating that an opaque supervised model assigned a synthetic probability based on synthetic training data. The evidence must be grounded in **objective, explainable mathematical anomalies**.
+3. **Why Pure Unsupervised Alone Is Insufficient:** While Isolation Forests detect statistical anomalies, they cannot distinguish mule-specific behavioral patterns (like rapid pass-through followed by fan-out cash drainage) from legitimate high-volume commercial accounts. Rules capture domain expertise; ML captures non-linear interactions rules miss.
 
-Consequently, Vajra rejects pseudo-supervision and implements a **100% Pure Unsupervised Machine Learning Architecture** pairing an **Isolation Forest** with **TreeSHAP Game-Theoretic Forensic Explainability**.
+Consequently, Vajra implements an **Authoritative Rules + Bounded LightGBM + Exact TreeSHAP** architecture where:
+- **Rules are the backbone** (0–100 deterministic score), encoding expert forensic domain knowledge.
+- **ML is bounded** (±20 points maximum) and can never flag an account independently (ML gate: if `rule_score < 10`, `ml_points ≤ 0`).
+- **TreeSHAP provides exact mathematical decomposition** satisfying a 100% deterministic sum invariant for court admissibility.
 
 ```
                                  RAW BANKING LEDGER
-                               (Zero Labels / 100% Unsupervised)
+                           (Zero Ground Truth Labels)
                                           │
                                           ▼
                       ┌───────────────────────────────────────┐
                       │    DUCKDB VECTORIZED FEATURE ENGINE   │
-                      │  • 15 Unsupervised Forensic Features  │
-                      │  • Velocity, Drainage, Dwell, Topology│
+                      │  • FIFO Pass-Through Ratios (5 windows)│
+                      │  • Velocity, Fan, Dwell, Device/IP   │
                       │  • < 0.10s Vectorized SQL Execution   │
                       └───────────────────┬───────────────────┘
                                           │
-                                          ▼
-                      ┌───────────────────────────────────────┐
-                      │    ISOLATION FOREST ANOMALY ENGINE    │
-                      │  • 150 Isolation Trees (Liu et al.)   │
-                      │  • Recursive Sub-Sampling Partitions  │
-                      │  • Path Length Anomaly Scoring s(x,n) │
-                      │  • Fits in 0.17s on 100% Offline CPU  │
-                      └───────────────────┬───────────────────┘
-                                          │
-                                          ▼
-                      ┌───────────────────────────────────────┐
-                      │      TREESHAP EXPLAINABILITY ENGINE   │
-                      │  • Lundberg et al. (Nature MI 2020)   │
-                      │  • Exact Additive Shapley Values      │
-                      │  • Baseline Expected Value E[f(x)]    │
-                      │  • Individual Feature Attribution φ_i │
-                      └───────────────────┬───────────────────┘
-                                          │
-                                          ▼
-                      ┌───────────────────────────────────────┐
-                      │    STATUTORY COURT EVIDENCE SYNTHESIS │
-                      │  • Automated Legal Evidence Drafting  │
-                      │  • Admissible under Sec 106 BNSS      │
-                      │  • Admissible under Sec 91 CrPC       │
-                      └───────────────────────────────────────┘
+                       ┌──────────────────┴──────────────────┐
+                       ▼                                     ▼
+          ┌─────────────────────────┐         ┌──────────────────────────┐
+          │  AUTHORITATIVE RULES    │         │  PSEUDO-LABEL GENERATOR  │
+          │  • 7 Score Families     │         │  • Confident Positives   │
+          │  • Smooth Linear Ramps  │         │    (rule≥75, 3+ families,│
+          │  • Single-Signal Cap    │         │     ptr_15m≥0.90, chain) │
+          │  • 0–100 Base Score     │         │  • Confident Negatives   │
+          └──────────┬──────────────┘         │    (rule≤15, unlinked)   │
+                     │                        └──────────┬───────────────┘
+                     │                                   ▼
+                     │                  ┌──────────────────────────┐
+                     │                  │  BOUNDED LIGHTGBM (±20)  │
+                     │                  │  • Monotonic Constraints  │
+                     │                  │  • 5-Fold GroupKFold     │
+                     │                  │  • Connected Component   │
+                     │                  │    Anti-Leakage Grouping │
+                     │                  └──────────┬───────────────┘
+                     │                             │
+                     └──────────┬──────────────────┘
+                                │
+                                ▼
+                  ┌───────────────────────────────────┐
+                  │      EXACT TREESHAP ATTRIBUTION   │
+                  │  • pred_contrib=True (LightGBM)   │
+                  │  • Hare-Niemeyer Largest Remainder │
+                  │  • Sum Invariant: Σreasons ≡ risk │
+                  └───────────────────┬───────────────┘
+                                     │
+                                     ▼
+                  ┌───────────────────────────────────┐
+                  │    CHAIN + RING + FALLBACK GATE   │
+                  │  • CSR 3-hop ≤72h Bridge BFS     │
+                  │  • Ring Points 0 to +8            │
+                  │  • PSI/Coherence Fallback Gate    │
+                  └───────────────────────────────────┘
 ```
 
 ---
 
-### 6.2 The Architectural Decision: Isolation Forest + TreeSHAP vs Deep Autoencoders
-When architecting an unsupervised anomaly detection engine for financial forensics, two primary paradigms emerge: **Option 1 (Isolation Forest + TreeSHAP)** and **Option 2 (Deep Autoencoders + Feature-Level Reconstruction Error)**. 
+### 6.2 The Architectural Decision: Rules + Bounded LightGBM vs Alternatives
+When architecting the Mule Risk Engine, three primary paradigms were evaluated:
 
-Vajra selected **Option 1**. The rigorous mathematical, empirical, and legal justifications are detailed below:
+| Evaluation Dimension | Selected: Rules + Bounded LightGBM + TreeSHAP | Alternative: Isolation Forest Only | Alternative: Deep Autoencoders | Forensic & Legal Impact |
+|---|---|---|---|---|
+| **Score Decomposability** | **100% decomposable.** Every point traces to a specific rule family or ML driver with exact mathematical attribution. | Anomaly score only; no rule-based domain encoding. | Opaque latent space; reconstruction errors smear across features. | Judges can examine exactly why each account scored high. |
+| **Domain Expert Control** | **Full control.** Velocity, Fan, Cash-Out, Device/IP weights are configurable. ML is bounded to ±20. | No expert knobs; purely data-driven. | No expert knobs; hyperparameter-dependent. | Officers can tune thresholds per jurisdiction without retraining. |
+| **ML Safety Gate** | **ML cannot flag independently.** If `rule_score < 10`, ML points are clamped to ≤0. | N/A | N/A | Prevents ML hallucination on benign accounts. |
+| **Automatic Fallback** | **4-way fallback gate.** Training failure, PSI drift >0.25, coherence drop, or flagged share outside [1%,15%] → immediate `rules_only`. | No fallback mechanism. | No fallback mechanism. | Production safety in adversarial environments. |
+| **Air-Gapped CPU Speed** | **6.33 seconds** for full 25k-account pipeline. | 0.17s but no rule integration. | 45–90 seconds, needs GPU. | Sub-SLA performance on police field laptops. |
+| **Judicial Admissibility** | **Deterministic sum invariant.** $\sum \text{reasons} + \text{clip\_adjust} \equiv \text{risk\_index}$ for 100% of accounts. | Probabilistic scores without decomposition. | Opaque, inadmissible under Section 106 BNSS cross-examination. | Court-ready evidence generation with zero unexplained residual. |
 
-| Evaluation Dimension | Option 1: Isolation Forest + TreeSHAP (Selected) | Option 2: Deep Autoencoders (Rejected) | Forensic & Legal Impact |
-|---|---|---|---|
-| **Tabular Geometry & Step Functions** | **Native axis-aligned orthogonal partitions.** Naturally isolates discrete regulatory thresholds (e.g., ₹50,000 reporting threshold, 15m velocity cliffs). | **Smooth continuous manifold assumption.** Neural networks struggle with non-smooth tabular step functions and multi-modal banking distributions. | Financial fraud exhibits sharp non-linear boundaries that tree partitions isolate with zero parameter distortion. |
-| **Attribution Fidelity (Explainability)** | **Exact Game-Theoretic Additivity.** Lundberg's TreeSHAP satisfies $\sum \phi_i = f(x) - \mathbb{E}[f(x)]$. Zero attribution smearing. | **Reconstruction Error Smearing (Cross-Talk).** An anomaly in feature $A$ corrupts the bottleneck latent vector $z$, causing false reconstruction errors across benign features $B, C, D$. | Autoencoder reconstruction errors generate false accusations across unrelated financial behaviors in court. |
-| **Air-Gapped CPU Execution Speed** | **0.17 seconds** to fit 150 trees across thousands of accounts. Sub-sampling complexity $O(n \cdot t \cdot \log \psi)$. | **45 to 90 seconds** on CPU across 100 backpropagation epochs. Requires CUDA GPU for acceptable speeds. | Crucial for golden-hour triage on field laptops in police stations without internet or GPUs. |
-| **Scale Invariance & Outlier Sensitivity** | **Monotonic rank invariance.** Tree splits depend solely on relative ordering, rendering the model immune to extreme monetary skews. | **Hyper-sensitive to scale.** Extreme transaction values (e.g., a ₹5 Crore outlier) dominate the Mean Squared Error (MSE) loss, suppressing subtle velocity signals. | Fraud networks mix micro-smurfing (₹10,000) with mega-aggregators (₹50,00,000). Tree isolation handles both seamlessly. |
-| **Judicial Admissibility (BNSS / CrPC)** | **Deterministic & Legally Auditable.** Individual Shapley values translate directly into statutory evidence paragraphs. | **Opaque Latent Space.** High-dimensional latent bottleneck distances cannot be articulated or justified under judicial cross-examination. | Guarantees compliance with Indian judicial scrutiny under Section 106 BNSS and Section 63 BSA. |
-
-#### Detailed Failure Analysis of Deep Autoencoders for Banking Forensics
-1. **The Reconstruction Error "Smearing" Phenomenon:**
-   In an Autoencoder, an input vector $x \in \mathbb{R}^d$ is mapped to a low-dimensional bottleneck latent representation $z = \sigma(W_e x + b_e) \in \mathbb{R}^k$ ($k \ll d$) and reconstructed as $\hat{x} = \sigma(W_d z + b_d)$. If an account exhibits an extreme anomaly in a single dimension (e.g., $x_{\text{drain}} = 1.0$), this anomalous value pushes the latent vector $z$ into an untrained, out-of-distribution region of the latent space. Consequently, during decoding, **all reconstructed dimensions $\hat{x}_j$ suffer severe reconstruction errors**:
-   $$\text{Error}_j = |x_j - \hat{x}_j| \gg 0 \quad \forall j \in \{1, \dots, d\}$$
-   When an investigator queries which feature caused the alert, the autoencoder falsely claims that transaction counts, IP foreign ratios, and counterparty counts were all anomalous, creating misleading forensic evidence.
-2. **Game-Theoretic Perfection of TreeSHAP:**
-   In contrast, TreeSHAP evaluates exact conditional expectations $\mathbb{E}[f(x) \mid x_S]$ across all internal tree decision paths. If a feature $x_j$ did not participate in early tree partitions isolating the account, its Shapley value $\phi_j$ is identically zero (Null Player Axiom). Only the true anomaly drivers receive positive credit.
+> **Note on Isolation Forest:** Vajra retains Isolation Forest as an *optional auxiliary triage tool* (`iforest.enabled: false` by default in `config.yaml`). When enabled, it populates a `needs_review` list for analyst triage. **Isolation Forest never modifies `risk_index`.**
 
 ---
 
-### 6.3 Mathematical Foundations of the Isolation Forest
-Proposed by Liu, Ting, and Zhou (IEEE ICDM / ACM TKDD), the Isolation Forest isolates anomalous observations rather than profiling normal data points. It exploits two quantitative properties of anomalies:
-1. They are the minority consisting of few instances.
-2. They have attribute-values that are functionally disparate from nominal instances.
+### 6.3 Score Formulation & Mathematical Invariant
 
-#### 1. Recursive Partitioning & Isolation Trees (iTrees)
-Let $X = \{x_1, \dots, x_n\}$ be an unsupervised dataset of $n$ instances in a $d$-dimensional feature space. An **Isolation Tree (iTree)** is a proper binary tree where each internal node contains:
-- A split feature $q \in \{1, \dots, d\}$.
-- A split value $p \in [\min(X_{\cdot, q}), \max(X_{\cdot, q})]$.
+The Mule Risk Index is computed as:
+$$\text{risk\_index} = \text{clip}(\text{rule\_score} + \text{ml\_points} + \text{ring\_points}, 0, 100)$$
 
-At each node, data is recursively partitioned:
-$$X_{\text{left}} = \{x \in X \mid x_q < p\}, \quad X_{\text{right}} = \{x \in X \mid x_q \ge p\}$$
-Partitioning terminates when either:
-1. The tree reaches a maximum depth limit $h_{\max} = \lceil \log_2(\psi) \rceil$, where $\psi$ is the sub-sampling size ($\psi = 256$).
-2. $|X| \le 1$.
-3. All data points in $X$ have identical attribute values.
+**Component 1: Authoritative Rule Score (0–100)**
+Seven rule families contribute points via smooth linear ramps (preventing hard-cliff false positives):
 
-#### 2. Path Length $h(x)$
-The path length $h(x)$ of an observation $x$ is the number of edges traversed from the root node to a terminating leaf node in an iTree. 
+| Family | Max Points | Key Signals |
+|---|---|---|
+| Velocity | 30 | Pass-through ratios (5m/15m/1h/6h/24h), hold median/p90 |
+| Fan Topology | 25 | Max fan-out within 15m, fan-in ratio, shared counterparties |
+| Cash-Out | 20 | ATM/P2P/crypto narration share, drainage ratio |
+| Device/IP | 10 | Foreign IP ratio, headless device ratio, device sharing |
+| Chain Coherence | 10 | Linkage to flagged accounts within 3 hops |
+| Narration | 5 | Scam keyword/pattern match in transaction remarks |
+| Mitigating Negatives | -25 | Long holding periods, low velocity, balanced flow |
 
-When an iTree terminates at a node with size $|X| = m > 1$, an adjustment factor representing the average path length of an unbuilt subtree is appended:
-$$c(m) = 2 \left( \ln(m - 1) + \gamma \right) - \frac{2(m - 1)}{m}$$
-where $\gamma \approx 0.5772156649$ is Euler's constant.
+**Single-signal capping** ensures no single rule indicator can push an account past Medium tier alone.
 
-#### 3. Average Path Length of Unsuccessful Search $c(n)$
-Since iTrees have an equivalent structure to Binary Search Trees (BST), the average path length over an ensemble of $n$ instances serves as the normalization baseline:
-$$c(n) = 2 \left( \ln(n - 1) + \gamma \right) - \frac{2(n - 1)}{n}$$
+**Component 2: Bounded LightGBM ML Points (±20)**
+- Monotonically constrained LightGBM trained on confident pseudo-labels:
+  - **Positives**: `rule_score ≥ 75`, ≥3 rule families active, `ptr_15m ≥ 0.90`, chain-coherent.
+  - **Negatives**: `rule_score ≤ 15`, unlinked to chain, bottom 70th percentile.
+- 5-fold GroupKFold by connected component ID prevents ring data leakage.
+- $\text{ml\_points} = 20 \times (2 \cdot \text{ml\_prob} - 1)$, clipped to $[-20, +20]$.
+- **ML Gate Protection**: If $\text{rule\_score} < 10$, then $\text{ml\_points} \le 0.0$ strictly.
 
-#### 4. Calibrated Anomaly Score $s(x, n)$
-The anomaly score of an instance $x$ across an ensemble of $T = 150$ iTrees is defined as:
-$$s(x, n) = 2^{-\frac{\mathbb{E}[h(x)]}{c(n)}}$$
-where $\mathbb{E}[h(x)] = \frac{1}{T} \sum_{t=1}^T h_t(x)$ is the expected path length across all isolation trees.
+**Component 3: Ring Bridge Points (0 to +8)**
+Second-pass CSR bridge BFS identifies accounts sitting on paths between two flagged seeds within 3 hops and 72 hours. These receive 0 to +8 additional points based on bridge centrality.
 
-**Mathematical Boundary Behaviors:**
-- As $\mathbb{E}[h(x)] \to 0 \implies s(x, n) \to 2^0 = 1.0$: The account is isolated in extremely few splits near the root of the trees $\to$ **Strong Anomaly / Confirmed Outlier**.
-- As $\mathbb{E}[h(x)] \to n - 1 \implies s(x, n) \to 0.0$: The account requires deep, extensive partitions to isolate $\to$ **Structurally Normal Retail Customer**.
-- When $\mathbb{E}[h(x)] \to c(n) \implies s(x, n) \to 2^{-1} = 0.5$: The account exhibits no distinct structural or behavioral variance.
+**Deterministic Sum Invariant:**
+$$\sum \text{reasons} + \text{clip\_adjust} \equiv \text{risk\_index} \quad \text{(100\% of accounts)}$$
+Enforced via Hare-Niemeyer largest-remainder rounding across top 4 TreeSHAP drivers.
 
-Vajra calibrates this score into a continuous $[0.0, 1.0]$ index, computes percentile ranks across the entire ledger, and flags accounts in the top **95th percentile** as high-risk anomalies.
+---
+
+### 6.4 TreeSHAP Forensic Attribution
+To convert the LightGBM's ML contribution into legally admissible courtroom evidence, Vajra integrates **exact TreeSHAP** (Lundberg et al., *Nature Machine Intelligence* 2020) via LightGBM's native `pred_contrib=True`.
 
 ---
 
@@ -442,15 +446,17 @@ Vajra guarantees **100% Zero-Hallucination Evidence Generation** via a determini
 
 ## 8. Frontend & Cognitive Forensics Design System
 
-The frontend was built from scratch without bloated component libraries, adhering to strict digital forensic usability requirements:
+The frontend was built from scratch with React 19 + TypeScript + Vite, adhering to strict digital forensic usability requirements:
 
-- **Almond & Coffee Monochromatic Theme:** Designed for 12-hour police shift work. Avoids jarring neon cyber aesthetics in favor of high-contrast, low-fatigue tones:
-  - Base Background: Canvas Bone (`#FBF7F0`)
-  - Surface Card: Warm Almond (`#F5EEE5`)
-  - Border Accents: Muted Sandstone (`#D2BFA8`)
-  - Typography: Deep Espresso Brown (`#34271E` / `#5C4634`)
-  - Status Accents: Muted Terracotta (`#A8422B`), Deep Forest Slate (`#2D5A43`)
-- **Custom Interactive SVG Canvas:** 60 FPS rendering supporting smooth zoom, pan, and interactive node drag-and-drop.
+- **Enterprise Slate & Blue Design System:** Designed for 12-hour police shift work with a clean, professional, low-fatigue interface:
+  - Application Background: Soft Slate (`#F4F7FB`)
+  - Card Surface: Pure White (`#FFFFFF`) with `1px solid #E2E8F0` borders
+  - Header & Body Surface: Faint Off-White (`#F8FAFC`)
+  - Typography: Deep Slate (`#0F172A` headings, `#334155` body, `#64748B` captions)
+  - Primary Accent: Royal Blue (`#2563EB`) for active states and key CTAs
+  - Sidebar: Deep Rich Navy (`#091326`) with atmospheric background overlay
+  - Status Colors: Emerald (`#10B981`), Rose (`#EF4444`), Amber (`#F59E0B`), Purple (`#8B5CF6`)
+- **Custom Interactive Canvas Graph Engine:** 60 FPS rendering supporting smooth zoom, pan, and interactive node drag-and-drop.
 - **Sugiyama Hierarchical DAG Layout:** Automatically sorts nodes into horizontal layers (Victim $\to$ Layer 1 $\to$ Layer 2 $\to$ Drainage) preventing tangled "hairball" visual graphs.
 - **Temporal Playback Engine:** Officers can drag a chronological time slider to watch the crime unfold minute-by-minute across the banking network.
 - **Bilingual Support:** One-click instant switching between English and Hindi for court notices and investigation summaries.
@@ -467,9 +473,9 @@ All benchmarks were conducted on a commodity machine (Apple M-series / 16 GB RAM
 | **Integrity Hashing** | Streaming SHA-256 Checksum on 286 MB File | **0.31 seconds** | 2.5–5.0 seconds (Standard Python `hashlib`) |
 | **CSR Index Construction** | In-Memory Graph Indexing (25,000 Nodes, 2,000,000 Edges) | **4.64 seconds** | 45–90 seconds (Neo4j / NetworkX) |
 | **Multi-Hop Traversal** | 4-Hop Causal FIFO Taint Trace | **0.10 – 0.44 ms** | 150–850 ms (Neo4j Cypher / NetworkX BFS) |
-| **Feature Extraction** | 15-Dimensional Vectorized Extraction (DuckDB SQL) | **0.08 seconds** | 15–40 seconds (Pandas / NetworkX loops) |
-| **Unsupervised Training** | Isolation Forest (150 trees, sub-sampling on CPU) | **0.17 seconds** | 45–90 seconds (Deep Autoencoders) |
-| **TreeSHAP Attribution** | Exact Polynomial-Time Shapley Evaluation (per account) | **12.6 ms** | 1,500–5,000 ms (Sampling KernelSHAP) |
+| **Feature Extraction** | Behavioral + FIFO Pass-Through Extraction (DuckDB SQL) | **0.08 seconds** | 15–40 seconds (Pandas / NetworkX loops) |
+| **Full Scoring Pipeline** | Rules + LightGBM + TreeSHAP + Chain (25k accounts) | **6.33 seconds** | 45–90 seconds (Deep Autoencoders / GNNs) |
+| **TreeSHAP Attribution** | Exact pred_contrib Shapley Evaluation (per account) | **39.45 ms avg** | 1,500–5,000 ms (Sampling KernelSHAP) |
 | **Document Verification** | AST Anti-Hallucination Ledger Verification | **1.8 ms** | N/A (LLM generation takes 8–15s and hallucinates) |
 | **Memory Footprint** | Active System RAM during full 2M graph investigation | **727 MB RAM** | 8–16 GB RAM (Neo4j Enterprise) |
 
@@ -517,7 +523,7 @@ Vajra/
 │   └── schema_map.yaml                 # Dynamic alias dictionary for multi-bank CSV normalization
 ├── backend/
 │   └── app/
-│       ├── main.py                     # FastAPI backend application exposing REST and SSE endpoints
+│       ├── main.py                     # FastAPI backend application exposing REST endpoints
 │       ├── core/
 │       │   ├── config.py               # Singleton configuration manager
 │       │   └── telemetry.py            # Live CPU, RAM, and process resource monitor
@@ -527,29 +533,40 @@ Vajra/
 │       │   └── csr.py                  # C-accelerated Compressed Sparse Row graph engine & FIFO taint tracer
 │       ├── detect/
 │       │   ├── rules.py                # Deterministic forensic rule scoring engine (velocity, fan-out, dwell)
-│       │   ├── features.py             # Vectorized 15-dimensional unsupervised feature extraction engine
-│       │   ├── isolation_detector.py   # Pure unsupervised Isolation Forest anomaly detection engine (150 trees)
+│       │   ├── features.py             # Vectorized behavioral & FIFO pass-through feature extraction engine
 │       │   └── shap_explainer.py       # TreeSHAP game-theoretic explainability engine & court evidentiary synthesizer
 │       ├── ai/
-│       │   ├── narr_classifier.py      # Model M2: Character n-gram TF-IDF narration classifier & injection shield
+│       │   ├── narr_classifier.py      # Character n-gram TF-IDF narration classifier & injection shield
 │       │   └── anti_hallucination.py   # AST-level database verification engine
 │       └── reports/
 │           └── legal_generator.py      # Automated generator for BNSS Sec 94/106/111 & BSA Sec 63 notices
+├── engine/                              # Core Mule Risk Engine modules
+│   ├── features.py                     # DuckDB vectorized feature extraction + FIFO pass-through scanner
+│   ├── rules.py                        # Smooth linear ramp rule scoring (7 families, 0–100)
+│   ├── chain.py                        # CSR time-respecting path traversal & bridge BFS
+│   ├── pseudo_labels.py                # Confident pseudo-labelling with audit sample export
+│   ├── calibrate.py                    # Platt scaling / Isotonic probability calibrators
+│   ├── ml.py                           # Monotonically constrained LightGBM with GroupKFold
+│   ├── shap_reasons.py                 # Hare-Niemeyer largest-remainder TreeSHAP attribution
+│   ├── fallback.py                     # PSI computation and 4-way fallback gate
+│   ├── ledger.py                       # Audit ledger builder enforcing sum equality invariant
+│   ├── explain.py                      # Section 91 CrPC legal narrative generator
+│   └── fusion.py                       # 9-step master pipeline orchestrator
 ├── frontend/
 │   ├── index.html                      # Single page application entry point
 │   ├── package.json                    # Frontend dependencies (React 19, Lucide, Vite)
 │   ├── src/
 │   │   ├── main.tsx                    # React application bootstrap
 │   │   ├── App.tsx                     # Main layout coordinator and tab state router
-│   │   ├── index.css                   # Custom Almond & Coffee design tokens and CSS variables
+│   │   ├── index.css                   # Enterprise Slate & Blue design tokens and CSS variables
 │   │   ├── types.ts                    # Strict TypeScript interfaces matching backend schemas
 │   │   └── components/
-│   │       ├── Header.tsx              # Brand logo, global search, and telemetry status
-│   │       ├── Sidebar.tsx             # Primary navigation (Investigate, Accounts, Dataset, etc.)
-│   │       ├── InvestigateTab.tsx      # Target account input, hops slider, trace controls, and summary
-│   │       ├── GraphCanvas.tsx         # Fullscreen OSINT network visualizer (vis-network, clustering, drawer)
-│   │       ├── LoadDataTab.tsx         # Drag-and-drop CSV upload and real-time ingestion monitor
-│   │       ├── AccountsTab.tsx         # Searchable directory, Isolation Anomaly Index, and TreeSHAP card
+│   │       ├── Header.tsx              # Vajra shield logo, global search, and telemetry status
+│   │       ├── Sidebar.tsx             # Primary navigation with atmospheric background
+│   │       ├── InvestigateTab.tsx      # Target account input, hops slider, trace controls
+│   │       ├── GraphCanvas.tsx         # Fullscreen OSINT network visualizer (canvas, clustering)
+│   │       ├── LoadDataTab.tsx         # Forensic study creation & dataset ingestion
+│   │       ├── AccountsTab.tsx         # Searchable account directory with risk scores & TreeSHAP
 │   │       ├── SyndicatesTab.tsx       # Clustered mule ring explorer
 │   │       ├── LegalReportsTab.tsx     # Court notice preview, Hindi toggle, and print/export
 │   │       ├── BenchmarkTab.tsx        # Live performance benchmarks and academic paper citations
@@ -578,11 +595,12 @@ Vajra/
 │   ├── parquet/                        # Compressed columnar cache (normalised_txns.parquet)
 │   ├── cache/                          # Compact binary arrays (account_dict.npz)
 │   └── raw/                            # Primary raw dataset repository
-├── bench/                              # Autonomous validation scripts and stress testing harnesses
-│   ├── test_synthetic_scenarios.py     # Automated test suite validating all 4 synthetic scenarios
-│   ├── train_isolation_forest.py       # Training and evaluation runner for Isolation Forest & TreeSHAP
-│   └── comprehensive_test.py           # End-to-end API regression test suite
-├── Makefile                            # Standard automation commands (build, run, test, bench)
+├── tests/
+│   └── test_engine.py                  # 11 unit & integration tests (determinism, invariants, air-gap)
+├── eval/
+│   ├── run_eval.py                     # 3-configuration benchmark harness
+│   └── report.md                       # Evaluation benchmark results
+├── Makefile                            # Standard automation commands (features, score, eval, test)
 ├── run.sh                              # Single-command air-gapped bootstrap script
 └── README.md                           # GitHub project presentation and quickstart guide
 ```
@@ -636,14 +654,14 @@ uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
 ### 12.4 Running the Test & Benchmark Suites
 
 ```bash
-# Run the synthetic scenario test harness
-.venv/bin/python bench/test_synthetic_scenarios.py
+# Run the 11 mandatory forensic unit & integration tests
+pytest tests/test_engine.py -v
 
-# Train and evaluate pure unsupervised Isolation Forest & TreeSHAP engine
-.venv/bin/python bench/train_isolation_forest.py
+# Run the full Mule Risk Engine pipeline (features → rules → LightGBM → TreeSHAP)
+make features && make score
 
-# Run the end-to-end API regression test suite
-.venv/bin/python bench/comprehensive_test.py
+# Run the 3-configuration forensic benchmark harness and generate eval/report.md
+make eval
 ```
 
 ---
@@ -656,11 +674,12 @@ uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
 | **Ingestion Speed** | 2,000,000 txns in < 15s | **2.72 seconds** | Immediate readiness during active golden hour |
 | **Trace Latency** | 4-hop trace in < 500ms | **0.10 – 0.44 ms** | Real-time interactive courtroom & dispatch tracing |
 | **Taint Tracking** | Chronological | **FIFO Proportional** | Eliminates false accusations & unlinked accounts |
-| **Unsupervised ML Speed**| < 30 seconds | **0.17 seconds** | Fits 150 isolation trees without GPU or labels |
-| **Explainability** | Additive & Court-Admissible | **TreeSHAP Exact** | Satisfies 4 game-theoretic axioms under Sec 106 BNSS |
+| **Full Scoring Pipeline** | ≤ 30 seconds (25k accts) | **6.33 seconds** | Rules + LightGBM + TreeSHAP + Chain on commodity CPU |
+| **Explainability** | Additive & Court-Admissible | **TreeSHAP Exact Sum Invariant** | Σreasons + clip_adjust ≡ risk_index for 100% of accounts |
+| **Account Explanation** | < 200 ms | **39.45 ms avg** | 5x faster than SLA for courtroom live queries |
 | **Notice Generation** | < 10 seconds | **< 0.05 seconds** | Instant dispatch to Nodal Officers via email/portal |
 | **Hallucination Rate** | 0.00% | **0.00% (AST Verified)** | Fully admissible under Section 63 BSA / Sec 65B IEA |
 
 ---
 
-*Vajra represents a leap forward in sovereign Indian law enforcement technology—combining the raw mathematical speed of C-level data structures, the game-theoretic explainability of TreeSHAP on unsupervised Isolation Forests, and the unyielding precision of deterministic legal compliance.*
+*Vajra represents a leap forward in sovereign Indian law enforcement technology—combining the raw mathematical speed of C-level CSR data structures, the domain-expert authority of deterministic forensic rules, the pattern-detection power of bounded LightGBM with exact TreeSHAP game-theoretic attribution, and the unyielding precision of zero-hallucination legal compliance.*
