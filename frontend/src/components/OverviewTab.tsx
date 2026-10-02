@@ -136,7 +136,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `Vajra_Top_Suspects_${new Date().toISOString().slice(0,10)}.csv`);
+    link.setAttribute("download", `Suspect_Accounts_${new Date().toISOString().slice(0,10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

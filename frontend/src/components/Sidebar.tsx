@@ -106,7 +106,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             }}>
               <img
                 src="/vajra_logo.png"
-                alt="वज्र"
+                alt="Emblem"
                 style={{
                   width: '30px',
                   height: '30px',

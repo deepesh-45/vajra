@@ -83,7 +83,7 @@ export const Header: React.FC<HeaderProps> = ({
       boxShadow: '0 1px 3px rgba(60, 45, 30, 0.04)',
       gap: '18px'
     }}>
-      {/* Left: Creative Modern Hamburger + Hindi वज्र Branding */}
+      {/* Left: Creative Modern Hamburger */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
         {onToggleSidebar && (
           <button
@@ -98,20 +98,6 @@ export const Header: React.FC<HeaderProps> = ({
             <span className="hamburger-line hamburger-line-3" />
           </button>
         )}
-
-        <span className="brand-devanagari" style={{
-          fontFamily: "'Alkatra', 'Modak', cursive, sans-serif",
-          fontSize: '1.85rem',
-          lineHeight: 1,
-          color: '#2563EB',
-          fontWeight: 700,
-          letterSpacing: '0.04em',
-          userSelect: 'none',
-          marginLeft: '2px',
-          textShadow: '0 1px 2px rgba(37,99,235,0.1)'
-        }}>
-          वज्र
-        </span>
       </div>
 
       {/* Center: Full Navbar Global Search Command Bar */}
