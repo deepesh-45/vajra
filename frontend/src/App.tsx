@@ -61,7 +61,7 @@ export const App: React.FC = () => {
       backgroundColor: '#F4F7FB',
       overflow: 'hidden'
     }}>
-      {/* Left Sidebar (Full Height Dark Navy) */}
+      {/* Left Sidebar (Full Height Pastel Almond) */}
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
       {/* Right Column: Header on Top + Scrollable Main Content */}

@@ -454,7 +454,7 @@ The frontend was built from scratch with React 19 + TypeScript + Vite, adhering 
   - Header & Body Surface: Faint Off-White (`#F8FAFC`)
   - Typography: Deep Slate (`#0F172A` headings, `#334155` body, `#64748B` captions)
   - Primary Accent: Royal Blue (`#2563EB`) for active states and key CTAs
-  - Sidebar: Deep Rich Navy (`#091326`) with atmospheric background overlay
+  - Sidebar: Warm Pastel Almond (`#F4EDE4`) with refined warm borders (`#E2D7C8`) and high-contrast typography
   - Status Colors: Emerald (`#10B981`), Rose (`#EF4444`), Amber (`#F59E0B`), Purple (`#8B5CF6`)
 - **Custom Interactive Canvas Graph Engine:** 60 FPS rendering supporting smooth zoom, pan, and interactive node drag-and-drop.
 - **Sugiyama Hierarchical DAG Layout:** Automatically sorts nodes into horizontal layers (Victim $\to$ Layer 1 $\to$ Layer 2 $\to$ Drainage) preventing tangled "hairball" visual graphs.

@@ -9,13 +9,13 @@
   --border-subtle: #EAECF0;      /* Subtle separator */
   --border-focus: #3B82F6;       /* Clean focus blue */
 
-  /* Sidebar Dark Navy System */
-  --sidebar-bg: #0A1226;         /* Deep rich dark navy */
-  --sidebar-surface: #0E1A38;    /* Slightly lighter navy container */
-  --sidebar-text: #94A3B8;       /* Slate muted text */
-  --sidebar-text-hover: #F8FAFC; /* Crisp white text on hover */
+  /* Sidebar Pastel Almond System */
+  --sidebar-bg: #F4EDE4;         /* Warm pastel almond cream */
+  --sidebar-surface: #FFFFFF;    /* Clean white container / card */
+  --sidebar-text: #54473A;       /* Warm dark taupe for optimal contrast */
+  --sidebar-text-hover: #1E293B; /* Deep slate on hover */
   --sidebar-active-bg: #2563EB;  /* Vibrant royal blue active pill */
-  --sidebar-border: #1E293B;
+  --sidebar-border: #E3D8C8;     /* Soft warm almond border */
 
   /* Typography Colors */
   --text-primary: #0F172A;       /* Deep slate primary headings */
