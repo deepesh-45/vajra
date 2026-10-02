@@ -4,7 +4,7 @@ EDA on Ingested DuckDB Data to inspect narrations, potential victims, and mule r
 
 import duckdb
 
-conn = duckdb.connect("data/duckdb/abhedya.duckdb")
+conn = duckdb.connect("data/duckdb/vajra.duckdb")
 
 print("--- TOP NARRATION PATTERNS ---")
 print(conn.execute("""

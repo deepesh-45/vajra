@@ -12,7 +12,7 @@ from backend.app.graph.csr import csr_graph
 from backend.app.reports.legal_generator import legal_generator
 
 if __name__ == "__main__":
-    conn = duckdb.connect("data/duckdb/abhedya.duckdb")
+    conn = duckdb.connect("data/duckdb/vajra.duckdb")
     csr_graph.build_from_duckdb(conn)
 
     victim = "AIRP10000024"

@@ -1,8 +1,8 @@
-# Operation "Vajra" Configuration
+# Vajra Configuration
 # All thresholds, weights, and detection parameters
 
 app:
-  name: "Operation Vajra"
+  name: "Vajra"
   version: "1.0.0"
   debug: false
   host: "127.0.0.1"

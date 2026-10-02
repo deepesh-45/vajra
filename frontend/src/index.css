@@ -1,71 +1,83 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root {
-  /* Shades & Tints: Cream, Beige, Pista, Emerald */
-  --bg: #F9F7F2;                 /* Warm rich cream */
-  --surface: #FFFFFF;            /* Clean crisp white surface */
-  --surface-2: #F3EFE6;          /* Warm beige tint */
-  --surface-pista: #EDF4EC;      /* Soft pista tint */
-  --surface-hover: #E8E2D5;
-  --border: #E0D8CA;             /* Warm soft beige border */
-  --border-strong: #C9BEAC;
-  --border-pista: #C8DEC5;
-  --border-subtle: #EBE5D9;
+  /* Monochromatic Almond & Warm Ivory Design System */
+  --bg: #FBF7F0;                 /* Warm ivory page background */
+  --surface: #FFFFFF;            /* Clean surface */
+  --surface-2: #F5EEE5;          /* Pale almond container & input fill */
+  --surface-almond: #E8D8C3;     /* Almond panel fill */
+  --surface-pista: #E8D8C3;      /* Harmonized almond accent */
+  --surface-hover: #DFCEB7;      /* Hover state */
+  --border: #D2BFA8;             /* Almond border */
+  --border-strong: #B89C7D;      /* Defined almond border */
+  --border-pista: #D2BFA8;
+  --border-subtle: #EBE1D3;      /* Faint almond separator */
 
-  --text: #16241B;               /* Deep forest dark text */
-  --text-muted: #536458;         /* Subdued sage gray */
-  --text-subtle: #84968A;
+  /* Monochromatic Almond Typography */
+  --text: #34271E;               /* Dark coffee for titles, key metrics, emphasis */
+  --text-body: #5C4634;          /* Deep almond brown primary text */
+  --text-muted: #8C7764;         /* Muted taupe secondary text */
+  --text-subtle: #A38F7D;        /* Faint caption text */
 
-  /* Emerald Primary */
-  --primary: #065F46;            /* Deep noble emerald */
-  --primary-hover: #044E39;
-  --primary-light: #ECFDF5;      /* Subtle emerald tint */
-  --primary-border: #A7F3D0;
+  /* Primary Action & Buttons: Dark Coffee */
+  --primary: #34271E;            /* Dark coffee for buttons, active tabs, icons */
+  --primary-hover: #221811;
+  --primary-light: #F5EEE5;      /* Pale almond tint */
+  --primary-border: #D2BFA8;
 
-  /* Pista Green Accents */
-  --pista: #477343;
-  --pista-light: #EDF5EC;
-  --pista-border: #BCD9B8;
-  --pista-hover: #385E35;
+  /* Almond Accent Tokens */
+  --pista: #5C4634;
+  --pista-light: #F5EEE5;
+  --pista-border: #D2BFA8;
+  --pista-hover: #34271E;
 
-  /* Warm Beige / Sand */
-  --beige: #8C7853;
-  --beige-light: #F7F3E9;
-  --beige-border: #DDD2BE;
+  --beige: #8C7764;
+  --beige-light: #F5EEE5;
+  --beige-border: #D2BFA8;
 
-  /* Status Colors */
-  --success: #047857;
-  --success-light: #EDFBF4;
-  --success-border: #BBF7D0;
+  /* Monochromatic Status Tones (Filled Almond Shades - No Clashing Hues) */
+  --success: #34271E;
+  --success-light: #E8D8C3;
+  --success-border: #D2BFA8;
 
-  --warning: #B45309;
-  --warning-light: #FEF3C7;
-  --warning-border: #FDE68A;
+  --warning: #5C4634;
+  --warning-light: #F5EEE5;
+  --warning-border: #D2BFA8;
 
-  --danger: #991B1B;
-  --danger-light: #FEF2F2;
-  --danger-border: #FECACA;
+  --danger: #34271E;
+  --danger-light: #E8D8C3;
+  --danger-border: #D2BFA8;
 
-  /* Header Dark Forest Moss */
-  --header-bg: #111D16;
-  --header-surface: #18281F;
-  --header-border: #22372B;
+  /* Header Monochrome Almond Styling */
+  --header-bg: #FBF7F0;
+  --header-surface: #F5EEE5;
+  --header-border: #D2BFA8;
+  --header-text: #34271E;
 
-  /* Layer Forensics Tokens */
-  --layer-victim: #5B21B6;
-  --layer-victim-bg: #F5F3FF;
-  --layer-1: #065F46;
-  --layer-1-bg: #ECFDF5;
-  --layer-2: #B45309;
-  --layer-2-bg: #FFFBEB;
-  --layer-3: #991B1B;
-  --layer-3-bg: #FEF2F2;
+  /* Monochromatic Almond Forensic Layer Progression (Light to Dark) */
+  --layer-victim: #8C7764;       /* Muted Taupe (Victim) */
+  --layer-victim-bg: #F5EEE5;
+  --layer-1: #CDB394;            /* Soft Almond (L1 Smurfing Dispatch) */
+  --layer-1-bg: #F5EEE5;
+  --layer-2: #9D7D5E;            /* Warm Almond (L2 Layering Mule) */
+  --layer-2-bg: #E8D8C3;
+  --layer-3: #5C4634;            /* Deep Almond Brown (L3 Aggregator) */
+  --layer-3-bg: #E8D8C3;
+  --layer-4: #34271E;            /* Dark Coffee (L4 Cashout Exit) */
+  --layer-4-bg: #E8D8C3;
 
-  --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  /* Risk Tiers Progression (Shades of Almond) */
+  --tier-low: #E8D8C3;
+  --tier-medium: #CDB394;
+  --tier-high: #9D7D5E;
+  --tier-critical: #34271E;
+
+  --font-sans: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-serif: 'Fraunces', Georgia, serif;
   --font-mono: 'JetBrains Mono', monospace;
-  --shadow-sm: 0 1px 3px 0 rgba(22, 36, 27, 0.05), 0 1px 2px 0 rgba(22, 36, 27, 0.03);
-  --shadow-md: 0 4px 6px -1px rgba(22, 36, 27, 0.06), 0 2px 4px -2px rgba(22, 36, 27, 0.03);
-  --shadow-lg: 0 10px 15px -3px rgba(22, 36, 27, 0.07), 0 4px 6px -4px rgba(22, 36, 27, 0.03);
+  --shadow-sm: 0 1px 3px 0 rgba(52, 39, 30, 0.04), 0 1px 2px 0 rgba(52, 39, 30, 0.02);
+  --shadow-md: 0 4px 6px -1px rgba(52, 39, 30, 0.05), 0 2px 4px -2px rgba(52, 39, 30, 0.02);
+  --shadow-lg: 0 10px 15px -3px rgba(52, 39, 30, 0.06), 0 4px 6px -4px rgba(52, 39, 30, 0.02);
 }
 
 * {
@@ -77,9 +89,14 @@
 body {
   font-family: var(--font-sans);
   background-color: var(--bg);
-  color: var(--text);
+  color: var(--text-body);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+}
+
+.heading-fraunces {
+  font-family: var(--font-serif);
+  color: var(--text);
 }
 
 button {

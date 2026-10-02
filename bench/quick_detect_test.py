@@ -12,7 +12,7 @@ from backend.app.detect.features import feature_engine
 from backend.app.detect.rules import rule_scoring_engine
 
 if __name__ == "__main__":
-    conn = duckdb.connect("data/duckdb/abhedya.duckdb")
+    conn = duckdb.connect("data/duckdb/vajra.duckdb")
     print("Computing Behavioural Features for all accounts...")
     f_res = feature_engine.compute_features(conn)
     print(f"Features computed in {f_res['elapsed_seconds']}s for {f_res['num_accounts']:,} accounts.")

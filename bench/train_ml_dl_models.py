@@ -1,5 +1,5 @@
 """
-Train and Evaluate ML (LightGBM) and DL (PyTorch GNN) Models for Abhedya-Chakra.
+Train and Evaluate ML (LightGBM) and DL (PyTorch GNN) Models for Vajra.
 """
 
 import sys
@@ -16,7 +16,7 @@ from backend.app.detect.gnn_embeddings import deep_graph_embeddings
 from backend.app.ai.narr_classifier import narration_classifier
 
 if __name__ == "__main__":
-    conn = duckdb.connect("data/duckdb/abhedya.duckdb")
+    conn = duckdb.connect("data/duckdb/vajra.duckdb", read_only=True)
 
     print("================================================================================")
     print(" 1. TRAINING MODEL M1: LightGBM GBDT + PU LEARNING + GRAPH EMBEDDINGS")

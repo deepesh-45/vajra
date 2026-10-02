@@ -12,7 +12,7 @@ export const BenchmarkTab: React.FC = () => {
 
   useEffect(() => {
     const poll = () => {
-      fetch('http://127.0.0.1:8000/api/bench')
+      fetch('/api/bench')
         .then(res => res.json())
         .then(setStats)
         .catch(console.error);
@@ -25,7 +25,7 @@ export const BenchmarkTab: React.FC = () => {
   const handleTestInjection = async () => {
     setTestingInjection(true);
     try {
-      const resp = await fetch('http://127.0.0.1:8000/api/models/test-injection', {
+      const resp = await fetch('/api/models/test-injection', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ narration: injectionInput })
@@ -76,21 +76,37 @@ export const BenchmarkTab: React.FC = () => {
 
   return (
     <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '1200px', margin: '0 auto' }}>
-      <div>
-        <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text)' }}>
-          System Speed, Accuracy & Private Offline Operation
-        </h2>
-        <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-          Live measurements proving speed, privacy, and memory efficiency on standard police laptops
-        </p>
+      {/* Title Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <h1 style={{
+            fontFamily: 'var(--font-serif)',
+            fontSize: '1.25rem',
+            fontWeight: 600,
+            letterSpacing: '-0.025em',
+            lineHeight: 1.4,
+            color: '#34271E',
+            margin: 0
+          }}>
+            Benchmarks & Diagnostics
+          </h1>
+          <p style={{
+            fontSize: '0.875rem',
+            lineHeight: 1.428,
+            color: '#8C7764',
+            margin: 0
+          }}>
+            Live measurements proving speed, privacy, and memory efficiency on standard police laptops
+          </p>
+        </div>
       </div>
 
       {/* Target vs Actual Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
         {benchmarks.map((b, idx) => (
           <div key={idx} style={{
-            backgroundColor: '#FFFFFF',
-            borderRadius: '10px',
+            backgroundColor: '#F5EEE5',
+            borderRadius: '4px',
             padding: '20px',
             border: '1px solid var(--border)',
             display: 'flex',
@@ -135,8 +151,8 @@ export const BenchmarkTab: React.FC = () => {
 
       {/* Interactive Deceptive Remark Filter Tester */}
       <div style={{
-        backgroundColor: '#FFFFFF',
-        borderRadius: '10px',
+        backgroundColor: '#F5EEE5',
+        borderRadius: '4px',
         padding: '20px',
         border: '1px solid var(--border)',
         display: 'flex',
@@ -157,7 +173,7 @@ export const BenchmarkTab: React.FC = () => {
             alignItems: 'center',
             gap: '6px',
             padding: '4px 10px',
-            borderRadius: '12px',
+            borderRadius: '4px',
             backgroundColor: 'var(--success-light)',
             color: 'var(--success)',
             fontSize: '11px',
@@ -190,7 +206,7 @@ export const BenchmarkTab: React.FC = () => {
               padding: '10px 20px',
               borderRadius: '6px',
               backgroundColor: 'var(--primary)',
-              color: '#FFFFFF',
+              color: '#FBF7F0',
               fontSize: '13px',
               fontWeight: 600,
               display: 'flex',
@@ -206,7 +222,7 @@ export const BenchmarkTab: React.FC = () => {
         {injectionResult && (
           <div style={{
             padding: '14px 16px',
-            borderRadius: '8px',
+            borderRadius: '4px',
             backgroundColor: injectionResult.is_adversarial ? 'var(--danger-light)' : 'var(--success-light)',
             border: `1px solid ${injectionResult.is_adversarial ? 'var(--danger-border)' : 'var(--success-border)'}`,
             display: 'flex',
@@ -224,7 +240,7 @@ export const BenchmarkTab: React.FC = () => {
               </strong>
             </div>
             <div style={{ fontSize: '12px', color: 'var(--text)' }}>
-              <strong>Category:</strong> {injectionResult.class} · <strong>Safe Cleaned Text:</strong> <code style={{ fontFamily: 'var(--font-mono)', padding: '2px 4px', backgroundColor: '#FFFFFF', borderRadius: '4px' }}>{injectionResult.sanitized_text}</code>
+              <strong>Category:</strong> {injectionResult.class} · <strong>Safe Cleaned Text:</strong> <code style={{ fontFamily: 'var(--font-mono)', padding: '2px 4px', backgroundColor: '#F5EEE5', borderRadius: '4px' }}>{injectionResult.sanitized_text}</code>
             </div>
             {injectionResult.reason && (
               <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
@@ -237,8 +253,8 @@ export const BenchmarkTab: React.FC = () => {
 
       {/* Forensic Research & Literature Citations */}
       <div style={{
-        backgroundColor: '#FFFFFF',
-        borderRadius: '10px',
+        backgroundColor: '#F5EEE5',
+        borderRadius: '4px',
         padding: '20px',
         border: '1px solid var(--border)',
         display: 'flex',
@@ -248,7 +264,7 @@ export const BenchmarkTab: React.FC = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <BookOpen size={16} color="var(--primary)" />
           <h3 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text)' }}>
-            Scientific Research Papers Fortifying Operation Vajra
+            Scientific Research Papers Fortifying Vajra
           </h3>
         </div>
 
@@ -303,8 +319,8 @@ export const BenchmarkTab: React.FC = () => {
       {/* Live Hardware Stats */}
       {stats && (
         <div style={{
-          backgroundColor: '#FFFFFF',
-          borderRadius: '10px',
+          backgroundColor: '#F5EEE5',
+          borderRadius: '4px',
           padding: '20px',
           border: '1px solid var(--border)',
           display: 'flex',

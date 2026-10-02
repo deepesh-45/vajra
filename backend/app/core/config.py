@@ -1,5 +1,5 @@
 """
-Core configuration loader for Abhedya-Chakra.
+Core configuration loader for Vajra.
 """
 
 from pathlib import Path

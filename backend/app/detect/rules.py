@@ -95,7 +95,9 @@ class RuleScoringEngine:
                 b.score_topology,
                 b.score_cashout,
                 b.score_device_ip,
-                b.score_scam_narr
+                b.score_scam_narr,
+                CAST(0.0 AS FLOAT) AS ml_prob,
+                b.risk_index AS blended_score
             FROM blended b
             ORDER BY b.risk_index DESC;
         """)

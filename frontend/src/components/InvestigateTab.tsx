@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, Play, Pause, RotateCcw, Download, ArrowRight, Zap, Layers, CheckCircle2, AlertTriangle, ShieldAlert, Eye, X } from 'lucide-react';
+import { Search, Play, Pause, RotateCcw, Download, ArrowRight, Zap, Layers, AlertTriangle, ShieldAlert, Eye, X } from 'lucide-react';
 import type { TraceResponse, NodeData, FreezeRecommendation, EdgeData } from '../types';
 import { GraphCanvas } from './GraphCanvas';
 
@@ -9,13 +9,11 @@ interface InvestigateTabProps {
   onDatasetChange?: () => void;
 }
 
-export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, onNavigateToLegal, onDatasetChange }) => {
+export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, onNavigateToLegal, onDatasetChange: _onDatasetChange }) => {
   const [victimInput, setVictimInput] = useState(initialVictim || 'AIRP10000024');
   const [traceData, setTraceData] = useState<TraceResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [switchingDataset, setSwitchingDataset] = useState(false);
-  const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
   // Selected Node & Forensic Details
   const [selectedNode, setSelectedNode] = useState<NodeData | null>(null);
@@ -34,79 +32,11 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(1);
   const [timeMode, setTimeMode] = useState<'cumulative' | 'slice'>('cumulative');
+  const [maxHops, setMaxHops] = useState<number>(4);
+  const [maxWaitHours, setMaxWaitHours] = useState<number>(72);
 
-  const presets = [
-    {
-      id: 'scenario_4_mega',
-      name: 'Scenario 4: Mega Capacity Limit Test',
-      victim: 'SBIN10005001',
-      path: 'data/synthetic/scenario_4_mega_capacity_stress_test_500nodes.csv',
-      badge: '511 Nodes · 1,650 Flows',
-      loss: '₹5 Crore',
-      isStress: true
-    },
-    {
-      id: 'scenario_1_smurfing',
-      name: 'Scenario 1: Fast Smurfing',
-      victim: 'SBIN10009901',
-      path: 'data/synthetic/scenario_1_fast_smurfing.csv',
-      badge: '267 Nodes · IEEE AML',
-      loss: '₹15 Lakh',
-      isStress: false
-    },
-    {
-      id: 'scenario_2_investment',
-      name: 'Scenario 2: Investment Scam',
-      victim: 'SBIN10008000',
-      path: 'data/synthetic/scenario_2_investment_scam.csv',
-      badge: '357 Nodes · IBM Watson',
-      loss: '₹25 Lakh',
-      isStress: false
-    },
-    {
-      id: 'scenario_3_cyclic',
-      name: 'Scenario 3: Cyclic Laundering',
-      victim: 'AXIS10007701',
-      path: 'data/synthetic/scenario_3_cyclic_ring.csv',
-      badge: '263 Nodes · Nature 2025',
-      loss: '₹18 Lakh',
-      isStress: false
-    },
-    {
-      id: 'benchmark_2m',
-      name: 'VoidHacks 2M Production',
-      victim: 'AIRP10000024',
-      path: 'VoidHacks8_MuleAccount_2M_Transactions.csv',
-      badge: '2M Txns · Benchmark',
-      loss: '₹10 Lakh+',
-      isStress: false
-    }
-  ];
-
-  const handleSelectScenario = async (p: typeof presets[0]) => {
-    setSwitchingDataset(true);
-    setStatusMessage(`Loading ${p.name}...`);
-    try {
-      const resp = await fetch('http://127.0.0.1:8000/api/ingest', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filepath: p.path })
-      });
-      if (!resp.ok) throw new Error('Failed to load dataset scenario');
-      setStatusMessage(`${p.name} loaded! Tracing money trail...`);
-      setVictimInput(p.victim);
-      setIsolatedPathNodeIds(null);
-      if (onDatasetChange) onDatasetChange();
-      await fetchTrace(p.victim);
-      setStatusMessage(null);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setSwitchingDataset(false);
-    }
-  };
-
-  const fetchTrace = async (acct: string) => {
+  const fetchTrace = async (acct: string, hops = maxHops, waitHours = maxWaitHours) => {
+    if (!acct.trim()) return;
     setLoading(true);
     setError(null);
     setSelectedNode(null);
@@ -115,10 +45,10 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
     setIsolatedPathNodeIds(null);
 
     try {
-      const resp = await fetch('http://127.0.0.1:8000/api/trace', {
+      const resp = await fetch('/api/trace', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ victim_account: acct, max_hops: 4 })
+        body: JSON.stringify({ victim_account: acct.trim(), max_hops: hops, max_wait_hours: waitHours })
       });
 
       if (!resp.ok) {
@@ -152,6 +82,7 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
     }
   };
 
+
   useEffect(() => {
     if (initialVictim) {
       setVictimInput(initialVictim);
@@ -162,7 +93,7 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
   // Fetch account profile when a node is clicked
   useEffect(() => {
     if (!selectedNode || selectedNode.isSupernode) return;
-    fetch(`http://127.0.0.1:8000/api/accounts/${selectedNode.acct_no}`)
+    fetch(`/api/accounts/${selectedNode.acct_no}`)
       .then(res => res.json())
       .then(data => setAccountDetails(data))
       .catch(console.error);
@@ -293,181 +224,212 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
 
   return (
     <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '1440px', margin: '0 auto' }}>
-      {/* Quick Test Scenarios & Capacity Stress Test Switcher Bar */}
-      <div style={{
-        backgroundColor: '#FFFFFF',
-        borderRadius: '10px',
-        padding: '14px 18px',
-        border: '1px solid var(--border)',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '10px'
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Zap size={16} color="var(--primary)" />
-            <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text)' }}>
-              1-Click Dataset Scenarios & Graph Capacity Limits:
-            </span>
-            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-              (Select below to test multi-hop rings and maximum scale without UI lag)
-            </span>
-          </div>
-          {statusMessage && (
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              fontSize: '12px',
-              fontWeight: 600,
-              color: 'var(--primary)',
-              backgroundColor: 'var(--primary-light)',
-              padding: '4px 10px',
-              borderRadius: '6px'
-            }}>
-              <CheckCircle2 size={14} />
-              <span>{statusMessage}</span>
-            </div>
-          )}
-        </div>
-
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          {presets.map(p => {
-            const isSelected = victimInput === p.victim;
-            return (
-              <button
-                key={p.id}
-                onClick={() => handleSelectScenario(p)}
-                disabled={switchingDataset || loading}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '7px 12px',
-                  borderRadius: '6px',
-                  backgroundColor: isSelected 
-                    ? 'var(--primary)' 
-                    : (p.isStress ? 'var(--surface-pista)' : '#FAF8F5'),
-                  color: isSelected 
-                    ? '#FFFFFF' 
-                    : (p.isStress ? 'var(--primary)' : 'var(--text)'),
-                  border: isSelected 
-                    ? '1px solid var(--primary)' 
-                    : (p.isStress ? '1px solid var(--border-pista)' : '1px solid var(--border-subtle)'),
-                  fontSize: '12px',
-                  fontWeight: isSelected || p.isStress ? 600 : 500,
-                  cursor: switchingDataset ? 'wait' : 'pointer',
-                  transition: 'background-color 0.15s, border-color 0.15s'
-                }}
-              >
-                <span>{p.name}</span>
-                <span style={{
-                  fontSize: '10px',
-                  padding: '2px 6px',
-                  borderRadius: '4px',
-                  backgroundColor: isSelected ? 'rgba(255,255,255,0.2)' : 'var(--surface-2)',
-                  color: isSelected ? '#FFFFFF' : 'var(--text-muted)'
-                }}>
-                  {p.badge}
-                </span>
-              </button>
-            );
-          })}
+      {/* Title Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <h1 style={{
+            fontFamily: 'var(--font-serif)',
+            fontSize: '1.25rem',
+            fontWeight: 600,
+            letterSpacing: '-0.025em',
+            lineHeight: 1.4,
+            color: '#34271E',
+            margin: 0
+          }}>
+            Investigate
+          </h1>
+          <p style={{
+            fontSize: '0.875rem',
+            lineHeight: 1.428,
+            color: '#8C7764',
+            margin: 0
+          }}>
+            Multi-hop money trail tracer & mule network graph
+          </p>
         </div>
       </div>
 
-      {/* Search Header Bar */}
+      {/* Professional Investigation Control Panel */}
       <div style={{
-        backgroundColor: '#FFFFFF',
-        borderRadius: '10px',
+        backgroundColor: '#F5EEE5',
+        borderRadius: '6px',
         padding: '16px 20px',
         border: '1px solid var(--border)',
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: '16px'
+        flexDirection: 'column',
+        gap: '12px'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
-          <Search size={18} color="var(--text-muted)" />
-          <input
-            type="text"
-            value={victimInput}
-            onChange={e => setVictimInput(e.target.value)}
-            placeholder="Enter 12-digit Victim Account Number (e.g. SBIN10005001 or AIRP10000024)"
-            style={{
-              flex: 1,
-              padding: '8px 12px',
-              borderRadius: '6px',
-              border: '1px solid var(--border)',
-              fontSize: '14px',
-              fontFamily: 'var(--font-mono)'
-            }}
-            onKeyDown={e => e.key === 'Enter' && fetchTrace(victimInput)}
-          />
-          <button
-            onClick={() => fetchTrace(victimInput)}
-            disabled={loading}
-            style={{
-              padding: '8px 20px',
-              borderRadius: '6px',
-              backgroundColor: 'var(--primary)',
-              color: '#FFFFFF',
-              fontSize: '13px',
-              fontWeight: 600,
-              cursor: 'pointer'
-            }}
-          >
-            {loading ? 'Tracing Trail...' : 'Trace Money Trail'}
-          </button>
-        </div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
+          {/* Target Account Input */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: '320px' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '0 12px',
+              height: '40px',
+              borderRadius: '4px',
+              backgroundColor: '#FBF7F0',
+              border: '1px solid #D2BFA8',
+              flex: 1
+            }}>
+              <Search size={16} color="#8C7764" />
+              <input
+                type="text"
+                value={victimInput}
+                onChange={e => setVictimInput(e.target.value)}
+                placeholder="Enter Victim Account Number (e.g. PUNB10000052, AIRP10000024)..."
+                style={{
+                  border: 'none',
+                  background: 'transparent',
+                  outline: 'none',
+                  width: '100%',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  color: '#34271E'
+                }}
+                onKeyDown={e => e.key === 'Enter' && fetchTrace(victimInput)}
+              />
+              {victimInput && (
+                <button
+                  onClick={() => setVictimInput('')}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#8C7764', padding: '2px' }}
+                >
+                  ✕
+                </button>
+              )}
+            </div>
 
-        {traceData && (
-          <div style={{ display: 'flex', gap: '10px' }}>
             <button
-              onClick={handleExportCSV}
+              onClick={() => fetchTrace(victimInput)}
+              disabled={loading}
               style={{
+                height: '40px',
+                padding: '0 20px',
+                borderRadius: '4px',
+                backgroundColor: '#34271E',
+                color: '#FBF7F0',
+                fontSize: '0.8125rem',
+                fontWeight: 600,
+                cursor: loading ? 'wait' : 'pointer',
+                border: 'none',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '6px',
-                padding: '8px 14px',
-                borderRadius: '6px',
-                backgroundColor: 'var(--surface-2)',
-                border: '1px solid var(--border)',
-                fontSize: '12px',
-                fontWeight: 600,
-                color: 'var(--text)',
-                cursor: 'pointer'
+                gap: '8px',
+                whiteSpace: 'nowrap'
               }}
             >
-              <Download size={14} />
-              <span>Export Money Trail CSV</span>
-            </button>
-            <button
-              onClick={() => onNavigateToLegal(traceData.victim_account)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '8px 14px',
-                borderRadius: '6px',
-                backgroundColor: 'var(--success)',
-                color: '#FFFFFF',
-                fontSize: '12px',
-                fontWeight: 600,
-                cursor: 'pointer'
-              }}
-            >
-              <span>Draft Freeze Notices</span>
-              <ArrowRight size={14} />
+              <Zap size={14} color="#FBF7F0" />
+              <span>{loading ? 'Tracing Trail...' : 'Trace Money Trail'}</span>
             </button>
           </div>
-        )}
+
+          {/* Traversal Controls: Max Hops & Time Window */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: '#5C4634' }}>
+              <span style={{ fontWeight: 600 }}>Max Hops:</span>
+              <select
+                value={maxHops}
+                onChange={e => {
+                  const h = Number(e.target.value);
+                  setMaxHops(h);
+                  if (victimInput) fetchTrace(victimInput, h, maxWaitHours);
+                }}
+                style={{
+                  padding: '6px 10px',
+                  borderRadius: '4px',
+                  border: '1px solid #D2BFA8',
+                  backgroundColor: '#FBF7F0',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  color: '#34271E'
+                }}
+              >
+                <option value={2}>2 Hops</option>
+                <option value={3}>3 Hops</option>
+                <option value={4}>4 Hops (Standard)</option>
+                <option value={5}>5 Hops (Deep Audit)</option>
+              </select>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: '#5C4634' }}>
+              <span style={{ fontWeight: 600 }}>Window:</span>
+              <select
+                value={maxWaitHours}
+                onChange={e => {
+                  const w = Number(e.target.value);
+                  setMaxWaitHours(w);
+                  if (victimInput) fetchTrace(victimInput, maxHops, w);
+                }}
+                style={{
+                  padding: '6px 10px',
+                  borderRadius: '4px',
+                  border: '1px solid #D2BFA8',
+                  backgroundColor: '#FBF7F0',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  color: '#34271E'
+                }}
+              >
+                <option value={24}>24 Hours</option>
+                <option value={48}>48 Hours</option>
+                <option value={72}>72 Hours (Statutory)</option>
+                <option value={168}>7 Days</option>
+              </select>
+            </div>
+
+            {traceData && (
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  onClick={handleExportCSV}
+                  title="Export forensic trail to CSV"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '8px 12px',
+                    borderRadius: '4px',
+                    backgroundColor: '#E8D8C3',
+                    border: '1px solid #D2BFA8',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    color: '#34271E',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <Download size={14} />
+                  <span>Export CSV</span>
+                </button>
+                <button
+                  onClick={() => onNavigateToLegal(traceData.victim_account)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '8px 14px',
+                    borderRadius: '4px',
+                    backgroundColor: '#34271E',
+                    color: '#FBF7F0',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    border: 'none'
+                  }}
+                >
+                  <span>Draft Freeze Notices</span>
+                  <ArrowRight size={14} />
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {error && (
         <div style={{
           padding: '14px 18px',
-          borderRadius: '8px',
+          borderRadius: '4px',
           backgroundColor: 'var(--danger-light)',
           border: '1px solid var(--danger-border)',
           color: 'var(--danger)',
@@ -481,14 +443,14 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
         <>
           {/* Metrics Strip */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '14px' }}>
-            <div style={{ backgroundColor: '#FFFFFF', padding: '14px 16px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+            <div style={{ backgroundColor: '#F5EEE5', padding: '14px 16px', borderRadius: '4px', border: '1px solid var(--border)' }}>
               <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>TOTAL SIPHONED (VICTIM)</div>
               <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text)', marginTop: '4px' }}>
                 ₹{traceData.initial_loss_inr.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
               </div>
             </div>
 
-            <div style={{ backgroundColor: '#FFFFFF', padding: '14px 16px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+            <div style={{ backgroundColor: '#F5EEE5', padding: '14px 16px', borderRadius: '4px', border: '1px solid var(--border)' }}>
               <div style={{ fontSize: '11px', color: 'var(--success)', fontWeight: 600 }}>RECOVERABLE (CURRENTLY HELD)</div>
               <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--success)', marginTop: '4px' }}>
                 ₹{traceData.total_held_inr.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
@@ -496,21 +458,21 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
               <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{traceData.recovery_potential_pct}% recoverable</div>
             </div>
 
-            <div style={{ backgroundColor: '#FFFFFF', padding: '14px 16px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+            <div style={{ backgroundColor: '#F5EEE5', padding: '14px 16px', borderRadius: '4px', border: '1px solid var(--border)' }}>
               <div style={{ fontSize: '11px', color: 'var(--danger)', fontWeight: 600 }}>CASHED-OUT (TERMINAL)</div>
               <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--danger)', marginTop: '4px' }}>
                 ₹{traceData.total_cashed_out_inr.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
               </div>
             </div>
 
-            <div style={{ backgroundColor: '#FFFFFF', padding: '14px 16px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+            <div style={{ backgroundColor: '#F5EEE5', padding: '14px 16px', borderRadius: '4px', border: '1px solid var(--border)' }}>
               <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>ACCOUNTS IN RING</div>
               <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text)', marginTop: '4px' }}>
                 {traceData.num_nodes} nodes · {traceData.num_edges} hops
               </div>
             </div>
 
-            <div style={{ backgroundColor: '#FFFFFF', padding: '14px 16px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+            <div style={{ backgroundColor: '#F5EEE5', padding: '14px 16px', borderRadius: '4px', border: '1px solid var(--border)' }}>
               <div style={{ fontSize: '11px', color: 'var(--primary)', fontWeight: 600 }}>TRACE LATENCY</div>
               <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--primary)', marginTop: '4px' }}>
                 {traceData.timing_ms} ms
@@ -521,8 +483,8 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
 
           {/* Pattern Motifs & Supernodes Control Bar */}
           <div style={{
-            backgroundColor: '#FFFFFF',
-            borderRadius: '10px',
+            backgroundColor: '#F5EEE5',
+            borderRadius: '4px',
             padding: '12px 18px',
             border: '1px solid var(--border)',
             display: 'flex',
@@ -576,7 +538,7 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
                   gap: '6px',
                   padding: '6px 12px',
                   borderRadius: '6px',
-                  backgroundColor: clustersCollapsed ? '#EFF6FF' : '#FFFFFF',
+                  backgroundColor: clustersCollapsed ? 'var(--surface-pista)' : '#F5EEE5',
                   color: clustersCollapsed ? 'var(--primary)' : 'var(--text)',
                   border: clustersCollapsed ? '1.5px solid var(--primary)' : '1px solid var(--border)',
                   fontSize: '12px',
@@ -597,7 +559,7 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
                     borderRadius: '4px',
                     fontSize: '11px',
                     fontWeight: layoutMode === 'flow' ? 700 : 500,
-                    backgroundColor: layoutMode === 'flow' ? '#FFFFFF' : 'transparent',
+                    backgroundColor: layoutMode === 'flow' ? '#E8D8C3' : 'transparent',
                     color: layoutMode === 'flow' ? 'var(--primary)' : 'var(--text-muted)',
                     boxShadow: layoutMode === 'flow' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
                     border: 'none',
@@ -613,7 +575,7 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
                     borderRadius: '4px',
                     fontSize: '11px',
                     fontWeight: layoutMode === 'force' ? 700 : 500,
-                    backgroundColor: layoutMode === 'force' ? '#FFFFFF' : 'transparent',
+                    backgroundColor: layoutMode === 'force' ? '#E8D8C3' : 'transparent',
                     color: layoutMode === 'force' ? 'var(--primary)' : 'var(--text-muted)',
                     boxShadow: layoutMode === 'force' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
                     border: 'none',
@@ -650,8 +612,8 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
 
           {/* Temporal Playback Slider Bar */}
           <div style={{
-            backgroundColor: '#FFFFFF',
-            borderRadius: '8px',
+            backgroundColor: '#F5EEE5',
+            borderRadius: '4px',
             padding: '12px 20px',
             border: '1px solid var(--border)',
             display: 'flex',
@@ -681,14 +643,14 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
 
               <button
                 onClick={() => setCurrentTs(Math.max(minTs, currentTs - 14400))}
-                style={{ padding: '6px', borderRadius: '4px', border: '1px solid var(--border)', backgroundColor: '#FFFFFF', cursor: 'pointer', fontSize: '11px' }}
+                style={{ padding: '6px', borderRadius: '4px', border: '1px solid var(--border)', backgroundColor: '#F5EEE5', cursor: 'pointer', fontSize: '11px' }}
                 title="Step Back 4 Hours"
               >
                 ⏮
               </button>
               <button
                 onClick={() => setCurrentTs(Math.min(maxTs, currentTs + 14400))}
-                style={{ padding: '6px', borderRadius: '4px', border: '1px solid var(--border)', backgroundColor: '#FFFFFF', cursor: 'pointer', fontSize: '11px' }}
+                style={{ padding: '6px', borderRadius: '4px', border: '1px solid var(--border)', backgroundColor: '#F5EEE5', cursor: 'pointer', fontSize: '11px' }}
                 title="Step Forward 4 Hours"
               >
                 ⏭
@@ -779,11 +741,11 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
                     <span>Stage 2: Layering Mule</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#9333EA' }} />
+                    <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: 'var(--layer-3)' }} />
                     <span>Stage 3: Aggregator Hub</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: 'var(--success)' }} />
+                    <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: 'var(--layer-4)' }} />
                     <span>Stage 4: Cash-Out Exit</span>
                   </div>
                 </div>
@@ -811,8 +773,8 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
             {/* Integrated Forensic Inspector Side Panel */}
             {selectedNode && (
               <aside style={{
-                backgroundColor: '#FFFFFF',
-                borderRadius: '12px',
+                backgroundColor: '#F5EEE5',
+                borderRadius: '4px',
                 border: '1px solid var(--border)',
                 padding: '20px',
                 display: 'flex',
@@ -833,7 +795,7 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
                 </div>
 
                 {/* Entity Details Card */}
-                <div style={{ padding: '14px', backgroundColor: 'var(--surface-2)', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                <div style={{ padding: '14px', backgroundColor: 'var(--surface-2)', borderRadius: '4px', border: '1px solid var(--border)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
                       <span style={{
@@ -866,10 +828,10 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
                     marginTop: '10px',
                     padding: '8px 10px',
                     borderRadius: '6px',
-                    backgroundColor: '#FEF2F2',
-                    border: '1px solid #FEE2E2',
+                    backgroundColor: 'var(--danger-light)',
+                    border: '1px solid var(--danger-border)',
                     fontSize: '11px',
-                    color: '#991B1B',
+                    color: 'var(--danger)',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '6px'
@@ -895,7 +857,7 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
                   </div>
                   <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: 'var(--surface-2)', border: '1px solid var(--border)' }}>
                     <span style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block' }}>Estimated Dwell Time</span>
-                    <span style={{ fontSize: '13px', fontWeight: 700, color: '#D97706' }}>
+                    <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--warning)' }}>
                       {selectedNodeMetrics?.dwellTime} mins
                     </span>
                   </div>
@@ -966,15 +928,15 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
                     {accountDetails?.recent_transactions?.slice(0, 10).map((txn: any) => {
                       const isOut = txn.src_acct === selectedNode.acct_no;
                       return (
-                        <div key={txn.txn_id} style={{ padding: '8px', borderRadius: '6px', border: '1px solid var(--border)', fontSize: '11px', backgroundColor: '#FFFFFF' }}>
+                        <div key={txn.txn_id} style={{ padding: '8px', borderRadius: '6px', border: '1px solid var(--border)', fontSize: '11px', backgroundColor: '#F5EEE5' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{
                               fontWeight: 700,
                               fontSize: '10px',
                               padding: '2px 6px',
                               borderRadius: '4px',
-                              backgroundColor: isOut ? '#FEE2E2' : '#DCFCE7',
-                              color: isOut ? '#DC2626' : '#16A34A'
+                              backgroundColor: isOut ? 'var(--danger-light)' : 'var(--success-light)',
+                              color: isOut ? 'var(--danger)' : 'var(--success)'
                             }}>
                               {isOut ? '→ OUT' : '← IN'}
                             </span>
@@ -995,8 +957,8 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
 
           {/* Recommended Freeze Targets Table */}
           <div style={{
-            backgroundColor: '#FFFFFF',
-            borderRadius: '10px',
+            backgroundColor: '#F5EEE5',
+            borderRadius: '4px',
             padding: '20px',
             border: '1px solid var(--border)',
             display: 'flex',

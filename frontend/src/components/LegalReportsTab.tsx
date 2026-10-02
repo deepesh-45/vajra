@@ -18,7 +18,7 @@ export const LegalReportsTab: React.FC<LegalReportsTabProps> = ({ victimAccount 
 
     try {
       if (docType === 'diary') {
-        const resp = await fetch('http://127.0.0.1:8000/api/reports/diary', {
+        const resp = await fetch('/api/reports/diary', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ victim_account: victimAccount })
@@ -26,7 +26,7 @@ export const LegalReportsTab: React.FC<LegalReportsTabProps> = ({ victimAccount 
         const data = await resp.json();
         setReportData(data);
       } else if (docType === 'freeze') {
-        const resp = await fetch('http://127.0.0.1:8000/api/reports/freeze', {
+        const resp = await fetch('/api/reports/freeze', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ victim_account: victimAccount, target_bank: targetBank })
@@ -34,7 +34,7 @@ export const LegalReportsTab: React.FC<LegalReportsTabProps> = ({ victimAccount 
         const data = await resp.json();
         setReportData(data);
       } else {
-        const resp = await fetch('http://127.0.0.1:8000/api/reports/freeze-hindi', {
+        const resp = await fetch('/api/reports/freeze-hindi', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ victim_account: victimAccount, target_bank: targetBank })
@@ -67,10 +67,35 @@ export const LegalReportsTab: React.FC<LegalReportsTabProps> = ({ victimAccount 
 
   return (
     <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '1200px', margin: '0 auto' }}>
+      {/* Title Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <h1 style={{
+            fontFamily: 'var(--font-serif)',
+            fontSize: '1.25rem',
+            fontWeight: 600,
+            letterSpacing: '-0.025em',
+            lineHeight: 1.4,
+            color: '#34271E',
+            margin: 0
+          }}>
+            Reports
+          </h1>
+          <p style={{
+            fontSize: '0.875rem',
+            lineHeight: 1.428,
+            color: '#8C7764',
+            margin: 0
+          }}>
+            Generated case documents and bank freeze notices
+          </p>
+        </div>
+      </div>
+
       {/* Document Selector & Actions */}
       <div style={{
-        backgroundColor: '#FFFFFF',
-        borderRadius: '10px',
+        backgroundColor: '#F5EEE5',
+        borderRadius: '4px',
         padding: '16px 20px',
         border: '1px solid var(--border)',
         display: 'flex',
@@ -84,7 +109,7 @@ export const LegalReportsTab: React.FC<LegalReportsTabProps> = ({ victimAccount 
               padding: '8px 16px',
               borderRadius: '6px',
               backgroundColor: docType === 'diary' ? 'var(--primary)' : 'var(--surface-2)',
-              color: docType === 'diary' ? '#FFFFFF' : 'var(--text)',
+              color: docType === 'diary' ? '#FBF7F0' : 'var(--text)',
               fontSize: '13px',
               fontWeight: 600,
               display: 'flex',
@@ -102,7 +127,7 @@ export const LegalReportsTab: React.FC<LegalReportsTabProps> = ({ victimAccount 
               padding: '8px 16px',
               borderRadius: '6px',
               backgroundColor: docType === 'freeze' ? 'var(--primary)' : 'var(--surface-2)',
-              color: docType === 'freeze' ? '#FFFFFF' : 'var(--text)',
+              color: docType === 'freeze' ? '#FBF7F0' : 'var(--text)',
               fontSize: '13px',
               fontWeight: 600,
               display: 'flex',
@@ -120,7 +145,7 @@ export const LegalReportsTab: React.FC<LegalReportsTabProps> = ({ victimAccount 
               padding: '8px 16px',
               borderRadius: '6px',
               backgroundColor: docType === 'freeze_hi' ? 'var(--primary)' : 'var(--surface-2)',
-              color: docType === 'freeze_hi' ? '#FFFFFF' : 'var(--text)',
+              color: docType === 'freeze_hi' ? '#FBF7F0' : 'var(--text)',
               fontSize: '13px',
               fontWeight: 600,
               display: 'flex',
@@ -142,7 +167,7 @@ export const LegalReportsTab: React.FC<LegalReportsTabProps> = ({ victimAccount 
                 border: '1px solid var(--border)',
                 fontSize: '13px',
                 fontWeight: 600,
-                backgroundColor: '#FFFFFF'
+                backgroundColor: '#F5EEE5'
               }}
             >
               <option value="AXIS">AXIS Bank</option>
@@ -203,7 +228,7 @@ export const LegalReportsTab: React.FC<LegalReportsTabProps> = ({ victimAccount 
         <div style={{
           backgroundColor: 'var(--success-light)',
           border: '1px solid var(--success-border)',
-          borderRadius: '10px',
+          borderRadius: '4px',
           padding: '14px 20px',
           display: 'flex',
           justifyContent: 'space-between',
@@ -232,8 +257,8 @@ export const LegalReportsTab: React.FC<LegalReportsTabProps> = ({ victimAccount 
 
       {/* Legal Notice Document Preview */}
       <div style={{
-        backgroundColor: '#FFFFFF',
-        borderRadius: '10px',
+        backgroundColor: '#F5EEE5',
+        borderRadius: '4px',
         border: '1px solid var(--border)',
         padding: '32px',
         boxShadow: 'var(--shadow-md)',

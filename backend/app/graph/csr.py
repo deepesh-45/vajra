@@ -131,9 +131,20 @@ class CSRGraph:
         """
         t0 = time.perf_counter()
 
-        victim_id = self.account_to_id.get(victim_acct)
+        v_clean = victim_acct.strip()
+        victim_id = self.account_to_id.get(v_clean)
+        if victim_id is None:
+            victim_id = self.account_to_id.get(v_clean.upper())
+        if victim_id is None:
+            v_lower = v_clean.lower()
+            for acct, aid in self.account_to_id.items():
+                if acct.lower() == v_lower:
+                    victim_id = aid
+                    v_clean = acct
+                    break
         if victim_id is None:
             return {"error": f"Victim account {victim_acct} not found in database."}
+        victim_acct = v_clean
 
         max_wait_sec = max_wait_hours * 3600
 

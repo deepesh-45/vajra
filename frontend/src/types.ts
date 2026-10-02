@@ -94,3 +94,35 @@ export interface DatasetPreset {
   edges: number;
   badge: string;
 }
+
+export interface TransactionRecord {
+  txn_id: string;
+  src_acct: string;
+  dst_acct: string;
+  src_ifsc: string;
+  dst_ifsc: string;
+  src_bank: string;
+  dst_bank: string;
+  amount: number;
+  amount_paise: number;
+  timestamp: string;
+  payment_mode: string;
+  narration: string;
+  ip: string;
+  device_type: string;
+}
+
+export interface DatasetTransactionsResponse {
+  transactions: TransactionRecord[];
+  total_count: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+  dataset_meta: {
+    dataset_name: string;
+    dataset_sha256: string;
+    total_rows: number;
+    total_accounts: number;
+    ingested_at: string;
+  } | null;
+}

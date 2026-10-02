@@ -11,7 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from backend.app.graph.csr import csr_graph
 
 if __name__ == "__main__":
-    conn = duckdb.connect("data/duckdb/abhedya.duckdb")
+    conn = duckdb.connect("data/duckdb/vajra.duckdb")
     print("Building/loading CSR graph...")
     csr_graph.build_from_duckdb(conn)
 

@@ -103,7 +103,7 @@ class LegalReportGenerator:
 
         lines.append("\n" + "=" * 80)
         lines.append("ELECTRONIC EVIDENCE INTEGRITY CERTIFICATE (SEC. 63 BSA / SEC. 65B IEA)")
-        lines.append("This document was generated automatically by Operation Vajra analytics workbench.")
+        lines.append("This document was generated automatically by Vajra analytics workbench.")
         raw_text = "\n".join(lines)
 
         # Verification check against database truth

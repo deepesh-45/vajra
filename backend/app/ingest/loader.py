@@ -16,7 +16,7 @@ import numpy as np
 from backend.app.core.telemetry import telemetry
 from backend.app.core.config import config
 
-DB_PATH = Path("data/duckdb/abhedya.duckdb")
+DB_PATH = Path("data/duckdb/vajra.duckdb")
 PARQUET_PATH = Path("data/parquet/normalised_txns.parquet")
 DICT_PATH = Path("data/cache/account_dict.npz")
 

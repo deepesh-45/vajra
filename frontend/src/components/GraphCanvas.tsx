@@ -70,16 +70,17 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isFullscreen]);
 
-  // Window resize handler
+  // Window resize handler with initial mount sizing
   useEffect(() => {
     const handleResize = () => {
       const canvas = canvasRef.current;
       if (!canvas) return;
       const rect = canvas.getBoundingClientRect();
       const dpr = window.devicePixelRatio || 1;
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
+      canvas.width = Math.floor(rect.width * dpr);
+      canvas.height = Math.floor(rect.height * dpr);
     };
+    handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -412,14 +413,15 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
 
     const dpr = window.devicePixelRatio || 1;
     const rect = canvas.getBoundingClientRect();
-    if (canvas.width !== rect.width * dpr || canvas.height !== rect.height * dpr) {
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
+    if (canvas.width !== Math.floor(rect.width * dpr) || canvas.height !== Math.floor(rect.height * dpr)) {
+      canvas.width = Math.floor(rect.width * dpr);
+      canvas.height = Math.floor(rect.height * dpr);
     }
-    ctx.scale(dpr, dpr);
+    // Reset transform to DPR on each frame to prevent exponential scaling accumulation
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    // Warm cream background
-    ctx.fillStyle = '#FAF8F5';
+    // Warm ivory background
+    ctx.fillStyle = '#FBF7F0';
     ctx.fillRect(0, 0, rect.width, rect.height);
 
     ctx.save();
@@ -431,8 +433,8 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       const bandHeight = Math.max(720, (bounds.maxY - bounds.minY) + 180);
 
       stageLanes.forEach(lane => {
-        ctx.fillStyle = '#F3EFE6';
-        ctx.strokeStyle = '#E0D8CA';
+        ctx.fillStyle = '#F5EEE5';
+        ctx.strokeStyle = '#E8D8C3';
         ctx.lineWidth = 1 / zoom;
         ctx.beginPath();
         if (ctx.roundRect) {
@@ -443,12 +445,12 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         ctx.fill();
         ctx.stroke();
 
-        ctx.fillStyle = '#536458';
+        ctx.fillStyle = '#34271E';
         ctx.font = '700 11px JetBrains Mono, monospace';
         ctx.textAlign = 'left';
         ctx.fillText(lane.name, lane.x + 16, 58);
 
-        ctx.fillStyle = '#8C7853';
+        ctx.fillStyle = '#8C7764';
         ctx.font = '500 10px Inter, sans-serif';
         ctx.fillText(lane.desc, lane.x + 16, 75);
       });
@@ -468,19 +470,19 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
 
       // In 'focused' mode when a node is hovered/selected, dim irrelevant edges to 8% opacity!
       if (edgeViewMode === 'focused' && isFocusActive && !isDirectlyFocused) {
-        ctx.strokeStyle = 'rgba(224, 216, 202, 0.25)';
+        ctx.strokeStyle = 'rgba(211, 226, 211, 0.25)';
         ctx.lineWidth = 0.8 / Math.sqrt(zoom);
       } else if (isDirectlyFocused) {
-        // High-contrast illuminated focused path
-        ctx.strokeStyle = isTainted ? '#991B1B' : '#065F46';
+        // High-contrast illuminated focused path (monochromatic sage/terracotta-rose)
+        ctx.strokeStyle = isTainted ? '#7D4747' : '#2B583E';
         ctx.lineWidth = 3.5 / Math.sqrt(zoom);
       } else if (isTainted) {
         // Normal tainted path
-        ctx.strokeStyle = isFocusActive ? 'rgba(153, 27, 27, 0.2)' : 'rgba(153, 27, 27, 0.7)';
+        ctx.strokeStyle = isFocusActive ? 'rgba(125, 71, 71, 0.2)' : 'rgba(125, 71, 71, 0.7)';
         ctx.lineWidth = Math.min(3.5, Math.max(1.2, Math.log10(Math.max(10, edge.amount_paise / 1000)))) / Math.sqrt(zoom);
       } else {
         // Neutral background flow
-        ctx.strokeStyle = 'rgba(216, 207, 191, 0.4)';
+        ctx.strokeStyle = 'rgba(186, 205, 186, 0.35)';
         ctx.lineWidth = 1 / Math.sqrt(zoom);
       }
 
@@ -503,7 +505,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         const px = uu * u * p1.x + 3 * uu * t * cp1x + 3 * u * tt * cp2x + tt * t * p2.x;
         const py = uu * u * p1.y + 3 * uu * t * p1.y + 3 * u * tt * p2.y + tt * t * p2.y;
 
-        ctx.fillStyle = isDirectlyFocused ? '#065F46' : '#991B1B';
+        ctx.fillStyle = isDirectlyFocused ? '#2B583E' : '#7D4747';
         ctx.beginPath();
         ctx.arc(px, py, (isDirectlyFocused ? 4 : 2.5) / Math.sqrt(zoom), 0, Math.PI * 2);
         ctx.fill();
@@ -518,7 +520,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         const ax = u * u * u * p1.x + 3 * u * u * arrowT * cp1x + 3 * u * arrowT * arrowT * cp2x + arrowT * arrowT * arrowT * p2.x;
         const ay = u * u * u * p1.y + 3 * u * u * arrowT * p1.y + 3 * u * arrowT * arrowT * p2.y + arrowT * arrowT * arrowT * p2.y;
 
-        ctx.fillStyle = isDirectlyFocused ? '#065F46' : '#8C7853';
+        ctx.fillStyle = isDirectlyFocused ? '#2B583E' : '#779380';
         ctx.beginPath();
         ctx.arc(ax, ay, 2.5 / Math.sqrt(zoom), 0, Math.PI * 2);
         ctx.fill();
@@ -541,19 +543,20 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       const isConnected = isFocusActive && focusedNodeConnections.connectedNodeIds.has(node.acct_no);
       const isDimmed = isFocusActive && !isConnected && edgeViewMode === 'focused';
 
-      let baseColor = '#065F46'; // L1 Emerald
-      if (node.isSupernode) baseColor = '#065F46'; // Supernode
-      else if (node.hop === 0) baseColor = '#5B21B6'; // Victim Purple
-      else if (node.hop === 1) baseColor = '#065F46'; // L1 Smurfing Dispatch (Emerald)
-      else if (node.hop === 2) baseColor = '#B45309'; // L2 Layering Mule (Ochre)
-      else if (node.hop === 3) baseColor = '#477343'; // L3 Aggregator (Pista)
-      else baseColor = '#991B1B'; // L4 Cashout Exit (Burgundy)
+      // Monochromatic Pastel Node Progression
+      let baseColor = '#2B583E'; // L1 Deep Sage
+      if (node.isSupernode) baseColor = '#2B583E'; // Supernode
+      else if (node.hop === 0) baseColor = '#547361'; // Victim (Misty Sage)
+      else if (node.hop === 1) baseColor = '#2A5A40'; // L1 Smurfing Dispatch (Pastel Deep Mint)
+      else if (node.hop === 2) baseColor = '#3E6D52'; // L2 Layering Mule (Pastel Laurel)
+      else if (node.hop === 3) baseColor = '#59836B'; // L3 Aggregator (Pastel Celadon)
+      else baseColor = '#203A2B'; // L4 Cashout Exit (Pastel Forest Slate)
 
       // Supernode Outer Dashed Ring
       if (node.isSupernode) {
         ctx.save();
         ctx.setLineDash([4, 4]);
-        ctx.strokeStyle = isDimmed ? 'rgba(71, 115, 67, 0.3)' : '#477343';
+        ctx.strokeStyle = isDimmed ? 'rgba(70, 116, 85, 0.3)' : '#467455';
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.arc(pos.x, pos.y, pos.r + 7, 0, Math.PI * 2);
@@ -565,7 +568,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       if (isTarget) {
         ctx.beginPath();
         ctx.arc(pos.x, pos.y, pos.r + 8, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(6, 95, 70, 0.25)';
+        ctx.fillStyle = 'rgba(43, 88, 62, 0.25)';
         ctx.fill();
       }
 
@@ -573,18 +576,18 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       ctx.beginPath();
       ctx.arc(pos.x, pos.y, pos.r + 2, 0, Math.PI * 2);
       ctx.strokeStyle = isDimmed
-        ? 'rgba(208, 199, 183, 0.3)'
-        : (node.held_paise > 0 ? '#047857' : '#D0C7B7');
+        ? 'rgba(186, 205, 186, 0.3)'
+        : (node.held_paise > 0 ? '#286641' : '#BACDBA');
       ctx.lineWidth = 1.5;
       ctx.stroke();
 
       // Main Node Circle
       ctx.beginPath();
       ctx.arc(pos.x, pos.y, pos.r, 0, Math.PI * 2);
-      ctx.fillStyle = isDimmed ? 'rgba(229, 223, 213, 0.5)' : baseColor;
+      ctx.fillStyle = isDimmed ? 'rgba(226, 236, 226, 0.5)' : baseColor;
       ctx.fill();
       ctx.lineWidth = isTarget ? 3 : 1.5;
-      ctx.strokeStyle = isTarget ? '#16241B' : '#FFFFFF';
+      ctx.strokeStyle = isTarget ? '#142419' : '#FFFFFF';
       ctx.stroke();
 
       // Center Bank Initial / Supernode Count (Clean, No Clutter!)
@@ -598,7 +601,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       if (isTarget || node.isSupernode) {
         ctx.textBaseline = 'alphabetic';
         ctx.font = node.isSupernode ? '700 11px Inter, sans-serif' : '700 10.5px JetBrains Mono, monospace';
-        ctx.fillStyle = '#16241B';
+        ctx.fillStyle = '#142419';
         ctx.textAlign = 'center';
 
         const labelText = node.isSupernode ? node.bank : node.acct_no;
@@ -712,7 +715,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         borderRadius: isFullscreen ? 0 : '12px',
         border: isFullscreen ? 'none' : '1px solid var(--border)',
         overflow: 'hidden',
-        background: '#FAF8F5',
+        background: 'var(--bg)',
         userSelect: 'none',
         boxShadow: isFullscreen ? 'none' : 'var(--shadow-sm)'
       }}
@@ -791,7 +794,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
             padding: '5px 10px',
             borderRadius: '4px',
             border: '1px solid var(--border)',
-            backgroundColor: '#FFFFFF',
+            backgroundColor: '#F5EEE5',
             fontSize: '11px',
             fontWeight: 600,
             color: 'var(--text)'
@@ -803,14 +806,14 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         <button
           onClick={() => setZoom(z => Math.min(4.5, z * 1.25))}
           title="Zoom In"
-          style={{ padding: '5px 8px', borderRadius: '4px', border: '1px solid var(--border)', backgroundColor: '#FFFFFF', fontSize: '12px', fontWeight: 700 }}
+          style={{ padding: '5px 8px', borderRadius: '4px', border: '1px solid var(--border)', backgroundColor: '#F5EEE5', fontSize: '12px', fontWeight: 700 }}
         >
           +
         </button>
         <button
           onClick={() => setZoom(z => Math.max(0.18, z / 1.25))}
           title="Zoom Out"
-          style={{ padding: '5px 8px', borderRadius: '4px', border: '1px solid var(--border)', backgroundColor: '#FFFFFF', fontSize: '12px', fontWeight: 700 }}
+          style={{ padding: '5px 8px', borderRadius: '4px', border: '1px solid var(--border)', backgroundColor: '#F5EEE5', fontSize: '12px', fontWeight: 700 }}
         >
           −
         </button>
@@ -866,7 +869,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
           bottom: '14px',
           right: '14px',
           backgroundColor: '#111D16',
-          color: '#FFFFFF',
+          color: '#FBF7F0',
           padding: '10px 14px',
           borderRadius: '6px',
           fontSize: '11.5px',

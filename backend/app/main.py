@@ -1,5 +1,5 @@
 """
-FastAPI Main Application for Abhedya-Chakra.
+FastAPI Main Application for Vajra.
 Provides high-throughput REST and SSE endpoints for offline multi-hop tracing, detection, and legal notice generation.
 """
 
@@ -22,8 +22,8 @@ from backend.app.detect.rules import rule_scoring_engine
 from backend.app.ingest.loader import DB_PATH, ingest_engine
 
 app = FastAPI(
-    title="Operation Vajra",
-    description="Offline Mule-Ring Detection & Case Generation Engine for Law Enforcement",
+    title="Vajra",
+    description="Offline Money Mule Detection & Legal Case Generation Engine for Law Enforcement",
     version="1.0.0"
 )
 
@@ -89,7 +89,26 @@ def overview():
     dataset_name = meta[0] if meta else "VoidHacks8_MuleAccount_2M_Transactions.csv"
     dataset_sha256 = meta[1] if meta else "2c9f81fd34f728c0b7c1e803cb49e1e231c1d9204a77badfcb737f50adf73101"
 
-    # Get scores summary if computed
+    # Ensure account_scores table exists and has computed scores
+    has_scores = conn.execute("SELECT count(*) FROM information_schema.tables WHERE table_name = 'account_scores';").fetchone()[0] > 0
+    if not has_scores or conn.execute("SELECT count(*) FROM account_scores;").fetchone()[0] == 0:
+        try:
+            from backend.app.detect.features import feature_engine
+            from backend.app.detect.rules import rule_scoring_engine
+            feature_engine.compute_features(conn)
+            rule_scoring_engine.compute_scores(conn)
+        except Exception as e:
+            print("Auto compute scores failed:", e)
+
+    # Ensure ml_prob and blended_score columns exist
+    try:
+        conn.execute("ALTER TABLE account_scores ADD COLUMN IF NOT EXISTS ml_prob FLOAT DEFAULT 0.0;")
+        conn.execute("ALTER TABLE account_scores ADD COLUMN IF NOT EXISTS blended_score DOUBLE;")
+        conn.execute("UPDATE account_scores SET blended_score = risk_index WHERE blended_score IS NULL;")
+    except Exception:
+        pass
+
+    # Get scores summary
     try:
         tier_counts = dict(conn.execute("SELECT tier, count(*) FROM account_scores GROUP BY tier;").fetchall())
         role_counts = dict(conn.execute("SELECT predicted_role, count(*) FROM account_scores GROUP BY predicted_role;").fetchall())
@@ -100,7 +119,8 @@ def overview():
             ORDER BY risk_index DESC, acct_id ASC
             LIMIT 15;
         """).fetch_df().to_dict(orient="records")
-    except Exception:
+    except Exception as e:
+        print("Error reading account scores:", e)
         tier_counts = {}
         role_counts = {}
         top_mules = []
@@ -109,9 +129,12 @@ def overview():
     victims = conn.execute("""
         SELECT DISTINCT src_acct 
         FROM txns 
-        WHERE narration LIKE '%TASK_EARNING%' OR narration LIKE '%INVESTMENT%' 
+        WHERE narration ILIKE '%task%' OR narration ILIKE '%investment%' OR narration ILIKE '%earning%' OR narration ILIKE '%refund%'
         LIMIT 10;
     """).fetchall()
+
+    if not victims:
+        victims = conn.execute("SELECT DISTINCT src_acct FROM txns LIMIT 10;").fetchall()
 
     return {
         "dataset_name": dataset_name,
@@ -130,6 +153,106 @@ def overview():
         "telemetry": telemetry.get_system_stats()
     }
 
+@app.get("/api/dataset/transactions")
+def get_dataset_transactions(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(100, ge=1, le=500),
+    search: Optional[str] = Query(None),
+    payment_mode: Optional[str] = Query(None),
+    sort_by: str = Query("ts"),
+    sort_dir: str = Query("desc")
+):
+    """
+    Paginated access to raw transactions stored in DuckDB.
+    Supports filtering by search query and payment mode, with configurable sorting.
+    """
+    conn = get_db()
+    has_txns = conn.execute("SELECT count(*) FROM information_schema.tables WHERE table_name = 'txns';").fetchone()[0] > 0
+    if not has_txns:
+        return {
+            "transactions": [],
+            "total_count": 0,
+            "page": page,
+            "page_size": page_size,
+            "total_pages": 0,
+            "dataset_meta": None
+        }
+
+    conditions = []
+    params = []
+
+    if search and search.strip():
+        q = f"%{search.strip()}%"
+        conditions.append("(txn_id ILIKE ? OR src_acct ILIKE ? OR dst_acct ILIKE ? OR narration ILIKE ? OR src_ifsc ILIKE ? OR dst_ifsc ILIKE ?)")
+        params.extend([q, q, q, q, q, q])
+
+    if payment_mode and payment_mode.strip().upper() not in ["ALL", ""]:
+        conditions.append("payment_mode = ?")
+        params.append(payment_mode.strip().upper())
+
+    where_sql = ("WHERE " + " AND ".join(conditions)) if conditions else ""
+
+    count_sql = f"SELECT count(*) FROM txns {where_sql};"
+    total_count = conn.execute(count_sql, params).fetchone()[0]
+
+    offset = (page - 1) * page_size
+    valid_sorts = {"ts": "ts", "amount": "amount", "txn_id": "txn_id", "src_acct": "src_acct", "dst_acct": "dst_acct"}
+    order_col = valid_sorts.get(sort_by, "ts")
+    order_dir = "DESC" if sort_dir.lower() == "desc" else "ASC"
+
+    query_sql = f"""
+        SELECT 
+            txn_id,
+            src_acct,
+            dst_acct,
+            src_ifsc,
+            dst_ifsc,
+            src_bank,
+            dst_bank,
+            amount,
+            amount_paise,
+            strftime(ts, '%Y-%m-%d %H:%M:%S') AS timestamp_str,
+            payment_mode,
+            narration,
+            ip,
+            device_type
+        FROM txns
+        {where_sql}
+        ORDER BY {order_col} {order_dir}
+        LIMIT ? OFFSET ?;
+    """
+    rows = conn.execute(query_sql, params + [page_size, offset]).fetchall()
+
+    col_names = [
+        "txn_id", "src_acct", "dst_acct", "src_ifsc", "dst_ifsc",
+        "src_bank", "dst_bank", "amount", "amount_paise", "timestamp",
+        "payment_mode", "narration", "ip", "device_type"
+    ]
+    txns = [dict(zip(col_names, r)) for r in rows]
+    total_pages = (total_count + page_size - 1) // page_size if total_count > 0 else 0
+
+    has_meta = conn.execute("SELECT count(*) FROM information_schema.tables WHERE table_name = 'dataset_meta';").fetchone()[0] > 0
+    meta_info = None
+    if has_meta:
+        m = conn.execute("SELECT dataset_name, dataset_sha256, total_rows, total_accounts, strftime(ingested_at, '%Y-%m-%d %H:%M:%S') FROM dataset_meta LIMIT 1;").fetchone()
+        if m:
+            meta_info = {
+                "dataset_name": m[0],
+                "dataset_sha256": m[1],
+                "total_rows": m[2],
+                "total_accounts": m[3],
+                "ingested_at": m[4]
+            }
+
+    return {
+        "transactions": txns,
+        "total_count": total_count,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": total_pages,
+        "dataset_meta": meta_info
+    }
+
 @app.get("/api/datasets")
 def list_available_datasets():
     """Returns curated synthetic and benchmark datasets with victim accounts for quick testing."""
@@ -138,7 +261,7 @@ def list_available_datasets():
             "id": "scenario_4_mega",
             "name": "Scenario 4: Mega Capacity Limit Test (511 Nodes / 1,650 Flows)",
             "category": "Stress Test (Max Capacity)",
-            "filepath": "data/synthetic/scenario_4_mega_capacity_stress_test_500nodes.csv",
+            "filepath": "synthetic_data/scenario_4_mega_capacity_stress_test_500nodes.csv",
             "default_victim": "SBIN10005001",
             "description": "Exceeds PRD maximum capacity limit (500+ nodes, 1,500+ flows). Simulates complex multi-hop layering of ₹5,00,00,000 across 5 layers with 60 FPS zero-lag canvas rendering.",
             "loss_amount": "₹5,00,00,000",
@@ -150,7 +273,7 @@ def list_available_datasets():
             "id": "scenario_1_smurfing",
             "name": "Scenario 1: Fast Smurfing Syndicate (IEEE Mobile AML)",
             "category": "Synthetic Scenario",
-            "filepath": "data/synthetic/scenario_1_fast_smurfing.csv",
+            "filepath": "synthetic_data/scenario_1_fast_smurfing.csv",
             "default_victim": "SBIN10009901",
             "description": "Rapid micro-structuring under ₹50,000 threshold within 15-minute bursts across UPI/IMPS gateways.",
             "loss_amount": "₹15,00,000",
@@ -162,7 +285,7 @@ def list_available_datasets():
             "id": "scenario_2_investment",
             "name": "Scenario 2: Investment Scam Pooling (IBM Watson)",
             "category": "Synthetic Scenario",
-            "filepath": "data/synthetic/scenario_2_investment_scam.csv",
+            "filepath": "synthetic_data/scenario_2_investment_scam.csv",
             "default_victim": "SBIN10008000",
             "description": "Multi-victim aggregation into aggregator mule accounts followed by immediate merchant cashouts.",
             "loss_amount": "₹25,00,000",
@@ -174,7 +297,7 @@ def list_available_datasets():
             "id": "scenario_3_cyclic",
             "name": "Scenario 3: Cyclic Laundering & Churn Ring (Nature 2025)",
             "category": "Synthetic Scenario",
-            "filepath": "data/synthetic/scenario_3_cyclic_ring.csv",
+            "filepath": "synthetic_data/scenario_3_cyclic_ring.csv",
             "default_victim": "AXIS10007701",
             "description": "Circular fund routing through nested 3-hop cycles before funnelling into crypto P2P cashout mules.",
             "loss_amount": "₹18,00,000",
@@ -184,9 +307,9 @@ def list_available_datasets():
         },
         {
             "id": "benchmark_2m",
-            "name": "VoidHacks 2M Production Benchmark",
+            "name": "2M Production Benchmark",
             "category": "Production Dataset",
-            "filepath": "VoidHacks8_MuleAccount_2M_Transactions.csv",
+            "filepath": "data/raw/VoidHacks8_MuleAccount_2M_Transactions.csv",
             "default_victim": "AIRP10000024",
             "description": "Full 2,000,000 transaction dataset provided by Void Hacks 8.0 / Indore Police with 24,873 accounts.",
             "loss_amount": "₹10,00,000+",
@@ -281,25 +404,46 @@ def trace(req: TraceRequest):
 @app.get("/api/accounts/{acct_no}")
 def get_account_profile(acct_no: str):
     conn = get_db()
-    acct = conn.execute("SELECT * FROM accounts WHERE acct_no = ?;", [acct_no]).fetchone()
+    clean_acct = acct_no.strip()
+    
+    # Check exact match
+    acct = conn.execute("SELECT * FROM accounts WHERE acct_no = ?;", [clean_acct]).fetchone()
     if not acct:
-        raise HTTPException(status_code=404, detail=f"Account {acct_no} not found.")
+        # Check case-insensitively
+        acct = conn.execute("SELECT * FROM accounts WHERE acct_no ILIKE ? LIMIT 1;", [clean_acct]).fetchone()
+        
+    if not acct:
+        # Check if present in txns
+        txn_check = conn.execute("""
+            SELECT src_acct, src_ifsc, src_bank FROM txns WHERE src_acct ILIKE ?
+            UNION
+            SELECT dst_acct, dst_ifsc, dst_bank FROM txns WHERE dst_acct ILIKE ?
+            LIMIT 1;
+        """, [clean_acct, clean_acct]).fetchone()
+        if txn_check:
+            clean_acct = txn_check[0]
+            acct = (0, clean_acct, txn_check[1], txn_check[2])
+        else:
+            raise HTTPException(status_code=404, detail=f"Account {acct_no} not found.")
+    else:
+        clean_acct = acct[1]
 
     # Account Score & Why Flagged
-    score_info = conn.execute("SELECT * FROM account_scores WHERE acct_no = ?;", [acct_no]).fetchone()
+    score_df = conn.execute("SELECT * FROM account_scores WHERE acct_no = ? LIMIT 1;", [clean_acct]).fetch_df()
     score_dict = {}
-    if score_info:
+    if not score_df.empty:
+        r = score_df.iloc[0].to_dict()
         score_dict = {
-            "risk_index": score_info[4],
-            "role": score_info[5],
-            "tier": score_info[6],
-            "score_velocity": score_info[7],
-            "score_topology": score_info[8],
-            "score_cashout": score_info[9],
-            "score_device_ip": score_info[10],
-            "score_scam_narr": score_info[11],
-            "ml_prob": round(float(score_info[12] if len(score_info) > 12 and score_info[12] is not None else 0.0), 3),
-            "blended_score": round(float(score_info[13] if len(score_info) > 13 and score_info[13] is not None else score_info[4]), 1)
+            "risk_index": float(r.get("risk_index", 0) or 0),
+            "role": str(r.get("predicted_role", "UNKNOWN")),
+            "tier": str(r.get("tier", "Low")),
+            "score_velocity": float(r.get("score_velocity", 0) or 0),
+            "score_topology": float(r.get("score_topology", 0) or 0),
+            "score_cashout": float(r.get("score_cashout", 0) or 0),
+            "score_device_ip": float(r.get("score_device_ip", 0) or 0),
+            "score_scam_narr": float(r.get("score_scam_narr", 0) or 0),
+            "ml_prob": round(float(r.get("ml_prob", 0.0) or 0.0), 3),
+            "blended_score": round(float(r.get("blended_score", r.get("risk_index", 0)) or 0.0), 1)
         }
 
     # Recent transactions
@@ -309,10 +453,10 @@ def get_account_profile(acct_no: str):
         WHERE src_acct = ? OR dst_acct = ?
         ORDER BY ts DESC
         LIMIT 25;
-    """, [acct_no, acct_no]).fetch_df().to_dict(orient="records")
+    """, [clean_acct, clean_acct]).fetch_df().to_dict(orient="records")
 
     return {
-        "acct_no": acct_no,
+        "acct_no": clean_acct,
         "bank": acct[3],
         "ifsc": acct[2],
         "score": score_dict,
@@ -322,20 +466,20 @@ def get_account_profile(acct_no: str):
 @app.get("/api/search")
 def search(q: str = Query(..., min_length=2)):
     conn = get_db()
-    pattern = f"%{q}%"
+    pattern = f"%{q.strip()}%"
     accts = conn.execute("""
         SELECT acct_no, primary_bank, primary_ifsc 
         FROM accounts 
-        WHERE acct_no LIKE ? OR primary_bank LIKE ? OR primary_ifsc LIKE ?
-        LIMIT 10;
+        WHERE acct_no ILIKE ? OR primary_bank ILIKE ? OR primary_ifsc ILIKE ?
+        LIMIT 15;
     """, [pattern, pattern, pattern]).fetchall()
 
     txns = conn.execute("""
         SELECT txn_id, src_acct, dst_acct, amount, ts, narration 
         FROM txns 
-        WHERE txn_id LIKE ? OR narration LIKE ?
-        LIMIT 10;
-    """, [pattern, pattern]).fetchall()
+        WHERE txn_id ILIKE ? OR narration ILIKE ? OR src_acct ILIKE ? OR dst_acct ILIKE ?
+        LIMIT 15;
+    """, [pattern, pattern, pattern, pattern]).fetchall()
 
     return {
         "accounts": [{"acct_no": r[0], "bank": r[1], "ifsc": r[2]} for r in accts],

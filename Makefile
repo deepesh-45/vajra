@@ -18,8 +18,15 @@ trace:
 legal:
 	.venv/bin/python bench/quick_legal_test.py
 
+test:
+	.venv/bin/python bench/test_synthetic_scenarios.py
+	.venv/bin/python bench/comprehensive_test.py
+
 build:
 	cd frontend && npm run build
 
 run:
 	./run.sh
+
+clean:
+	rm -rf frontend/dist __pycache__ .pytest_cache

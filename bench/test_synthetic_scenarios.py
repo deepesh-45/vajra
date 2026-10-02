@@ -73,28 +73,28 @@ def test_scenario(csv_path: str, victim_acct: str, expected_min_recoverable: flo
 def run_all():
     # Scenario 1: Fast Smurfing
     test_scenario(
-        csv_path="data/synthetic/scenario_1_fast_smurfing.csv",
+        csv_path="synthetic_data/scenario_1_fast_smurfing.csv",
         victim_acct="SBIN10009901",
         expected_min_recoverable=100000.0
     )
 
     # Scenario 2: Investment Scam
     test_scenario(
-        csv_path="data/synthetic/scenario_2_investment_scam.csv",
+        csv_path="synthetic_data/scenario_2_investment_scam.csv",
         victim_acct="SBIN10008000",
         expected_min_recoverable=50000.0
     )
 
     # Scenario 3: Cyclic Laundering
     test_scenario(
-        csv_path="data/synthetic/scenario_3_cyclic_ring.csv",
+        csv_path="synthetic_data/scenario_3_cyclic_ring.csv",
         victim_acct="AXIS10007701",
         expected_min_recoverable=100000.0
     )
 
     # Scenario 4: Mega Capacity Limit Stress Test (511 Nodes, 1,650 Flows)
     test_scenario(
-        csv_path="data/synthetic/scenario_4_mega_capacity_stress_test_500nodes.csv",
+        csv_path="synthetic_data/scenario_4_mega_capacity_stress_test_500nodes.csv",
         victim_acct="SBIN10005001",
         expected_min_recoverable=1000000.0
     )

@@ -5,7 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$DIR"
 
 echo "============================================================"
-echo " Starting Operation Vajra Workbench (Offline Mode)"
+echo " Starting Vajra Workbench (Offline Mode)"
 echo " Indore Police Commissionerate - Cyber Crime Cell"
 echo "============================================================"
 
