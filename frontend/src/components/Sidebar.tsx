@@ -75,13 +75,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
           padding: '0 6px 20px 6px',
           borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
         }}>
-          {/* Logo container using user's uploaded official Vajra emblem */}
+          {/* Logo container using user's uploaded official Vajra shield emblem (transparent) */}
           <div style={{
             width: '42px',
             height: '42px',
             borderRadius: '10px',
-            backgroundColor: 'rgba(255, 255, 255, 0.04)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
+            backgroundColor: 'rgba(255, 255, 255, 0.06)',
+            border: '1px solid rgba(255, 255, 255, 0.12)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -92,9 +92,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
               src="/vajra_logo.png"
               alt="Vajra"
               style={{
-                width: '36px',
-                height: '36px',
-                objectFit: 'contain'
+                width: '34px',
+                height: '34px',
+                objectFit: 'contain',
+                filter: 'brightness(1.8) contrast(1.1)'
               }}
             />
           </div>

@@ -444,7 +444,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         ctx.strokeStyle = 'rgba(210, 191, 168, 0.25)';
         ctx.lineWidth = 1 / Math.sqrt(zoom);
       } else {
-        ctx.strokeStyle = edge.amount_paise > 5000000 ? '#B45309' : '#8C7764';
+        ctx.strokeStyle = edge.amount_paise > 5000000 ? '#B45309' : '#64748B';
         ctx.lineWidth = Math.min(3.5, Math.max(1.5, Math.log10(edge.amount_paise / 10000 + 1))) / Math.sqrt(zoom);
       }
       ctx.stroke();
@@ -468,7 +468,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       const ax = au * au * au * srcX + 3 * au * au * arrowT * cp1x + 3 * au * arrowT * arrowT * cp2x + arrowT * arrowT * arrowT * dstX;
       const ay = au * au * au * srcY + 3 * au * au * arrowT * cp1y + 3 * au * arrowT * arrowT * cp2y + arrowT * arrowT * arrowT * dstY;
 
-      ctx.fillStyle = isDirectlyFocused ? '#2563EB' : '#8C7764';
+      ctx.fillStyle = isDirectlyFocused ? '#2563EB' : '#64748B';
       ctx.beginPath();
       ctx.arc(ax, ay, 2.5 / Math.sqrt(zoom), 0, Math.PI * 2);
       ctx.fill();
@@ -783,7 +783,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         borderRadius: isFullscreen ? 0 : '8px',
         border: isFullscreen ? 'none' : '1px solid #D2BFA8',
         overflow: 'hidden',
-        backgroundColor: '#FBF7F0',
+        backgroundColor: '#F8FAFC',
         userSelect: 'none'
       }}
     >
@@ -824,15 +824,15 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         {/* Brand & Scale Indicators */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#34271E' }}>
+            <span style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#0F172A' }}>
               Vajra OSINT Graph Explorer
             </span>
             <span style={{
               fontSize: '0.6875rem',
               padding: '2px 6px',
               borderRadius: '4px',
-              backgroundColor: '#34271E',
-              color: '#FBF7F0',
+              backgroundColor: '#0F172A',
+              color: '#F8FAFC',
               fontWeight: 600
             }}>
               Sub-ms Traversal
@@ -889,7 +889,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
                   borderRadius: '4px',
                   border: '1px solid #D2BFA8',
                   backgroundColor: '#FFFFFF',
-                  color: '#34271E',
+                  color: '#0F172A',
                   fontSize: '0.75rem',
                   fontFamily: 'monospace',
                   width: '130px'
@@ -903,8 +903,8 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
                   padding: '4px 8px',
                   borderRadius: '4px',
                   border: '1px solid #D2BFA8',
-                  backgroundColor: '#34271E',
-                  color: '#FBF7F0',
+                  backgroundColor: '#0F172A',
+                  color: '#F8FAFC',
                   fontSize: '0.75rem',
                   fontWeight: 600,
                   cursor: 'pointer'
@@ -922,8 +922,8 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
               padding: '5px 10px',
               borderRadius: '4px',
               border: '1px solid #D2BFA8',
-              backgroundColor: '#FBF7F0',
-              color: '#34271E',
+              backgroundColor: '#F8FAFC',
+              color: '#0F172A',
               fontSize: '0.75rem',
               fontWeight: 600,
               cursor: 'pointer'
@@ -939,8 +939,8 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
               padding: '5px 10px',
               borderRadius: '4px',
               border: '1px solid #D2BFA8',
-              backgroundColor: '#FBF7F0',
-              color: '#34271E',
+              backgroundColor: '#F8FAFC',
+              color: '#0F172A',
               fontSize: '0.75rem',
               fontWeight: 600,
               cursor: 'pointer'
@@ -956,8 +956,8 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
               padding: '5px 10px',
               borderRadius: '4px',
               border: '1px solid #D2BFA8',
-              backgroundColor: '#FBF7F0',
-              color: '#34271E',
+              backgroundColor: '#F8FAFC',
+              color: '#0F172A',
               fontSize: '0.75rem',
               fontWeight: 600,
               cursor: 'pointer'
@@ -973,8 +973,8 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
               padding: '5px 10px',
               borderRadius: '4px',
               border: '1px solid #D2BFA8',
-              backgroundColor: edgeViewMode === 'focused' ? '#E8D8C3' : '#FBF7F0',
-              color: '#34271E',
+              backgroundColor: edgeViewMode === 'focused' ? '#E2E8F0' : '#F8FAFC',
+              color: '#0F172A',
               fontSize: '0.75rem',
               fontWeight: 600,
               cursor: 'pointer'
@@ -990,8 +990,8 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
                 padding: '4px 8px',
                 borderRadius: '4px',
                 border: '1px solid #D2BFA8',
-                backgroundColor: '#FBF7F0',
-                color: '#34271E',
+                backgroundColor: '#F8FAFC',
+                color: '#0F172A',
                 fontSize: '0.8125rem',
                 fontWeight: 700,
                 cursor: 'pointer'
@@ -1005,8 +1005,8 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
                 padding: '4px 8px',
                 borderRadius: '4px',
                 border: '1px solid #D2BFA8',
-                backgroundColor: '#FBF7F0',
-                color: '#34271E',
+                backgroundColor: '#F8FAFC',
+                color: '#0F172A',
                 fontSize: '0.8125rem',
                 fontWeight: 700,
                 cursor: 'pointer'
@@ -1026,8 +1026,8 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
               padding: '5px 12px',
               borderRadius: '4px',
               border: 'none',
-              backgroundColor: isFullscreen ? '#34271E' : '#E8D8C3',
-              color: isFullscreen ? '#FBF7F0' : '#34271E',
+              backgroundColor: isFullscreen ? '#0F172A' : '#E2E8F0',
+              color: isFullscreen ? '#F8FAFC' : '#0F172A',
               fontSize: '0.75rem',
               fontWeight: 600,
               cursor: 'pointer'

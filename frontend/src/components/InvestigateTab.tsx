@@ -814,22 +814,22 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
                         fontWeight: 700,
                         padding: '2px 8px',
                         borderRadius: '4px',
-                        backgroundColor: selectedNodeMetrics?.riskScore && selectedNodeMetrics.riskScore > 75 ? 'var(--danger-light)' : 'var(--primary-light)',
-                        color: selectedNodeMetrics?.riskScore && selectedNodeMetrics.riskScore > 75 ? 'var(--danger)' : 'var(--primary)',
+                        backgroundColor: selectedNodeMetrics?.riskScore && selectedNodeMetrics.riskScore > 75 ? '#FEF2F2' : '#EFF6FF',
+                        color: selectedNodeMetrics?.riskScore && selectedNodeMetrics.riskScore > 75 ? '#DC2626' : '#2563EB',
                         textTransform: 'uppercase'
                       }}>
                         {selectedNodeMetrics?.roleTag}
                       </span>
-                      <h4 style={{ fontSize: '15px', fontWeight: 700, fontFamily: 'var(--font-mono)', marginTop: '4px', color: 'var(--text)' }}>
+                      <h4 style={{ fontSize: '15px', fontWeight: 700, fontFamily: 'var(--font-mono)', marginTop: '4px', color: '#0F172A' }}>
                         {selectedNode.acct_no}
                       </h4>
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                      <div style={{ fontSize: '11px', color: '#64748B', marginTop: '2px' }}>
                         {selectedNode.bank} · IFSC: {selectedNode.ifsc}
                       </div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block' }}>Risk Index</span>
-                      <span style={{ fontSize: '18px', fontWeight: 800, color: selectedNodeMetrics?.riskScore && selectedNodeMetrics.riskScore > 75 ? 'var(--danger)' : 'var(--primary)' }}>
+                      <span style={{ fontSize: '10px', color: '#64748B', textTransform: 'uppercase', display: 'block' }}>Risk Index</span>
+                      <span style={{ fontSize: '18px', fontWeight: 800, color: selectedNodeMetrics?.riskScore && selectedNodeMetrics.riskScore > 75 ? '#DC2626' : '#2563EB' }}>
                         {selectedNodeMetrics?.riskScore} / 100
                       </span>
                     </div>
@@ -839,10 +839,10 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
                     marginTop: '10px',
                     padding: '8px 10px',
                     borderRadius: '6px',
-                    backgroundColor: 'var(--danger-light)',
-                    border: '1px solid var(--danger-border)',
+                    backgroundColor: '#FEF2F2',
+                    border: '1px solid #FEE2E2',
                     fontSize: '11px',
-                    color: 'var(--danger)',
+                    color: '#DC2626',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '6px'
@@ -854,27 +854,27 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
 
                 {/* Attributes Grid */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                  <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: 'var(--surface-2)', border: '1px solid var(--border)' }}>
-                    <span style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block' }}>Total Inflow</span>
-                    <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--success)' }}>
+                  <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0' }}>
+                    <span style={{ fontSize: '10px', color: '#64748B', display: 'block' }}>Total Inflow</span>
+                    <span style={{ fontSize: '13px', fontWeight: 700, color: '#059669' }}>
                       ₹{selectedNodeMetrics?.totalInflow.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                     </span>
                   </div>
-                  <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: 'var(--surface-2)', border: '1px solid var(--border)' }}>
-                    <span style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block' }}>Total Outflow</span>
-                    <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--danger)' }}>
+                  <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0' }}>
+                    <span style={{ fontSize: '10px', color: '#64748B', display: 'block' }}>Total Outflow</span>
+                    <span style={{ fontSize: '13px', fontWeight: 700, color: '#DC2626' }}>
                       ₹{selectedNodeMetrics?.totalOutflow.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                     </span>
                   </div>
-                  <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: 'var(--surface-2)', border: '1px solid var(--border)' }}>
-                    <span style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block' }}>Estimated Dwell Time</span>
+                  <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0' }}>
+                    <span style={{ fontSize: '10px', color: '#64748B', display: 'block' }}>Estimated Dwell Time</span>
                     <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--warning)' }}>
                       {selectedNodeMetrics?.dwellTime} mins
                     </span>
                   </div>
-                  <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: 'var(--surface-2)', border: '1px solid var(--border)' }}>
-                    <span style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block' }}>Direct Fan Degree</span>
-                    <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--primary)' }}>
+                  <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0' }}>
+                    <span style={{ fontSize: '10px', color: '#64748B', display: 'block' }}>Direct Fan Degree</span>
+                    <span style={{ fontSize: '13px', fontWeight: 700, color: '#2563EB' }}>
                       {selectedNodeMetrics?.degree} links
                     </span>
                   </div>
@@ -882,7 +882,7 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
 
                 {/* Investigation Actions */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                  <span style={{ fontSize: '11px', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>
                     Graph Actions
                   </span>
                   <button
@@ -890,7 +890,7 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
                     style={{
                       padding: '8px 12px',
                       borderRadius: '6px',
-                      backgroundColor: 'var(--primary)',
+                      backgroundColor: '#2563EB',
                       color: '#FFFFFF',
                       border: 'none',
                       fontSize: '12px',
@@ -911,9 +911,9 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
                     style={{
                       padding: '8px 12px',
                       borderRadius: '6px',
-                      backgroundColor: 'var(--surface-2)',
-                      color: 'var(--text)',
-                      border: '1px solid var(--border)',
+                      backgroundColor: '#F8FAFC',
+                      color: '#0F172A',
+                      border: '1px solid #E2E8F0',
                       fontSize: '12px',
                       fontWeight: 600,
                       cursor: 'pointer',
@@ -931,7 +931,7 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
                 {/* Connected Transactions Table */}
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                    <span style={{ fontSize: '11px', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>
                       Recent Linked Flows
                     </span>
                   </div>
