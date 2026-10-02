@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   FolderOpen,
-  LayoutDashboard,
   Network,
   Users,
   Share2,
@@ -18,10 +17,9 @@ interface SidebarProps {
   onToggleCollapse?: () => void;
 }
 
-// Ordered tabs with colorful icon accents inspired by the Overview page
+// Ordered tabs with colorful icon accents
 const navItems = [
   { id: 'load', label: 'Load Data', icon: FolderOpen, color: '#2563EB', bg: '#EFF6FF' },
-  { id: 'overview', label: 'Overview', icon: LayoutDashboard, color: '#059669', bg: '#ECFDF5' },
   { id: 'investigate', label: 'Graph Explorer', icon: Network, color: '#7C3AED', bg: '#F5F3FF' },
   { id: 'accounts', label: 'Accounts', icon: Users, color: '#D97706', bg: '#FFFBEB' },
   { id: 'syndicates', label: 'Syndicates', icon: Share2, color: '#DC2626', bg: '#FEF2F2' },

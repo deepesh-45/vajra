@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
-import { OverviewTab } from './components/OverviewTab';
 import { InvestigateTab } from './components/InvestigateTab';
 import { AccountsTab } from './components/AccountsTab';
 import { SyndicatesTab } from './components/SyndicatesTab';
@@ -111,8 +110,8 @@ export const App: React.FC = () => {
         <main className={`app-content ${isInvestigate ? '' : 'animated-ambient-bg'}`} style={{
           flex: 1,
           minWidth: 0,
-          padding: isInvestigate ? 0 : (activeTab === 'overview' ? '12px 20px' : '24px 28px'),
-          overflowY: (isInvestigate || activeTab === 'overview') ? 'hidden' : 'auto',
+          padding: isInvestigate ? 0 : '18px 24px',
+          overflowY: isInvestigate ? 'hidden' : 'auto',
           overflowX: 'hidden',
           position: 'relative',
           height: 'calc(100vh - 64px)',
@@ -123,17 +122,9 @@ export const App: React.FC = () => {
           <div style={{
             position: 'relative',
             zIndex: 1,
-            height: (isInvestigate || activeTab === 'overview') ? '100%' : 'auto',
-            width: '100%',
-            overflow: (isInvestigate || activeTab === 'overview') ? 'hidden' : 'visible'
+            height: isInvestigate ? '100%' : 'auto',
+            width: '100%'
           }}>
-          {activeTab === 'overview' && (
-            <OverviewTab
-              data={overviewData}
-              onSelectVictim={handleSelectVictim}
-              onNavigateTab={setActiveTab}
-            />
-          )}
 
           {activeTab === 'investigate' && (
             <InvestigateTab
@@ -175,7 +166,6 @@ export const App: React.FC = () => {
               onDatasetChange={loadOverview}
               onSelectVictim={handleSelectVictim}
               onNavigateToInvestigate={() => setActiveTab('investigate')}
-              onNavigateToOverview={() => setActiveTab('overview')}
             />
           )}
 
