@@ -216,38 +216,39 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
     });
   }, [edges, maxTimestamp, timeMode, activeMotif, isolatedPathNodeIds]);
 
-  // OSINT Node Visibility Computation
+  // OSINT Node Visibility Computation & Vertical Layer Assignment
   // <= 25 nodes: All nodes visible
-  // > 25 nodes: Single layer from victim to cashout initially; expands strictly layer-by-layer (level-wise to the next layer only)
-  const { osintNodes, osintEdges } = useMemo(() => {
+  // > 25 nodes: Vertical layers (columns) expanding to the right
+  const { osintNodes, osintEdges, verticalLayerMap, parentMap } = useMemo(() => {
     const visibleAccts = new Set<string>();
+    const vLayerMap = new Map<string, number>();
+    const pMap = new Map<string, string>();
 
     if (!isLargeGraph) {
       nodes.forEach(n => visibleAccts.add(n.acct_no));
     } else {
-      // 1. Always include initial spine (victim down to cashout)
-      initialSpineNodes.forEach(acct => visibleAccts.add(acct));
+      // 1. Initial spine nodes are assigned to Vertical Layer 0
+      initialSpineNodes.forEach(acct => {
+        visibleAccts.add(acct);
+        vLayerMap.set(acct, 0);
+      });
 
-      const nodeMap = new Map<string, NodeData>();
-      nodes.forEach(n => nodeMap.set(n.acct_no, n));
-
-      // 2. Expand strictly layer-by-layer to the immediate next layer only
+      // 2. BFS: For each expanded node in vertical layer L, its children are assigned to vertical layer L + 1
       const queue = Array.from(visibleAccts);
       const visited = new Set<string>(queue);
 
       while (queue.length > 0) {
         const curr = queue.shift()!;
-        const currNode = nodeMap.get(curr);
-        if (!currNode) continue;
+        const currLayer = vLayerMap.get(curr) ?? 0;
 
         if (expandedNodes.has(curr)) {
           const children = childrenMap.get(curr);
           if (children) {
             children.forEach(childAcct => {
-              const childNode = nodeMap.get(childAcct);
-              // Strictly restrict expansion to the immediate next layer
-              if (childNode && childNode.hop === currNode.hop + 1) {
+              if (!visibleAccts.has(childAcct)) {
                 visibleAccts.add(childAcct);
+                vLayerMap.set(childAcct, currLayer + 1);
+                pMap.set(childAcct, curr);
                 if (!visited.has(childAcct)) {
                   visited.add(childAcct);
                   queue.push(childAcct);
@@ -264,7 +265,9 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
 
     return {
       osintNodes: filteredNodes.length > 0 ? filteredNodes : nodes,
-      osintEdges: filteredEdges
+      osintEdges: filteredEdges,
+      verticalLayerMap: vLayerMap,
+      parentMap: pMap
     };
   }, [nodes, visibleEdges, expandedNodes, childrenMap, isLargeGraph, initialSpineNodes]);
 
@@ -371,78 +374,105 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       };
     } else {
       // ----------------------------------------------------
-      // MODE B (> 25 nodes): Level-Wise Vertical Hierarchy
-      // Top: Victim Origin (Hop 0)
-      // Intermediate: L1, L2, L3
-      // Bottom: Cashout Off-Ramps (Hop 4)
-      // Each layer occupies its own horizontal level tier.
-      // Sibling nodes expand horizontally side-by-side.
+      // MODE B (> 25 nodes): Vertical Layers (Columns) Expanding to the Right
+      // Vertical Layer 0: Primary Investigation Spine (Victim on Top, Cashout on Bottom)
+      // Vertical Layer 1: Expanded children of Layer 0 nodes
+      // Vertical Layer 2: Expanded children of Layer 1 nodes
+      // Each vertical layer is a dedicated column of nodes expanding to the right!
       // ----------------------------------------------------
-      const tierSpacingY = 180; // Vertical distance between levels
-      const cardSpacingX = CARD_WIDTH + 24; // Horizontal distance between sibling cards in the same level
+      const spineList = spineOrderedNodes.length > 0 ? spineOrderedNodes : nodes.filter(n => initialSpineNodes.has(n.acct_no));
       const spineX = 240;
+      const cardW = CARD_WIDTH;
+      const cardH = CARD_HEIGHT;
+      const slotH = cardH + 16;
+      const colWidth = cardW + 80;
 
-      // Group visible nodes by hop (0, 1, 2, 3, 4)
-      const hopGroups: Record<number, NodeData[]> = { 0: [], 1: [], 2: [], 3: [], 4: [] };
-      osintNodes.forEach(n => {
-        const hop = Math.min(4, Math.max(0, n.hop));
-        if (!hopGroups[hop]) hopGroups[hop] = [];
-        hopGroups[hop].push(n);
+      // 1. Layout Vertical Layer 0 (Spine from Victim on top down to Cashout on bottom)
+      let currentSpineY = 120;
+      spineList.forEach(sNode => {
+        const spineY = currentSpineY;
+        positions.set(sNode.acct_no, { x: spineX, y: spineY, w: cardW, h: cardH });
+
+        // Find direct children of this spine node that are in Vertical Layer 1
+        const layer1Kids = osintNodes
+          .filter(n => verticalLayerMap.get(n.acct_no) === 1 && parentMap.get(n.acct_no) === sNode.acct_no)
+          .sort((a, b) => (b.taint_in_paise || 0) - (a.taint_in_paise || 0));
+
+        if (layer1Kids.length > 0) {
+          // Position children in Vertical Layer 1 next to this spine node
+          layer1Kids.forEach((kid, idx) => {
+            const kidX = spineX + colWidth;
+            const kidY = spineY + idx * slotH;
+            positions.set(kid.acct_no, { x: kidX, y: kidY, w: cardW, h: cardH });
+          });
+          const maxKidY = spineY + layer1Kids.length * slotH;
+          currentSpineY = Math.max(spineY + 190, maxKidY + 40);
+        } else {
+          currentSpineY += 190;
+        }
       });
 
-      // Sort nodes within each hop:
-      // Spine node first, then sort by highest taint/amount
-      const spineAcctSet = new Set(spineOrderedNodes.map(s => s.acct_no));
-      [0, 1, 2, 3, 4].forEach(hop => {
-        const group = hopGroups[hop];
-        if (!group || group.length === 0) return;
+      // 2. Layout deeper vertical layers (Layer 2, Layer 3, etc.)
+      const maxLayer = osintNodes.reduce((max, n) => Math.max(max, verticalLayerMap.get(n.acct_no) || 0), 0);
 
-        group.sort((a, b) => {
-          const aIsSpine = spineAcctSet.has(a.acct_no) ? 1 : 0;
-          const bIsSpine = spineAcctSet.has(b.acct_no) ? 1 : 0;
-          if (aIsSpine !== bIsSpine) return bIsSpine - aIsSpine;
+      for (let L = 2; L <= maxLayer; L++) {
+        const layerNodes = osintNodes.filter(n => verticalLayerMap.get(n.acct_no) === L);
+        // Group by parent and sort by parent Y position
+        layerNodes.sort((a, b) => {
+          const parentA = parentMap.get(a.acct_no);
+          const parentB = parentMap.get(b.acct_no);
+          const yA = parentA ? (positions.get(parentA)?.y || 0) : 0;
+          const yB = parentB ? (positions.get(parentB)?.y || 0) : 0;
+          if (yA !== yB) return yA - yB;
           return (b.taint_in_paise || 0) - (a.taint_in_paise || 0);
         });
-      });
 
-      // Assign level-wise coordinates
-      [0, 1, 2, 3, 4].forEach(hop => {
-        const group = hopGroups[hop];
-        if (!group || group.length === 0) return;
+        let nextAvailableY = 120;
+        layerNodes.forEach(node => {
+          const parentAcct = parentMap.get(node.acct_no);
+          const parentPos = parentAcct ? positions.get(parentAcct) : null;
+          const targetY = parentPos ? parentPos.y : 120;
+          const actualY = Math.max(targetY, nextAvailableY);
 
-        const y = 120 + hop * tierSpacingY;
-
-        group.forEach((node, idx) => {
-          const x = spineX + idx * cardSpacingX;
-          positions.set(node.acct_no, { x, y, w: CARD_WIDTH, h: CARD_HEIGHT });
-
-          if (x < minX) minX = x;
-          if (x + CARD_WIDTH > maxX) maxX = x + CARD_WIDTH;
-          if (y < minY) minY = y;
-          if (y + CARD_HEIGHT > maxY) maxY = y + CARD_HEIGHT;
+          const colX = spineX + L * colWidth;
+          positions.set(node.acct_no, { x: colX, y: actualY, w: cardW, h: cardH });
+          nextAvailableY = actualY + slotH;
         });
+      }
+
+      // Calculate bounds
+      osintNodes.forEach(node => {
+        const p = positions.get(node.acct_no);
+        if (p) {
+          if (p.x < minX) minX = p.x;
+          if (p.x + cardW > maxX) maxX = p.x + cardW;
+          if (p.y < minY) minY = p.y;
+          if (p.y + cardH > maxY) maxY = p.y + cardH;
+        }
       });
 
-      // Horizontal stage corridor bands in vertical mode
-      const stageBands = [0, 1, 2, 3, 4].map(hop => {
-        const y = 98 + hop * tierSpacingY;
-        return {
-          name: hop === 0 ? "STAGE 0: VICTIM ORIGIN (TOP)" : (hop === 4 ? "STAGE 4: CASHOUT OFF-RAMPS (BOTTOM)" : stageMeta[hop]?.name || `STAGE ${hop}`),
-          desc: stageMeta[hop]?.desc || "",
-          y,
-          height: 118,
-          count: hopGroups[hop]?.length || 0
-        };
-      });
+      // Stage lanes for vertical mode representing each vertical layer column!
+      const stageLanes = [];
+      for (let L = 0; L <= maxLayer; L++) {
+        const count = osintNodes.filter(n => (verticalLayerMap.get(n.acct_no) || 0) === L).length;
+        const colX = spineX + L * colWidth - 16;
+        stageLanes.push({
+          name: L === 0 ? "PRIMARY SPINE (TOP ➔ CASHOUT)" : `VERTICAL LAYER ${L}`,
+          desc: L === 0 ? "Single Direct Trail" : `Downstream Expansion ${L}`,
+          x: colX,
+          width: cardW + 32,
+          count
+        });
+      }
 
       return {
         nodePositions: positions,
-        stageLanes: [],
-        stageBands,
+        stageLanes,
+        stageBands: [],
         bounds: { minX, maxX, minY, maxY }
       };
     }
-  }, [osintNodes, isLargeGraph, spineOrderedNodes]);
+  }, [osintNodes, isLargeGraph, spineOrderedNodes, initialSpineNodes, verticalLayerMap, parentMap]);
 
   // Fit View
   const fitToView = useCallback(() => {
@@ -508,51 +538,25 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
     ctx.translate(pan.x, pan.y);
     ctx.scale(zoom, zoom);
 
-    // 2. Stage Corridor Backgrounds
-    if (!isLargeGraph) {
-      // Horizontal mode: Vertical stage lanes
-      stageLanes.forEach(lane => {
-        const laneH = Math.max(700, (bounds.maxY - bounds.minY) + 260);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
-        roundRect(ctx, lane.x, 80, lane.width, laneH, 10);
-        ctx.fill();
-        ctx.strokeStyle = '#D5C7B5';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
+    // 2. Stage Corridor Backgrounds (Vertical Layers / Columns)
+    stageLanes.forEach(lane => {
+      const laneH = Math.max(700, (bounds.maxY - bounds.minY) + 260);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+      roundRect(ctx, lane.x, 80, lane.width, laneH, 10);
+      ctx.fill();
+      ctx.strokeStyle = '#D5C7B5';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
 
-        ctx.fillStyle = '#0F172A';
-        ctx.font = '700 11.5px Inter, sans-serif';
-        ctx.textAlign = 'left';
-        ctx.fillText(lane.name, lane.x + 16, 106);
+      ctx.fillStyle = '#0F172A';
+      ctx.font = '700 11px Inter, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(lane.name, lane.x + 14, 104);
 
-        ctx.fillStyle = '#64748B';
-        ctx.font = '500 9.5px Inter, sans-serif';
-        ctx.fillText(`${lane.desc} (${lane.count} visible)`, lane.x + 16, 122);
-      });
-    } else {
-      // Vertical mode: Horizontal stage bands
-      const bandWidth = Math.max(1400, (bounds.maxX - bounds.minX) + 160);
-      const bandX = Math.min(bounds.minX - 60, 100);
-
-      stageBands.forEach(band => {
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.88)';
-        roundRect(ctx, bandX, band.y, bandWidth, band.height, 10);
-        ctx.fill();
-        ctx.strokeStyle = '#D5C7B5';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-
-        // Stage Title
-        ctx.fillStyle = '#0F172A';
-        ctx.font = '700 11px Inter, sans-serif';
-        ctx.textAlign = 'left';
-        ctx.fillText(band.name, bandX + 16, band.y + 18);
-
-        ctx.fillStyle = '#64748B';
-        ctx.font = '500 9px Inter, sans-serif';
-        ctx.fillText(`${band.desc} • ${band.count} active`, bandX + 16, band.y + 32);
-      });
-    }
+      ctx.fillStyle = '#64748B';
+      ctx.font = '500 9px Inter, sans-serif';
+      ctx.fillText(`${lane.desc} (${lane.count} visible)`, lane.x + 14, 120);
+    });
 
     const isFocusActive = !!focusedNodeConnections;
 
@@ -579,11 +583,9 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         cp2x = dstX - cpDist;
         cp2y = dstY;
       } else {
-        // Vertical Level-Wise Mode:
-        // Connect vertically downwards from Level H to Level H+1
-        const isSameLevel = Math.abs(p2.y - p1.y) < 20;
-
-        if (isSameLevel) {
+        // Vertical Mode with Vertical Layers (Columns):
+        if (p2.x > p1.x) {
+          // Connect horizontally from right port of parent to left port of child
           srcX = p1.x + CARD_WIDTH;
           srcY = p1.y + CARD_HEIGHT / 2;
           dstX = p2.x;
@@ -596,7 +598,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
           cp2x = dstX - cpDist;
           cp2y = dstY;
         } else {
-          // Bottom midpoint of parent down to top midpoint of child
+          // Bottom midpoint of parent down to top midpoint of child (vertical spine)
           srcX = p1.x + CARD_WIDTH / 2;
           srcY = p1.y + CARD_HEIGHT;
           dstX = p2.x + CARD_WIDTH / 2;
@@ -821,13 +823,9 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       }
 
       // 4.7 Right Edge Expand/Collapse Toggle Button (+ / −)
-      const hasNextLayerKids = edges.some(e => {
-        if (e.src_acct !== node.acct_no) return false;
-        const c = nodes.find(n => n.acct_no === e.dst_acct);
-        return c && c.hop === node.hop + 1;
-      });
+      const hasKidsToExpand = edges.some(e => e.src_acct === node.acct_no);
 
-      if (hasNextLayerKids && isLargeGraph) {
+      if (hasKidsToExpand && isLargeGraph) {
         const btnRadius = 10;
         const btnX = x + w;
         const btnY = y + h / 2;
@@ -864,9 +862,6 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
     const clickX = (e.clientX - rect.left - pan.x) / zoom;
     const clickY = (e.clientY - rect.top - pan.y) / zoom;
 
-    const nodeMap = new Map<string, NodeData>();
-    nodes.forEach(n => nodeMap.set(n.acct_no, n));
-
     for (const node of osintNodes) {
       const pos = nodePositions.get(node.acct_no);
       if (!pos) continue;
@@ -875,14 +870,9 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       const isNearPlusBtn = Math.hypot(clickX - (pos.x + pos.w), clickY - (pos.y + pos.h / 2)) <= 14;
 
       if (isInsideCard || isNearPlusBtn) {
-        // Check if node has children in the immediate next layer
-        const hasNextLayerKids = edges.some(edge => {
-          if (edge.src_acct !== node.acct_no) return false;
-          const c = nodeMap.get(edge.dst_acct);
-          return c && c.hop === node.hop + 1;
-        });
+        const hasKids = edges.some(edge => edge.src_acct === node.acct_no);
 
-        if (hasNextLayerKids && isLargeGraph) {
+        if (hasKids && isLargeGraph) {
           setExpandedNodes(prev => {
             const next = new Set(prev);
             if (next.has(node.acct_no)) {
@@ -891,23 +881,18 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
               const queue = [node.acct_no];
               while (queue.length > 0) {
                 const currAcct = queue.shift()!;
-                const currNode = nodeMap.get(currAcct);
-                if (!currNode) continue;
                 edges.forEach(edge => {
-                  if (edge.src_acct === currAcct) {
-                    const c = nodeMap.get(edge.dst_acct);
-                    if (c && c.hop === currNode.hop + 1 && next.has(c.acct_no)) {
-                      if (!toRemove.has(c.acct_no)) {
-                        toRemove.add(c.acct_no);
-                        queue.push(c.acct_no);
-                      }
+                  if (edge.src_acct === currAcct && next.has(edge.dst_acct)) {
+                    if (!toRemove.has(edge.dst_acct)) {
+                      toRemove.add(edge.dst_acct);
+                      queue.push(edge.dst_acct);
                     }
                   }
                 });
               }
               toRemove.forEach(a => next.delete(a));
             } else {
-              // Expand
+              // Expand into next vertical layer
               next.add(node.acct_no);
             }
             return next;
@@ -1048,7 +1033,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
             color: isLargeGraph ? '#1D4ED8' : '#047857',
             border: `1px solid ${isLargeGraph ? '#BFDBFE' : '#A7F3D0'}`
           }}>
-            {isLargeGraph ? "Vertical Drill-Down (Victim ➔ Cashout)" : "Horizontal Flow (≤25 Nodes)"}
+            {isLargeGraph ? "Vertical Layers (Victim ➔ Cashout Spine)" : "Horizontal Flow (≤25 Nodes)"}
           </span>
         </div>
 
