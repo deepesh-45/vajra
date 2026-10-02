@@ -680,7 +680,7 @@ export const LoadDataTab: React.FC<LoadDataTabProps> = ({
             { label: 'File Parsing', desc: 'DuckDB native CSV/Parquet reader', hasLine: true },
             { label: 'Normalising', desc: 'Timestamp & Account harmonization', hasLine: true },
             { label: 'Graph Indexing', desc: 'Adjacency matrix generation', hasLine: true },
-            { label: 'ML Anomaly Scoring', desc: 'Unsupervised Isolation Forest + SHAP', hasLine: false }
+            { label: 'Mule Risk Engine', desc: 'Rules + Bounded LightGBM + TreeSHAP', hasLine: false }
           ].map((step, idx) => (
             <div key={idx} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

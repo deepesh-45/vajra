@@ -1,5 +1,5 @@
 # Product Requirements Document
-## Operation "Abhedya-Chakra" — Offline Mule-Ring Detection & Case Generation Engine
+## VAJRA (वज्र) — Offline Money Mule Detection & Case Generation Engine
 
 | Field | Value |
 |---|---|
@@ -760,7 +760,7 @@ All amounts are **integer paise** across the API; formatting happens at render t
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────┐
-│ ☰ Abhedya-Chakra            [ Search account / txn / IFSC… ]   EN | हिं  ⚙  │ 56px top bar
+│ ☰ Vajra (वज्र)               [ Search account / txn / IFSC… ]   EN | हिं  ⚙  │ 56px top bar
 ├───────────┬────────────────────────────────────────────────────────────────┤
 │ Overview  │                                                                │
 │ Investigate                     MAIN CONTENT AREA                         │
@@ -992,7 +992,7 @@ Runs: cold ingest (3×), 1,000 random-victim traces (p50/p95/max), 1,000 account
 
 ### 21.1 Layout
 ```
-abhedya-chakra/
+vajra/
 ├─ README.md                    # 1-page quickstart
 ├─ PRD.md                       # this document
 ├─ Makefile  run.sh  run.bat    # one-command start

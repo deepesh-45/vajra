@@ -1,5 +1,5 @@
 """
-End-to-End Test Suite for Operation Abhedya-Chakra using standard library urllib.
+End-to-End Test Suite for Operation Vajra (वज्र) using standard library urllib.
 """
 
 import urllib.request
