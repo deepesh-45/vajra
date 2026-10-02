@@ -74,6 +74,18 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
   const [hoveredNode, setHoveredNode] = useState<NodeData | null>(null);
   const [animTime, setAnimTime] = useState<number>(0);
   const [edgeViewMode, setEdgeViewMode] = useState<'focused' | 'all'>('focused');
+  const [nodeDetail, setNodeDetail] = useState<any>(null);
+
+  useEffect(() => {
+    if (!selectedNode) {
+      setNodeDetail(null);
+      return;
+    }
+    fetch(`/api/accounts/${selectedNode.acct_no}`)
+      .then(res => res.json())
+      .then(data => setNodeDetail(data))
+      .catch(() => setNodeDetail(null));
+  }, [selectedNode?.acct_no]);
 
   // OSINT Dynamic Expansion State (Nodes expand on click to eliminate clutter)
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
@@ -1104,6 +1116,27 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
               </div>
             </div>
           </div>
+
+          {/* TreeSHAP Anomaly Driver */}
+          {nodeDetail?.shap_explanation?.top_drivers?.length > 0 && (
+            <div style={{
+              padding: '8px 10px',
+              backgroundColor: '#FBF7F0',
+              borderRadius: '6px',
+              border: '1px solid #D2BFA8',
+              fontSize: '0.6875rem'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
+                <span style={{ fontWeight: 700, color: '#34271E' }}>TreeSHAP Anomaly Driver:</span>
+                <span style={{ fontWeight: 700, color: '#B45309', fontFamily: 'monospace' }}>
+                  SHAP +{nodeDetail.shap_explanation.top_drivers[0].shap_value}
+                </span>
+              </div>
+              <p style={{ margin: 0, color: '#5C4634', lineHeight: 1.3 }}>
+                {nodeDetail.shap_explanation.top_drivers[0].evidence_text}
+              </p>
+            </div>
+          )}
 
           {/* Action buttons */}
           <div style={{ display: 'flex', gap: '8px' }}>

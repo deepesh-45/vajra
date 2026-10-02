@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, X, ArrowRight, Cpu } from 'lucide-react';
+import { Search, X, ArrowRight } from 'lucide-react';
 import type { OverviewData } from '../types';
 
 interface AccountsTabProps {
@@ -29,8 +29,28 @@ interface AccountScoreDetails {
   score_cashout: number;
   score_device_ip: number;
   score_scam_narr: number;
+  isolation_anomaly_score?: number;
+  anomaly_percentile?: number;
+  is_anomaly?: boolean;
   ml_prob?: number;
   blended_score?: number;
+}
+
+interface ShapDriver {
+  feature: string;
+  label: string;
+  value: number;
+  shap_value: number;
+  is_anomalous: boolean;
+  evidence_text: string;
+}
+
+interface ShapExplanation {
+  acct_no: string;
+  baseline_expected_value: number;
+  total_shap_sum: number;
+  top_drivers: ShapDriver[];
+  court_admissible_narrative: string;
 }
 
 interface AccountProfile {
@@ -38,6 +58,7 @@ interface AccountProfile {
   bank: string;
   ifsc: string;
   score?: AccountScoreDetails;
+  shap_explanation?: ShapExplanation;
   recent_transactions?: any[];
 }
 
@@ -442,29 +463,111 @@ export const AccountsTab: React.FC<AccountsTabProps> = ({ data, onSelectVictim }
                 padding: '12px',
                 backgroundColor: '#FBF7F0'
               }}>
-                <p style={{ fontSize: '11px', color: '#8C7764', margin: 0 }}>ML GBDT Prob</p>
+                <p style={{ fontSize: '11px', color: '#8C7764', margin: 0 }}>Isolation Anomaly Index</p>
                 <p style={{
                   fontFamily: 'var(--font-serif)',
                   fontSize: '1.5rem',
                   fontWeight: 600,
-                  color: '#34271E',
+                  color: (accountProfile?.score?.isolation_anomaly_score ?? 0) >= 0.65 ? '#991B1B' : '#34271E',
                   margin: '4px 0 0 0'
                 }}>
-                  {accountProfile?.score?.ml_prob ? Math.round(accountProfile.score.ml_prob * 100) : selectedAccount.confidence}
+                  {accountProfile?.score?.isolation_anomaly_score !== undefined 
+                    ? Math.round(accountProfile.score.isolation_anomaly_score * 100)
+                    : selectedAccount.confidence}
                   <span style={{ fontSize: '0.875rem', fontWeight: 400, color: '#8C7764' }}>
                     %
                   </span>
                 </p>
+                {accountProfile?.score?.anomaly_percentile !== undefined && (
+                  <p style={{ fontSize: '10px', color: '#8C7764', margin: '2px 0 0 0' }}>
+                    Top {Math.round(100 - accountProfile.score.anomaly_percentile)}% Outlier
+                  </p>
+                )}
               </div>
             </div>
 
-            {/* Explainable Feature Attribution Bars (Section 8 of ML/DL Plan) */}
+            {/* TreeSHAP Exact Explainability & Court Evidence */}
+            {accountProfile?.shap_explanation && accountProfile.shap_explanation.top_drivers.length > 0 && (
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+                padding: '12px',
+                borderRadius: '6px',
+                backgroundColor: '#F5EEE5',
+                border: '1px solid #D2BFA8'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: '#34271E' }}>
+                    TreeSHAP Forensic Attribution
+                  </span>
+                  <span style={{
+                    fontSize: '10px',
+                    fontWeight: 600,
+                    padding: '2px 6px',
+                    borderRadius: '4px',
+                    backgroundColor: '#34271E',
+                    color: '#FBF7F0'
+                  }}>
+                    Exact Game Theory
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {accountProfile.shap_explanation.top_drivers.map((d, idx) => (
+                    <div key={idx} style={{
+                      padding: '6px 8px',
+                      borderRadius: '4px',
+                      backgroundColor: '#FBF7F0',
+                      border: '1px solid #D2BFA8',
+                      fontSize: '11px'
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                        <span style={{ fontWeight: 600, color: '#34271E' }}>{d.label}</span>
+                        <span style={{
+                          fontFamily: 'monospace',
+                          fontWeight: 700,
+                          color: '#B45309',
+                          fontSize: '10px'
+                        }}>
+                          SHAP +{d.shap_value}
+                        </span>
+                      </div>
+                      <p style={{ margin: 0, fontSize: '10.5px', color: '#5C4634', lineHeight: 1.35 }}>
+                        {d.evidence_text}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Court Admissible Evidence Box */}
+                {accountProfile.shap_explanation.court_admissible_narrative && (
+                  <div style={{
+                    marginTop: '4px',
+                    padding: '8px',
+                    borderRadius: '4px',
+                    backgroundColor: '#E8D8C3',
+                    borderLeft: '3px solid #34271E',
+                    fontSize: '10.5px',
+                    color: '#34271E',
+                    lineHeight: 1.4
+                  }}>
+                    <strong style={{ display: 'block', marginBottom: '3px', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                      ⚖️ Court-Admissible Narrative (BNSS 106 / Sec 91 CrPC)
+                    </strong>
+                    {accountProfile.shap_explanation.court_admissible_narrative}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Explainable Feature Attribution Sub-Scores */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#8C7764' }}>
-                  Feature Attribution (Why Flagged)
+                  Rule Heuristic Indicators
                 </span>
-                <span style={{ fontSize: '10px', color: '#8C7764' }}>Model M1 & Rules</span>
+                <span style={{ fontSize: '10px', color: '#8C7764' }}>Heuristic Slices</span>
               </div>
 
               {/* Bar 1: Velocity */}
@@ -510,24 +613,6 @@ export const AccountsTab: React.FC<AccountsTabProps> = ({ data, onSelectVictim }
                   <div style={{ width: `${(scoreDevice / 15) * 100}%`, height: '100%', backgroundColor: '#B28C68' }} />
                 </div>
               </div>
-            </div>
-
-            {/* Neural Graph Embedding Status */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '8px 12px',
-              borderRadius: '4px',
-              backgroundColor: '#E8D8C3',
-              border: '1px solid #D2BFA8',
-              fontSize: '11px'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Cpu size={14} color="#34271E" />
-                <span style={{ fontWeight: 600, color: '#34271E' }}>Model M4 GraphSAGE GNN:</span>
-              </div>
-              <span style={{ color: '#5C4634', fontWeight: 600 }}>3-Hop Message Passing Active</span>
             </div>
 
             {/* Mask Toggle */}

@@ -1,24 +1,60 @@
 """
-High-Performance Feature Extraction Engine.
-Computes per-account behavioural, topological, velocity, and cash-out signals using DuckDB window SQL.
-Runs in <= 10 seconds for all 25,000 accounts.
+High-Performance Unsupervised Feature Extraction Engine.
+Extracts per-account behavioral, topological, velocity, and drainage signals
+using DuckDB vectorized SQL for unsupervised anomaly detection.
 """
 
 import time
-from typing import Dict, Any, Optional
+from typing import Dict, Any, List
 import duckdb
+
+FEATURE_COLUMNS: List[str] = [
+    "in_cnt",
+    "in_deg_distinct",
+    "in_sum",
+    "out_cnt",
+    "out_deg_distinct",
+    "out_sum",
+    "drain_ratio",
+    "pass_through_ratio_15m",
+    "avg_txn_size_in",
+    "avg_txn_size_out",
+    "in_out_degree_skew",
+    "foreign_ip_ratio",
+    "headless_ratio",
+    "cashout_narr_ratio",
+    "scam_narr_cnt"
+]
+
+FEATURE_LABELS: Dict[str, str] = {
+    "in_cnt": "Inbound Transaction Count",
+    "in_deg_distinct": "Fan-In Distinct Depositors",
+    "in_sum": "Total Inflow Volume",
+    "out_cnt": "Outbound Transaction Count",
+    "out_deg_distinct": "Fan-Out Distinct Beneficiaries",
+    "out_sum": "Total Outflow Volume",
+    "drain_ratio": "Drainage Ratio (Outflow / Inflow)",
+    "pass_through_ratio_15m": "Rapid 15-Minute Velocity Drain",
+    "avg_txn_size_in": "Average Inflow Transaction Size",
+    "avg_txn_size_out": "Average Outflow Transaction Size",
+    "in_out_degree_skew": "In/Out Degree Topological Asymmetry",
+    "foreign_ip_ratio": "Offshore / VPN IP Origin Ratio",
+    "headless_ratio": "Headless Script / Emulator Ratio",
+    "cashout_narr_ratio": "Cashout / P2P / Crypto Narrations Ratio",
+    "scam_narr_cnt": "Scam Narration Flags Count"
+}
 
 class FeatureEngine:
     def __init__(self):
-        pass
+        self.feature_columns = FEATURE_COLUMNS
+        self.feature_labels = FEATURE_LABELS
 
     def compute_features(self, conn: duckdb.DuckDBPyConnection) -> Dict[str, Any]:
-        """Compute all behavioural features and store in account_features table."""
+        """Compute all unsupervised behavioral features and store in account_features table."""
         t0 = time.perf_counter()
 
         conn.execute("DROP TABLE IF EXISTS account_features;")
 
-        # Compute Volume, Degree, Rails, Cash-out, and Slicing aggregations
         conn.execute("""
             CREATE TABLE account_features AS
             WITH in_stats AS (
@@ -62,19 +98,28 @@ class FeatureEngine:
                 COALESCE(o.out_cnt, 0) AS out_cnt,
                 COALESCE(o.out_deg_distinct, 0) AS out_deg_distinct,
                 COALESCE(o.out_sum, 0.0) AS out_sum,
-                -- In/Out Balance Ratio
+                -- 1. Drainage Ratio: What portion of incoming funds were evacuated?
                 CASE 
-                    WHEN COALESCE(i.in_sum, 0) = 0 THEN 0.0 
+                    WHEN COALESCE(i.in_sum, 0.0) <= 0 THEN 0.0 
                     ELSE LEAST(1.0, COALESCE(o.out_sum, 0.0) / (i.in_sum + 1e-5)) 
-                END AS out_in_ratio,
-                -- Velocity: High outbound ratio with tight timing
+                END AS drain_ratio,
+                -- 2. Rapid Velocity Drain (15-min Pass-Through): Dispersed within short turnaround
                 CASE
-                    WHEN COALESCE(i.in_sum, 0) > 0 AND COALESCE(o.out_sum, 0) > 0 
-                         AND (COALESCE(o.last_out_ts, 0) - COALESCE(i.first_in_ts, 0)) BETWEEN 60 AND 3600
+                    WHEN COALESCE(i.in_sum, 0.0) > 0 AND COALESCE(o.out_sum, 0.0) > 0 
+                         AND (COALESCE(o.last_out_ts, 0) - COALESCE(i.first_in_ts, 0)) BETWEEN 30 AND 3600
                     THEN LEAST(1.0, (o.out_sum / (i.in_sum + 1e-5)))
                     ELSE 0.0
-                END AS ptr_15m_approx,
-                -- Cash-out ratios
+                END AS pass_through_ratio_15m,
+                -- 3. Average Transaction Sizes
+                COALESCE(i.in_mean, 0.0) AS avg_txn_size_in,
+                COALESCE(o.out_mean, 0.0) AS avg_txn_size_out,
+                -- 4. In/Out Degree Asymmetry (Smurfing vs Aggregation)
+                CASE
+                    WHEN (COALESCE(i.in_deg_distinct, 0) + COALESCE(o.out_deg_distinct, 0)) = 0 THEN 0.0
+                    ELSE ABS(COALESCE(i.in_deg_distinct, 0) - COALESCE(o.out_deg_distinct, 0))::FLOAT / 
+                         (COALESCE(i.in_deg_distinct, 0) + COALESCE(o.out_deg_distinct, 0))
+                END AS in_out_degree_skew,
+                -- 5. Infrastructure & Narration Anomalies
                 CASE WHEN COALESCE(o.out_cnt, 0) = 0 THEN 0.0 ELSE o.foreign_ip_out_cnt::FLOAT / o.out_cnt END AS foreign_ip_ratio,
                 CASE WHEN COALESCE(o.out_cnt, 0) = 0 THEN 0.0 ELSE o.headless_out_cnt::FLOAT / o.out_cnt END AS headless_ratio,
                 CASE WHEN COALESCE(o.out_cnt, 0) = 0 THEN 0.0 ELSE o.cashout_narr_cnt::FLOAT / o.out_cnt END AS cashout_narr_ratio,
@@ -88,6 +133,7 @@ class FeatureEngine:
         elapsed = time.perf_counter() - t0
         return {
             "num_accounts": num_accounts,
+            "feature_count": len(self.feature_columns),
             "elapsed_seconds": round(elapsed, 2)
         }
 

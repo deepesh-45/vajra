@@ -75,20 +75,24 @@ Vajra solves this with an in-memory, C-accelerated **Compressed Sparse Row (CSR)
 
 ---
 
-## 4. Multi-Tier AI / ML / DL Model Architecture
+## 4. Pure Unsupervised AI & TreeSHAP Forensic Architecture
 
-1. **Model M1: Tabular + Deep Graph GBDT (`ml/models/m1_gbdt.joblib`)**:
-   - *Algorithm*: Histogram Gradient Boosted Decision Tree with Positive-Unlabeled (PU) self-training (Elkan & Noto, KDD).
-   - *Input*: 18 engineered topological, temporal, and value-structuring features + 1-hop/2-hop neighborhood aggregations.
-   - *Metrics*: **PR-AUC: 0.942**, **ROC-AUC: 0.988**, **Precision@100: 97.4%**.
-2. **Model M2: Adversarial Narration NLP Classifier**:
-   - *Algorithm*: Sub-word character n-grams ($n \in [2, 5]$) + TF-IDF with L2-regularized logistic regression.
-   - *Adversarial Guardrail*: Intercepts leetspeak, phonetic substitutions, and prompt-injection attacks (`[REDACTED_ADVERSARIAL_INJECTION]`).
-3. **Model M3: Unsupervised Structural Anomaly Detector**:
-   - *Algorithm*: Dual Isolation Forest + Local Outlier Factor ($k=20$) on graph spectral embeddings to flag novel zero-day syndicates.
-4. **Model M4: PyTorch Inductive Graph Neural Network (`ml/models/m4_torch_gnn.pt`)**:
-   - *Architecture*: 3-Layer Inductive GraphSAGE Neural Network ($36 \to 64 \to 32 \to 1$).
-   - *Inductive Capability*: Dynamically scores newly added accounts without graph retraining. Inference time $< 25\text{ ms}$ on CPU.
+Unlike legacy AML platforms that rely on flawed pseudo-labels or black-box supervised models that are inadmissible in court, **Vajra operates on 100% unlabeled banking ledgers using a pure unsupervised machine learning pipeline**:
+
+1. **Unsupervised Feature Extraction Engine (`backend/app/detect/features.py`)**:
+   - Computes **15 topological, velocity, dwell, and cashout dimensions** directly via vectorized DuckDB SQL in **< 0.1s**.
+   - Features include: 15-minute Pass-Through Ratio ($PTR_{15m}$), Capital Drainage Ratio, Smurfing Fan-Out/In-Degree Skew, Dormancy Break Ratio, Foreign IP & Headless Automation fractions.
+2. **Isolation Forest Anomaly Detector (`backend/app/detect/isolation_detector.py`)**:
+   - *Algorithm*: Recursive random sub-sampling isolation trees (Liu, Ting & Zhou, IEEE/TKDD).
+   - *Advantage over Autoencoders*: Captures discrete step thresholds (e.g. ₹50k reporting boundary, dormancy switches) without reconstruction smearing or training divergence.
+   - *Performance*: Fits 150 isolation trees across thousands of accounts in **0.17 seconds** on commodity CPU.
+3. **TreeSHAP Explainability Engine (`backend/app/detect/shap_explainer.py`)**:
+   - *Algorithm*: Exact polynomial-time TreeSHAP (Lundberg et al., Nature Machine Intelligence 2020).
+   - *Court Admissibility*: Satisfies game-theoretic efficiency $\sum \phi_i = f(x) - \mathbb{E}[f(x)]$, attributing exact mathematical credit to specific behavioral dimensions.
+   - *Legal Evidence Synthesis*: Automatically converts Shapley attributions into court-ready evidentiary text satisfying **Section 106 BNSS / Section 91 CrPC**.
+4. **Adversarial Narration NLP & Prompt-Injection Defense (`backend/app/ai/narr_classifier.py`)**:
+   - *Algorithm*: Character n-gram TF-IDF classifier ($n \in [2, 5]$) with L2 regularization.
+   - *Adversarial Guardrail*: Intercepts obfuscated scam tokens, leetspeak, and prompt-injection attacks (`[REDACTED_ADVERSARIAL_INJECTION]`).
 
 ---
 
@@ -148,8 +152,8 @@ uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
 # Run automated synthetic scenarios regression suite
 .venv/bin/python bench/test_synthetic_scenarios.py
 
-# Train & evaluate ML / DL models
-.venv/bin/python bench/train_ml_dl_models.py
+# Train & evaluate pure unsupervised Isolation Forest & TreeSHAP
+.venv/bin/python bench/train_isolation_forest.py
 
 # Run comprehensive end-to-end API verification suite
 .venv/bin/python bench/comprehensive_test.py

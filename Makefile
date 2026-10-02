@@ -12,6 +12,9 @@ ingest:
 detect:
 	.venv/bin/python bench/quick_detect_test.py
 
+train:
+	.venv/bin/python bench/train_isolation_forest.py
+
 trace:
 	.venv/bin/python bench/quick_trace_test.py
 

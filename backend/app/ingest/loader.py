@@ -230,16 +230,16 @@ class IngestEngine:
         from backend.app.detect.features import feature_engine
         from backend.app.detect.rules import rule_scoring_engine
         from backend.app.graph.csr import csr_graph
-        from backend.app.detect.ml_detector import mule_ml_detector
+        from backend.app.detect.isolation_detector import isolation_detector
 
         feature_engine.compute_features(conn)
         rule_scoring_engine.compute_scores(conn)
         csr_graph.build_from_duckdb(conn)
 
         if progress_callback:
-            progress_callback("Adapting & Self-Training ML GBDT on New Dataset", total_rows, rate_read, telemetry.current_ram_mb)
+            progress_callback("Fitting Unsupervised Isolation Forest & TreeSHAP Explainer", total_rows, rate_read, telemetry.current_ram_mb)
 
-        mule_ml_detector.train_pu_model(conn)
+        isolation_detector.train_unsupervised_model(conn)
 
         total_time = time.perf_counter() - t0
         peak_ram = telemetry.peak_ram_mb

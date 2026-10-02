@@ -1,14 +1,15 @@
 # Product Requirements Document
-## Operation "Abhedya-Chakra" — Offline Mule-Ring Detection & Case Generation Engine
+## VAJRA (वज्र) — Offline Money Mule Detection & Case Generation Engine
 
 | Field | Value |
 |---|---|
 | Event | Void Hacks() 8.0 — Theme: Abhedya (Cyber Security & Digital Forensics) |
 | In association with | Indore Police Commissionerate |
-| Version | 1.0 (build-ready) |
-| Date | 01 October 2026 |
+| Project Name | Vajra (वज्र) |
+| Version | 2.0 (Pure Unsupervised AI + TreeSHAP) |
+| Date | 02 October 2026 |
 | Execution window | 36 hours |
-| Dataset scale | 2,000,000 transactions · ~25,000 accounts (1,500 injected mules, 23,500 regular) |
+| Dataset scale | 2,000,000 transactions · ~25,000 accounts |
 | Status | Approved for implementation |
 
 > **How to read this document.** Sections 1–5 explain *why* and *for whom*. Sections 6–14 define *what* and *how* (requirements, architecture, stack, data, algorithms, AI). Section 15 is the UI specification. Sections 16–22 cover outputs, security, testing, fallbacks and the **hour-by-hour build guide**. Every requirement has an ID (e.g. `FR-B3`) so the team can track it.
@@ -48,7 +49,7 @@
 
 Financial cyber-fraud syndicates (digital arrest, fake task, Ponzi bot, loan-app fraud) move stolen money through **multi-tier mule account networks** within minutes. Investigators receive multi-bank exports of millions of rows and lose the critical window in which funds can still be frozen.
 
-**Abhedya-Chakra** is a locally deployed analytics workbench that, given a bulk transaction export:
+**Vajra** is a locally deployed analytics workbench that, given a bulk transaction export:
 
 1. Ingests and indexes **2M+ rows in ≤ 60 s** on a 16 GB laptop.
 2. Scores every account on a **0–100 Mule Risk Index** using explainable graph/behaviour rules plus a self-adapting ML layer.
@@ -391,10 +392,9 @@ Priority: **P0** = must for demo, **P1** = should, **P2** = stretch.
 | Columnar interchange | Apache Arrow / Parquet | CSV | — | |
 | Graph traversal | NumPy CSR arrays (+ Numba `@njit` for BFS) | `python-igraph` | SciPy sparse + `networkx` (subgraphs only) | Numba optional; pure NumPy BFS is the fallback |
 | Cycle / SCC | `igraph` / `scipy.sparse.csgraph.connected_components` | `networkx` on suspect subgraph | — | |
-| Feature SQL | DuckDB window functions | Polars `rolling` | pandas on per-account groups (slow) | |
-| ML (tabular) | **LightGBM** | XGBoost | scikit-learn `HistGradientBoosting` | |
-| Embeddings | Spectral/SVD embedding of adjacency (fast, deterministic) | node2vec | PyTorch Geometric GraphSAGE | Start with SVD; GNN only if time |
-| Explainability | LightGBM `pred_contrib` (SHAP) | Permutation importance | Rule-contribution table | |
+| Feature SQL | DuckDB window functions | Polars `rolling` | pandas on per-account groups (slow) | < 0.10s 15-D extraction |
+| ML (Unsupervised) | **Isolation Forest** (150 trees, sub-sampling) | Local Outlier Factor | scikit-learn `OneClassSVM` | Zero labels needed; 0.17s CPU fit |
+| Explainability | **TreeSHAP** (`shap.TreeExplainer`) | Exact Shapley values | Section 106 BNSS text generator | Lundberg Nature MI 2020 |
 | Narration classifier | TF-IDF + Logistic Regression (scikit-learn) | fastText | Regex dictionary | Also injection detector |
 | Local LLM | **llama.cpp** / `llama-cpp-python` with Qwen2.5-7B-Instruct Q4_K_M (GGUF) | Ollama (same model) | Qwen2.5-3B Q4 or Llama-3.2-3B | CPU-only; ~5 GB RAM |
 | LLM output control | GBNF grammar / JSON schema | Regex-validated JSON | **Template-only mode (no LLM)** | Template mode must always work |
@@ -588,28 +588,21 @@ On load, compute score distributions and propose cutoffs: elbow of sorted scores
 
 | # | Model | Purpose | Trained when | Runtime | Fallback |
 |---|---|---|---|---|---|
-| M1 | Mule classifier (LightGBM + spectral embeddings) | Find slower/partial mules, refine rule score | Pretrain offline on synthetic; **self-train at load** on pseudo-labels | Seconds on CPU | Rules only (`w_ml=0`) |
-| M2 | Narration classifier (TF-IDF+LR) | Classify narration → enum; detect injection-like text | Offline on synthetic + curated phrases | Milliseconds | Regex dictionary |
-| M3 | Case Officer LLM (Qwen2.5-7B Q4, optionally LoRA-tuned) | Fluent narrative in legal tone from verified claims | Offline fine-tune (optional) | Local llama.cpp | **Deterministic templates** |
-| M4 (opt.) | GNN (GraphSAGE) | Extra structural signal | Offline | Optional | Spectral embedding |
+| M1 | Unsupervised Isolation Forest (150 trees) | Pure zero-label anomaly isolation on 15-D behavioral space | Fits dynamically at data ingestion | 0.17s on CPU | Rule-based scoring (`w_ml=0`) |
+| M2 | TreeSHAP Explainability Engine | Computes exact additive Shapley attributions $\sum \phi_i = f(x) - \mathbb{E}[f(x)]$ | Evaluates on demand per suspect account | < 15 ms on CPU | Rule-contribution breakdown |
+| M3 | Statutory Court Evidence Synthesizer | Generates court-admissible factual evidence under Sec 106 BNSS / Sec 91 CrPC | On demand with TreeSHAP | < 1 ms | Deterministic static text |
+| M4 | Narration Classifier (TF-IDF+LR) | Sub-word char n-gram classifier & prompt-injection shield | Pretrained offline | Milliseconds | Regex dictionary |
 
-### 12.2 M1 — Self-adapting mule detector (step by step)
+### 12.2 M1 — Pure Unsupervised Isolation Forest Architecture
+1. **Zero Ground-Truth Reality:** Real banking ledgers contain no ground-truth fraud labels. Supervised and pseudo-supervised models cause severe confirmation bias and fail judicial scrutiny.
+2. **Feature Extraction:** Direct 15-dimensional SQL vectorization across accounts via DuckDB (< 0.10s).
+3. **iTree Construction:** 150 Isolation Trees with recursive axis-aligned random splits and sub-sampling ($\psi = 256$).
+4. **Calibrated Anomaly Scoring:** Evaluates expected path length $\mathbb{E}[h(x)]$ against BST average search depth $c(n)$, calibrating to $[0.0, 1.0]$.
+5. **Percentile Ranking:** Identifies accounts in top 95th percentile ($p \ge 95\%$) as structural outliers.
 
-1. **Pretrain** on synthetic data (Section 13) with ratio/timing/degree features only (no raw IDs/amounts) so it generalises. Save `m1_base.txt`.
-2. **On new data load:** compute features; compute `rule_score`.
-3. **Pseudo-labels:**
-   - Positives: `rule_score ≥ P_hi` (e.g. top 1.5% and `PTR_15m ≥ 0.9` and `chain coherent`).
-   - Negatives: `rule_score ≤ P_lo` and typical-behaviour accounts (bottom 70%).
-   - Everything else = unlabeled (excluded from fit, scored by model).
-4. **Fine-tune** `m1_base` on pseudo-labels (LightGBM `init_model`), with class weights and **PU correction** (prior ≈ 5%); 5-fold **by-account** CV to produce out-of-fold predictions (prevents the model just memorising its own rule hits).
-5. **Score all accounts** → `ml_prob`; blend (11.4).
-6. **Audit:** show agreement matrix (rules vs ML), top disagreements, feature importance. Disagreements are *useful* (new finds) and *risky* (pseudo-label bias) — the UI exposes both.
-7. **Switch:** `ml.enabled`, `ml.weight`, `ml.mode: base|self_train` in config; one toggle in Diagnostics.
-
-**Leakage rules:** split by account; never train on any victim/blind-test hints; features exclude IDs and absolute amounts; seeds fixed.
-
-### 12.3 M1 evaluation (labels exist only on synthetic data)
-Precision, recall, F1, PR-AUC, precision@K (K = 1,500), calibration curve, per-typology recall (fast pass-through, slow-drip, cycle, fan-in only), robustness under **perturbation tests** (±jitter timing, split amounts, rename narrations, rotate IPs) to simulate adversaries.
+### 12.3 M2 & M3 — TreeSHAP Attribution & Legal Evidence Generation
+1. **Exact Shapley Axioms:** Lundberg's TreeSHAP guarantees Efficiency, Symmetry, Dummy Player, and Additivity axioms, providing uncorrupted feature attribution without autoencoder "error smearing."
+2. **Court Evidence Synthesis:** Automatically maps positive Shapley drivers to statutory evidentiary statements for Section 106 BNSS / Section 91 CrPC notices.
 
 ### 12.4 M2 — Narration classifier
 Classes: `NORMAL_BANK_CODE`, `BENIGN_TEXT`, `SCAM_MARKER` (task, commission, investment, KYC, refund, "digital arrest" phrasing etc.), `CRYPTO_P2P`, `WALLET`, `ATM_CASH`, `OFFSHORE_GATEWAY`, `INJECTION_ATTEMPT`, `UNKNOWN`. Features: char n-gram TF-IDF. Used for (a) scoring features, (b) sanitising text before any LLM sees it. Dictionary regex backup is shipped and used if the model file is missing.

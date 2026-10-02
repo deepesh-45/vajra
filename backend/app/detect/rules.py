@@ -28,23 +28,23 @@ class RuleScoringEngine:
                     f.primary_bank,
                     f.in_deg_distinct,
                     f.out_deg_distinct,
-                    f.out_in_ratio,
-                    f.ptr_15m_approx,
+                    f.drain_ratio,
+                    f.pass_through_ratio_15m,
                     f.foreign_ip_ratio,
                     f.headless_ratio,
                     f.cashout_narr_ratio,
                     -- Component 1: Velocity Pass-Through (Weight 30)
                     CASE 
-                        WHEN f.ptr_15m_approx >= 0.85 THEN 30.0
-                        WHEN f.out_in_ratio >= 0.85 AND f.out_cnt >= 2 THEN 20.0
-                        WHEN f.out_in_ratio >= 0.70 THEN 10.0
+                        WHEN f.pass_through_ratio_15m >= 0.85 THEN 30.0
+                        WHEN f.drain_ratio >= 0.85 AND f.out_cnt >= 2 THEN 20.0
+                        WHEN f.drain_ratio >= 0.70 THEN 10.0
                         ELSE 0.0
                     END AS score_velocity,
                     -- Component 2: Fan Topology (Weight 25)
                     CASE 
                         WHEN f.in_deg_distinct >= 20 THEN 25.0  -- L1 Collector
-                        WHEN f.in_deg_distinct >= 5 AND f.out_in_ratio >= 0.80 THEN 20.0
-                        WHEN f.out_deg_distinct BETWEEN 3 AND 15 AND f.out_in_ratio >= 0.75 THEN 25.0 -- L2 Distributor
+                        WHEN f.in_deg_distinct >= 5 AND f.drain_ratio >= 0.80 THEN 20.0
+                        WHEN f.out_deg_distinct BETWEEN 3 AND 15 AND f.drain_ratio >= 0.75 THEN 25.0 -- L2 Distributor
                         ELSE 0.0
                     END AS score_topology,
                     -- Component 3: Cash-out Signals (Weight 20)
@@ -62,8 +62,8 @@ class RuleScoringEngine:
                     END AS score_scam_narr,
                     -- Role Assignment
                     CASE
-                        WHEN f.in_deg_distinct >= 10 AND f.out_in_ratio >= 0.70 THEN 'COLLECTOR'
-                        WHEN f.out_deg_distinct BETWEEN 3 AND 15 AND f.out_in_ratio >= 0.75 THEN 'DISTRIBUTOR'
+                        WHEN f.in_deg_distinct >= 10 AND f.drain_ratio >= 0.70 THEN 'COLLECTOR'
+                        WHEN f.out_deg_distinct BETWEEN 3 AND 15 AND f.drain_ratio >= 0.75 THEN 'DISTRIBUTOR'
                         WHEN f.cashout_narr_ratio >= 0.30 OR f.foreign_ip_ratio >= 0.50 OR f.headless_ratio >= 0.50 THEN 'TERMINAL'
                         WHEN f.out_cnt = 0 AND f.in_cnt > 0 THEN 'TERMINAL'
                         ELSE 'REGULAR'
@@ -97,7 +97,10 @@ class RuleScoringEngine:
                 b.score_device_ip,
                 b.score_scam_narr,
                 CAST(0.0 AS FLOAT) AS ml_prob,
-                b.risk_index AS blended_score
+                b.risk_index AS blended_score,
+                CAST(0.0 AS FLOAT) AS isolation_anomaly_score,
+                CAST(50.0 AS FLOAT) AS anomaly_percentile,
+                CAST(FALSE AS BOOLEAN) AS is_anomaly
             FROM blended b
             ORDER BY b.risk_index DESC;
         """)
