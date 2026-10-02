@@ -8,8 +8,9 @@
 [![Legal Compliance](https://img.shields.io/badge/Compliance-BNSS%20%2F%20BSA%20%2F%20PMLA-34271E.svg)](#)
 [![Anti-Hallucination](https://img.shields.io/badge/Anti--Hallucination-100%25%20AST%20Verified-2D5A43.svg)](#)
 
-> **Official Master Technical Documentation:**  
-> For the complete, mathematically rigorous, deep-dive architectural manifesto, read [**DOCUMENTATION.md**](DOCUMENTATION.md).
+> **Documentation & Briefings:**  
+> - For a fast 2-page executive summary & approach brief, read [**PROJECT_BRIEF.md**](PROJECT_BRIEF.md).  
+> - For the complete, mathematically rigorous, deep-dive architectural manifesto, read [**DOCUMENTATION.md**](DOCUMENTATION.md).
 
 ---
 
