@@ -543,12 +543,32 @@ def get_account_profile(acct_no: str):
             "blended_score": round(float(r.get("blended_score", r.get("risk_index", 0)) or 0.0), 1)
         }
 
-    # TreeSHAP Forensic Explanation
-    shap_explanation = None
+    # Vajra Forensic Mule Risk Explanation & Deterministic Ledger
+    vajra_explanation = None
     try:
-        shap_explanation = tree_shap_engine.explain_account(clean_acct, conn)
+        from engine.explain import explain_account
+        vajra_explanation = explain_account(clean_acct, conn)
+        if "error" not in vajra_explanation:
+            ledger = vajra_explanation.get("ledger", {})
+            score_dict = {
+                "risk_index": float(vajra_explanation.get("risk_index", 0.0)),
+                "risk_display": int(vajra_explanation.get("risk_display", 0)),
+                "tier": str(vajra_explanation.get("tier", "Low")),
+                "role": str(vajra_explanation.get("role", "UNKNOWN")),
+                "role_confidence": float(vajra_explanation.get("role_confidence", 0.8)),
+                "rule_score": float(ledger.get("rule_score", 0.0)),
+                "ml_prob": float(ledger.get("ml_prob", 0.0)),
+                "ml_points": float(ledger.get("ml_points", 0.0)),
+                "ring_points": float(ledger.get("ring_points", 0.0)),
+                "clip_adjust": float(ledger.get("clip_adjust", 0.0)),
+                "confidence": str(ledger.get("confidence", "LOW")),
+                "flagged": bool(vajra_explanation.get("flagged", False)),
+                "needs_review": bool(vajra_explanation.get("needs_review", False)),
+                "reasons": ledger.get("reasons", []),
+                "narrative": vajra_explanation.get("narrative_paragraph", "")
+            }
     except Exception as e:
-        print(f"Error computing TreeSHAP for {clean_acct}:", e)
+        print(f"Error computing explain_account for {clean_acct}:", e)
 
     # Recent transactions
     recent_txns = conn.execute("""
@@ -564,9 +584,20 @@ def get_account_profile(acct_no: str):
         "bank": acct[3],
         "ifsc": acct[2],
         "score": score_dict,
+        "vajra_explanation": vajra_explanation,
         "shap_explanation": shap_explanation,
         "recent_transactions": recent_txns
     }
+
+
+@app.get("/api/explain/{acct_no}")
+def get_explain_account(acct_no: str):
+    conn = get_db()
+    from engine.explain import explain_account
+    res = explain_account(acct_no.strip(), conn)
+    if "error" in res:
+        raise HTTPException(status_code=404, detail=res["error"])
+    return res
 
 @app.get("/api/search")
 def search(q: str = Query(..., min_length=2)):
