@@ -48,6 +48,8 @@ export const App: React.FC = () => {
     setActiveTab('legal');
   };
 
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
+
   const datasetName = overviewData?.dataset_name || 'VoidHacks8_MuleAccount_2M_Transactions.csv';
   const totalRows = overviewData?.total_transactions || 2000000;
 
@@ -62,7 +64,12 @@ export const App: React.FC = () => {
       overflow: 'hidden'
     }}>
       {/* Left Sidebar (Full Height Pastel Almond) */}
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+      <Sidebar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        isCollapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+      />
 
       {/* Right Column: Header on Top + Scrollable Main Content */}
       <div className="app-main-column" style={{
@@ -83,16 +90,21 @@ export const App: React.FC = () => {
           onDatasetReload={loadOverview}
           onSelectPreset={handleSelectPreset}
           onSelectAccount={handleSelectVictim}
+          isSidebarCollapsed={sidebarCollapsed}
+          onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
         />
 
-        {/* Main Content Area */}
-        <main className="app-content" style={{
+        {/* Main Content Area with Animated Light Ambient Background */}
+        <main className="app-content animated-ambient-bg" style={{
           flex: 1,
           minWidth: 0,
-          backgroundColor: '#F4F7FB',
           padding: '24px 28px',
-          overflowY: 'auto'
+          overflowY: 'auto',
+          position: 'relative'
         }}>
+          <div className="ambient-orb-1" />
+          <div className="ambient-orb-2" />
+          <div style={{ position: 'relative', zIndex: 1 }}>
           {activeTab === 'overview' && (
             <OverviewTab
               data={overviewData}
@@ -148,6 +160,7 @@ export const App: React.FC = () => {
           {activeTab === 'settings' && (
             <SettingsTab />
           )}
+          </div>
         </main>
       </div>
     </div>

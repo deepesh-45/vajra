@@ -1,14 +1,16 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import {
-  Upload,
-  Check,
+  UploadCloud,
   CheckCircle2,
   Database,
-  ShieldCheck,
   ArrowRight,
-  FolderPlus,
-  Play,
-  RotateCcw
+  ShieldCheck,
+  Zap,
+  Users,
+  Repeat,
+  Network,
+  FileCheck,
+  FolderOpen
 } from 'lucide-react';
 import type { OverviewData } from '../types';
 
@@ -16,71 +18,27 @@ interface LoadDataTabProps {
   overviewData: OverviewData | null;
   onDatasetChange: () => void;
   onSelectVictim?: (victim: string) => void;
-  onNavigateToInvestigate: () => void;
-  onNavigateToOverview: () => void;
-}
-
-interface ForensicStudy {
-  id: string;
-  name: string;
-  case_ref: string;
-  dataset_filename: string;
-  filepath: string;
-  rows: number;
-  accounts: number;
-  analyst: string;
-  status: string;
-  date: string;
+  onNavigateToInvestigate?: () => void;
+  onNavigateToOverview?: () => void;
 }
 
 export const LoadDataTab: React.FC<LoadDataTabProps> = ({
   overviewData,
   onDatasetChange,
-  onSelectVictim: _onSelectVictim,
   onNavigateToInvestigate,
   onNavigateToOverview
 }) => {
   const [uploading, setUploading] = useState<boolean>(false);
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
   const [isDragOver, setIsDragOver] = useState<boolean>(false);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-
-  // New Study Form State
-  const [studyName, setStudyName] = useState<string>('Operation Vajra (वज्र): Multi-State UPI Mule Syndicate');
-  const [caseRef, setCaseRef] = useState<string>('FIR No. 412/2024 - Cyber Crime Division Indore');
-  const [investigatorName, setInvestigatorName] = useState<string>('Ayush Sharma (Lead Cyber Analyst)');
-  const [datasetSelectionMode, setDatasetSelectionMode] = useState<'upload' | 'preset'>('preset');
   const [selectedPresetFile, setSelectedPresetFile] = useState<string>('data/raw/VoidHacks8_MuleAccount_2M_Transactions.csv');
-
-  // Historical Studies State
-  const [studies, setStudies] = useState<ForensicStudy[]>([]);
-  const [_loadingStudies, setLoadingStudies] = useState<boolean>(false);
-  const [loadingStudyId, setLoadingStudyId] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetchStudies();
-  }, []);
-
-  const fetchStudies = async () => {
-    setLoadingStudies(true);
-    try {
-      const res = await fetch('/api/studies');
-      if (res.ok) {
-        const json = await res.json();
-        if (json.studies) setStudies(json.studies);
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoadingStudies(false);
-    }
-  };
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleFileUpload = async (file: File) => {
     if (!file) return;
 
     setUploading(true);
-    setUploadStatus('Uploading & indexing dataset into DuckDB engine...');
+    setUploadStatus('Loading bank records into the offline database...');
 
     const formData = new FormData();
     formData.append('file', file);
@@ -91,25 +49,24 @@ export const LoadDataTab: React.FC<LoadDataTabProps> = ({
         body: formData
       });
 
-      if (!resp.ok) throw new Error('Failed to ingest dataset');
+      if (!resp.ok) throw new Error('Failed to load file');
 
-      setUploadStatus('Study initialized & indexed! Database ready.');
+      setUploadStatus('Bank records indexed successfully! Database ready.');
       setTimeout(() => {
         setUploading(false);
         setUploadStatus(null);
         onDatasetChange();
-        fetchStudies();
-      }, 900);
+      }, 800);
     } catch (err: any) {
       setUploadStatus(`Error: ${err.message}`);
       setUploading(false);
     }
   };
 
-  const handleLoadPreset = async (filepath: string, studyId?: string) => {
-    if (studyId) setLoadingStudyId(studyId);
+  const handleLoadPreset = async (filepath: string) => {
+    setSelectedPresetFile(filepath);
     setUploading(true);
-    setUploadStatus(`Loading & indexing study dataset into DuckDB...`);
+    setUploadStatus(`Loading selected investigation scenario...`);
 
     try {
       const resp = await fetch('/api/ingest', {
@@ -118,20 +75,17 @@ export const LoadDataTab: React.FC<LoadDataTabProps> = ({
         body: JSON.stringify({ filepath })
       });
 
-      if (!resp.ok) throw new Error('Failed to load dataset');
+      if (!resp.ok) throw new Error('Failed to load scenario');
 
-      setUploadStatus('Study dataset loaded into DuckDB successfully!');
+      setUploadStatus('Scenario loaded and indexed successfully!');
       setTimeout(() => {
         setUploading(false);
         setUploadStatus(null);
-        setLoadingStudyId(null);
         onDatasetChange();
-        fetchStudies();
-      }, 800);
+      }, 700);
     } catch (err: any) {
       setUploadStatus(`Error: ${err.message}`);
       setUploading(false);
-      setLoadingStudyId(null);
     }
   };
 
@@ -150,93 +104,462 @@ export const LoadDataTab: React.FC<LoadDataTabProps> = ({
     ? overviewData.total_accounts.toLocaleString()
     : '24,873';
 
+  // Preset Scenarios with colorful icon accents matching OverviewTab
+  const scenarios = [
+    {
+      id: 'voidhacks',
+      title: '2M National Bank Network',
+      path: 'data/raw/VoidHacks8_MuleAccount_2M_Transactions.csv',
+      desc: '2,000,000 transactions across 24,873 accounts. Full multi-state fraud network.',
+      tag: 'Full Scale',
+      icon: Database,
+      iconColor: '#2563EB',
+      iconBg: '#EFF6FF',
+      tagColor: '#1D4ED8',
+      tagBg: '#DBEAFE'
+    },
+    {
+      id: 'smurfing',
+      title: 'Fast Smurfing (Under 5 Min)',
+      path: 'synthetic_data/scenario_1_fast_smurfing.csv',
+      desc: 'Stolen funds rapidly split into small amounts within minutes to evade bank limits.',
+      tag: 'Rapid Split',
+      icon: Zap,
+      iconColor: '#059669',
+      iconBg: '#ECFDF5',
+      tagColor: '#047857',
+      tagBg: '#D1FAE5'
+    },
+    {
+      id: 'investment',
+      title: 'Investment Scam Syndicate',
+      path: 'synthetic_data/scenario_2_investment_scam.csv',
+      desc: 'Telegram task fraud funnel with collector accounts and distributor cashouts.',
+      tag: 'Task Fraud',
+      icon: Users,
+      iconColor: '#D97706',
+      iconBg: '#FFFBEB',
+      tagColor: '#B45309',
+      tagBg: '#FEF3C7'
+    },
+    {
+      id: 'cyclic',
+      title: 'Cyclic Mule Ring',
+      path: 'synthetic_data/scenario_3_cyclic_ring.csv',
+      desc: 'Circular round-trip money transfers between shell accounts to disguise origin.',
+      tag: 'Circular Loop',
+      icon: Repeat,
+      iconColor: '#DC2626',
+      iconBg: '#FEF2F2',
+      tagColor: '#B91C1C',
+      tagBg: '#FEE2E2'
+    },
+    {
+      id: 'capacity',
+      title: '500-Node Large Syndicate',
+      path: 'synthetic_data/scenario_4_mega_capacity_stress_test_500nodes.csv',
+      desc: 'High-volume criminal syndicate with 500 interconnected mule accounts.',
+      tag: 'High Capacity',
+      icon: Network,
+      iconColor: '#7C3AED',
+      iconBg: '#F5F3FF',
+      tagColor: '#6D28D9',
+      tagBg: '#EDE9FE'
+    },
+    {
+      id: 'sample',
+      title: 'Curated Forensic Sample',
+      path: 'synthetic_data/sample_custom_export.csv',
+      desc: 'Quick-start verified sample with confirmed mule roles and bank statements.',
+      tag: 'Sample Set',
+      icon: FileCheck,
+      iconColor: '#0891B2',
+      iconBg: '#ECFEFF',
+      tagColor: '#0E7490',
+      tagBg: '#CFFAFE'
+    }
+  ];
+
   return (
     <div style={{
-      maxWidth: '1360px',
+      maxWidth: '1240px',
       margin: '0 auto',
       display: 'flex',
       flexDirection: 'column',
-      gap: '24px',
+      gap: '20px',
       color: '#0F172A',
-      paddingBottom: '40px'
+      paddingBottom: '36px'
     }}>
-      {/* Title Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <h1 style={{
-              fontSize: '1.375rem',
-              fontWeight: 700,
-              letterSpacing: '-0.02em',
-              color: '#0F172A',
-              margin: 0
-            }}>
-              Load Data & Forensic Studies
-            </h1>
-            <span style={{
-              display: 'inline-flex',
-              alignItems: 'baseline',
-              gap: '4px',
-              backgroundColor: '#EFF6FF',
-              border: '1px solid #DBEAFE',
-              padding: '1px 7px',
-              borderRadius: '5px'
-            }}>
-              <span style={{ fontSize: '10px', fontWeight: 800, color: '#1D4ED8' }}>VAJRA</span>
-              <span className="brand-devanagari" style={{
-                fontFamily: "'Alkatra', 'Modak', cursive, sans-serif",
-                fontSize: '13px',
-                color: '#2563EB',
-                lineHeight: 1
-              }}>वज्र</span>
-            </span>
-          </div>
-          <p style={{
-            fontSize: '0.875rem',
-            color: '#64748B',
-            margin: 0
-          }}>
-            Open or initiate a financial fraud study, select or upload evidence transaction ledgers, and index data into DuckDB
-          </p>
-        </div>
-
-        {uploadStatus && (
-          <div style={{
-            padding: '8px 16px',
-            borderRadius: '8px',
-            backgroundColor: '#EFF6FF',
-            border: '1px solid #BFDBFE',
-            color: '#1D4ED8',
-            fontSize: '0.8125rem',
-            fontWeight: 600,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            boxShadow: '0 1px 3px rgba(37,99,235,0.1)'
-          }}>
-            <CheckCircle2 size={16} color="#2563EB" />
-            <span>{uploadStatus}</span>
-          </div>
-        )}
-      </div>
-
-      {/* SECTION 1: Open a New Study Card */}
+      {/* Visual Hero Banner with Impressive 3D Cyber Shield Image */}
       <div style={{
         backgroundColor: '#FFFFFF',
+        borderRadius: '14px',
         border: '1px solid #E2E8F0',
-        borderRadius: '12px',
-        padding: '24px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '20px',
-        boxShadow: '0 1px 3px rgba(15,23,42,0.04)'
+        padding: '24px 28px',
+        display: 'grid',
+        gridTemplateColumns: '1.2fr 1fr',
+        gap: '28px',
+        alignItems: 'center',
+        boxShadow: '0 2px 6px rgba(15, 23, 42, 0.04)',
+        position: 'relative',
+        overflow: 'hidden'
       }}>
-        {/* Section Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        {/* Left Column: Case Information & Quick Actions */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', zIndex: 2 }}>
+          {/* Status Chips */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <span style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '5px',
+              backgroundColor: '#ECFDF5',
+              color: '#047857',
+              border: '1px solid #A7F3D0',
+              padding: '3px 10px',
+              borderRadius: '20px',
+              fontSize: '11px',
+              fontWeight: 700
+            }}>
+              <ShieldCheck size={13} color="#059669" />
+              <span>Air-Gapped Offline Protection</span>
+            </span>
+
+            <span style={{
+              backgroundColor: '#EFF6FF',
+              color: '#1D4ED8',
+              border: '1px solid #BFDBFE',
+              padding: '3px 10px',
+              borderRadius: '20px',
+              fontSize: '11px',
+              fontWeight: 600
+            }}>
+              Indore Police Cyber Cell
+            </span>
+          </div>
+
+          <div>
+            <h1 style={{
+              fontSize: '1.65rem',
+              fontWeight: 800,
+              letterSpacing: '-0.025em',
+              color: '#0F172A',
+              margin: '0 0 6px 0',
+              lineHeight: 1.2
+            }}>
+              Case Management & Evidence Ingestion
+            </h1>
+            <p style={{
+              fontSize: '0.875rem',
+              color: '#64748B',
+              lineHeight: 1.45,
+              margin: 0
+            }}>
+              Select a pre-configured banking fraud scenario or upload new bank statements to trace money trails and generate official freeze notices.
+            </p>
+          </div>
+
+          {/* Currently Loaded Dataset Summary */}
+          <div style={{
+            backgroundColor: '#F8FAFC',
+            border: '1px solid #E2E8F0',
+            borderRadius: '10px',
+            padding: '12px 16px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '12px',
+            flexWrap: 'wrap'
+          }}>
+            <div>
+              <span style={{ fontSize: '11px', fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                Active Case File
+              </span>
+              <p style={{ fontSize: '13px', fontWeight: 700, color: '#0F172A', margin: '2px 0 0 0', fontFamily: 'var(--font-mono)' }}>
+                {currentDatasetFilename}
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <div>
+                <span style={{ fontSize: '11px', color: '#64748B' }}>Total Records:</span>
+                <p style={{ fontSize: '13px', fontWeight: 700, color: '#2563EB', margin: 0 }}>
+                  {totalRowsFormatted} Txns
+                </p>
+              </div>
+              <div style={{ borderLeft: '1px solid #CBD5E1', paddingLeft: '16px' }}>
+                <span style={{ fontSize: '11px', color: '#64748B' }}>Accounts:</span>
+                <p style={{ fontSize: '13px', fontWeight: 700, color: '#0F172A', margin: 0 }}>
+                  {totalAccountsFormatted}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Primary Action Buttons */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '2px' }}>
+            <button
+              onClick={onNavigateToOverview}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '9px 18px',
+                borderRadius: '8px',
+                backgroundColor: '#2563EB',
+                color: '#FFFFFF',
+                fontSize: '13px',
+                fontWeight: 600,
+                border: 'none',
+                cursor: 'pointer',
+                boxShadow: '0 2px 4px rgba(37, 99, 235, 0.25)',
+                transition: 'background-color 0.15s ease'
+              }}
+              onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#1D4ED8')}
+              onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#2563EB')}
+            >
+              <span>View Case Overview</span>
+              <ArrowRight size={15} />
+            </button>
+
+            <button
+              onClick={onNavigateToInvestigate}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '9px 18px',
+                borderRadius: '8px',
+                backgroundColor: '#FFFFFF',
+                color: '#334155',
+                fontSize: '13px',
+                fontWeight: 600,
+                border: '1px solid #CBD5E1',
+                cursor: 'pointer',
+                transition: 'background-color 0.15s ease'
+              }}
+              onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#F8FAFC')}
+              onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#FFFFFF')}
+            >
+              <Network size={15} color="#2563EB" />
+              <span>Explore Money Trail</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Right Column: High-Tech Forensics Visualization Image */}
+        <div style={{
+          position: 'relative',
+          borderRadius: '12px',
+          overflow: 'hidden',
+          boxShadow: '0 8px 24px -4px rgba(15, 23, 42, 0.12), 0 2px 6px rgba(15, 23, 42, 0.06)',
+          border: '1px solid #CBD5E1',
+          height: '240px',
+          backgroundColor: '#0F172A'
+        }}>
+          <img
+            src="/vajra_hero.jpg"
+            alt="Forensic Command Center"
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              objectPosition: 'center'
+            }}
+          />
+          {/* Subtle gradient vignette */}
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'linear-gradient(to top, rgba(15, 23, 42, 0.4) 0%, transparent 60%)',
+            pointerEvents: 'none'
+          }} />
+          <div style={{
+            position: 'absolute',
+            bottom: '10px',
+            left: '12px',
+            right: '12px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            color: '#FFFFFF',
+            fontSize: '11px',
+            fontWeight: 600,
+            textShadow: '0 1px 3px rgba(0,0,0,0.8)'
+          }}>
+            <span>State Cyber Police Forensics</span>
+            <span style={{ backgroundColor: 'rgba(37,99,235,0.8)', padding: '2px 8px', borderRadius: '4px' }}>
+              Live System
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Upload Status Toast */}
+      {uploadStatus && (
+        <div style={{
+          padding: '10px 16px',
+          borderRadius: '8px',
+          backgroundColor: '#EFF6FF',
+          border: '1px solid #BFDBFE',
+          color: '#1D4ED8',
+          fontSize: '13px',
+          fontWeight: 600,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          boxShadow: '0 1px 3px rgba(37,99,235,0.1)'
+        }}>
+          <CheckCircle2 size={16} color="#2563EB" />
+          <span>{uploadStatus}</span>
+        </div>
+      )}
+
+      {/* Main Action Grid: Select Scenario OR Upload Bank File */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '1.4fr 1fr',
+        gap: '20px'
+      }}>
+        {/* Left Card: Select Pre-Configured Investigation Case */}
+        <div style={{
+          backgroundColor: '#FFFFFF',
+          borderRadius: '12px',
+          border: '1px solid #E2E8F0',
+          padding: '20px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '14px',
+          boxShadow: '0 1px 3px rgba(15, 23, 42, 0.03)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '8px',
+                backgroundColor: '#EFF6FF',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#2563EB'
+              }}>
+                <FolderOpen size={18} />
+              </div>
+              <div>
+                <h2 style={{ fontSize: '1rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>
+                  Pre-Configured Investigation Scenarios
+                </h2>
+                <span style={{ fontSize: '0.75rem', color: '#64748B' }}>
+                  Click any case scenario to load and trace immediately
+                </span>
+              </div>
+            </div>
+
+            <span style={{
+              fontSize: '11px',
+              fontWeight: 600,
+              backgroundColor: '#F1F5F9',
+              color: '#475569',
+              padding: '2px 8px',
+              borderRadius: '6px'
+            }}>
+              6 Scenarios Ready
+            </span>
+          </div>
+
+          {/* Scenario Cards Grid with Colorful Icons */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(2, 1fr)',
+            gap: '10px'
+          }}>
+            {scenarios.map(scen => {
+              const isSelected = selectedPresetFile === scen.path || currentDatasetFilename.includes(scen.id);
+              const Icon = scen.icon;
+              return (
+                <div
+                  key={scen.id}
+                  onClick={() => handleLoadPreset(scen.path)}
+                  style={{
+                    padding: '12px 14px',
+                    borderRadius: '10px',
+                    backgroundColor: isSelected ? '#EFF6FF' : '#F8FAFC',
+                    border: `1.5px solid ${isSelected ? '#2563EB' : '#E2E8F0'}`,
+                    cursor: uploading ? 'wait' : 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                    transition: 'all 0.15s ease'
+                  }}
+                  onMouseEnter={e => {
+                    if (!isSelected) {
+                      e.currentTarget.style.backgroundColor = '#F1F5F9';
+                      e.currentTarget.style.borderColor = '#CBD5E1';
+                    }
+                  }}
+                  onMouseLeave={e => {
+                    if (!isSelected) {
+                      e.currentTarget.style.backgroundColor = '#F8FAFC';
+                      e.currentTarget.style.borderColor = '#E2E8F0';
+                    }
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{
+                        width: '28px',
+                        height: '28px',
+                        borderRadius: '6px',
+                        backgroundColor: scen.iconBg,
+                        color: scen.iconColor,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0
+                      }}>
+                        <Icon size={15} />
+                      </div>
+                      <span style={{ fontSize: '12.5px', fontWeight: 700, color: '#0F172A' }}>
+                        {scen.title}
+                      </span>
+                    </div>
+
+                    <span style={{
+                      fontSize: '10px',
+                      fontWeight: 600,
+                      backgroundColor: scen.tagBg,
+                      color: scen.tagColor,
+                      padding: '1px 6px',
+                      borderRadius: '4px'
+                    }}>
+                      {scen.tag}
+                    </span>
+                  </div>
+
+                  <p style={{ fontSize: '11px', color: '#64748B', margin: 0, lineHeight: 1.35 }}>
+                    {scen.desc}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Right Card: Drag & Drop Upload Zone */}
+        <div style={{
+          backgroundColor: '#FFFFFF',
+          borderRadius: '12px',
+          border: '1px solid #E2E8F0',
+          padding: '20px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '14px',
+          boxShadow: '0 1px 3px rgba(15, 23, 42, 0.03)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <div style={{
-              width: '36px',
-              height: '36px',
+              width: '32px',
+              height: '32px',
               borderRadius: '8px',
               backgroundColor: '#EFF6FF',
               display: 'flex',
@@ -244,752 +567,90 @@ export const LoadDataTab: React.FC<LoadDataTabProps> = ({
               justifyContent: 'center',
               color: '#2563EB'
             }}>
-              <FolderPlus size={20} />
+              <UploadCloud size={18} />
             </div>
             <div>
-              <h2 style={{ fontSize: '1.0625rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>
-                Open a New Study
+              <h2 style={{ fontSize: '1rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>
+                Upload Bank Statement
               </h2>
               <span style={{ fontSize: '0.75rem', color: '#64748B' }}>
-                Define case metadata, choose an evidence source, and prepare the forensic pipeline
+                Load evidence CSV or Excel export
               </span>
             </div>
           </div>
 
-          <span style={{
-            backgroundColor: '#F1F5F9',
-            color: '#475569',
-            fontSize: '0.75rem',
-            fontWeight: 600,
-            padding: '4px 10px',
-            borderRadius: '9999px'
-          }}>
-            Step 1 of Forensic Investigation
-          </span>
-        </div>
-
-        {/* Study Metadata Inputs */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#334155' }}>
-              Study Title / Case Name
-            </label>
-            <input
-              type="text"
-              value={studyName}
-              onChange={e => setStudyName(e.target.value)}
-              placeholder="e.g. Operation Vajra: Telegram Mule Syndicate"
-              style={{
-                padding: '9px 12px',
-                borderRadius: '6px',
-                backgroundColor: '#F8FAFC',
-                border: '1px solid #CBD5E1',
-                color: '#0F172A',
-                fontSize: '0.8125rem',
-                outline: 'none'
-              }}
-            />
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#334155' }}>
-              Legal Reference / FIR Number
-            </label>
-            <input
-              type="text"
-              value={caseRef}
-              onChange={e => setCaseRef(e.target.value)}
-              placeholder="e.g. FIR No. 412/2024 Crime Branch"
-              style={{
-                padding: '9px 12px',
-                borderRadius: '6px',
-                backgroundColor: '#F8FAFC',
-                border: '1px solid #CBD5E1',
-                color: '#0F172A',
-                fontSize: '0.8125rem',
-                outline: 'none'
-              }}
-            />
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#334155' }}>
-              Lead Investigating Officer
-            </label>
-            <input
-              type="text"
-              value={investigatorName}
-              onChange={e => setInvestigatorName(e.target.value)}
-              placeholder="e.g. Ayush Sharma (Lead Cyber Analyst)"
-              style={{
-                padding: '9px 12px',
-                borderRadius: '6px',
-                backgroundColor: '#F8FAFC',
-                border: '1px solid #CBD5E1',
-                color: '#0F172A',
-                fontSize: '0.8125rem',
-                outline: 'none'
-              }}
-            />
-          </div>
-        </div>
-
-        {/* Dataset Selection Tabs */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '6px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#0F172A' }}>
-              Select Evidence Dataset Source:
-            </span>
-
-            <div style={{
+          {/* Drag & Drop Zone */}
+          <div
+            onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+            onDragLeave={() => setIsDragOver(false)}
+            onDrop={onDrop}
+            onClick={() => fileInputRef.current?.click()}
+            style={{
+              backgroundColor: isDragOver ? '#EFF6FF' : '#F8FAFC',
+              border: isDragOver ? '2px dashed #2563EB' : '2px dashed #CBD5E1',
+              borderRadius: '10px',
+              padding: '36px 18px',
               display: 'flex',
-              backgroundColor: '#F1F5F9',
-              padding: '3px',
-              borderRadius: '8px',
-              border: '1px solid #E2E8F0'
-            }}>
-              <button
-                onClick={() => setDatasetSelectionMode('preset')}
-                style={{
-                  padding: '6px 14px',
-                  borderRadius: '6px',
-                  backgroundColor: datasetSelectionMode === 'preset' ? '#FFFFFF' : 'transparent',
-                  color: datasetSelectionMode === 'preset' ? '#0F172A' : '#64748B',
-                  fontWeight: 600,
-                  fontSize: '0.75rem',
-                  border: 'none',
-                  cursor: 'pointer',
-                  boxShadow: datasetSelectionMode === 'preset' ? '0 1px 2px rgba(0,0,0,0.06)' : 'none'
-                }}
-              >
-                Available Studies & Scenarios
-              </button>
-              <button
-                onClick={() => setDatasetSelectionMode('upload')}
-                style={{
-                  padding: '6px 14px',
-                  borderRadius: '6px',
-                  backgroundColor: datasetSelectionMode === 'upload' ? '#FFFFFF' : 'transparent',
-                  color: datasetSelectionMode === 'upload' ? '#0F172A' : '#64748B',
-                  fontWeight: 600,
-                  fontSize: '0.75rem',
-                  border: 'none',
-                  cursor: 'pointer',
-                  boxShadow: datasetSelectionMode === 'upload' ? '0 1px 2px rgba(0,0,0,0.06)' : 'none'
-                }}
-              >
-                Upload Custom CSV / Parquet
-              </button>
-            </div>
-          </div>
-
-          {/* Mode 1: Preset Datasets Grid */}
-          {datasetSelectionMode === 'preset' ? (
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '10px',
+              textAlign: 'center',
+              cursor: uploading ? 'wait' : 'pointer',
+              transition: 'all 0.2s ease',
+              flex: 1
+            }}
+          >
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '12px'
-            }}>
-              {[
-                {
-                  id: 'voidhacks',
-                  name: 'VoidHacks8 2M Benchmark',
-                  path: 'data/raw/VoidHacks8_MuleAccount_2M_Transactions.csv',
-                  desc: '2,000,000 transactions • 24,873 accounts • Full nationwide network',
-                  badge: 'Full Scale',
-                  badgeBg: '#EFF6FF',
-                  badgeColor: '#1D4ED8'
-                },
-                {
-                  id: 'scen1',
-                  name: 'Scenario 1: Fast Smurfing',
-                  path: 'synthetic_data/scenario_1_fast_smurfing.csv',
-                  desc: '12,500 txns • Sub-5 min rapid layering • Target: SBIN10009901',
-                  badge: 'Smurfing',
-                  badgeBg: '#ECFDF5',
-                  badgeColor: '#047857'
-                },
-                {
-                  id: 'scen2',
-                  name: 'Scenario 2: Investment Fraud',
-                  path: 'synthetic_data/scenario_2_investment_scam.csv',
-                  desc: '18,240 txns • Telegram fake task funnel • Target: SBIN10008000',
-                  badge: 'Investment Scam',
-                  badgeBg: '#FFFBEB',
-                  badgeColor: '#B45309'
-                },
-                {
-                  id: 'scen3',
-                  name: 'Scenario 3: Cyclic Mule Loop',
-                  path: 'synthetic_data/scenario_3_cyclic_ring.csv',
-                  desc: '14,100 txns • Circular round-trip topology • Target: AXIS10007701',
-                  badge: 'Cyclic Ring',
-                  badgeBg: '#FDF2F8',
-                  badgeColor: '#BE185D'
-                },
-                {
-                  id: 'scen4',
-                  name: 'Scenario 4: Mega Capacity Test',
-                  path: 'synthetic_data/scenario_4_mega_capacity_stress_test_500nodes.csv',
-                  desc: '22,400 txns • High-capacity 500-node stress test • Target: SBIN10005001',
-                  badge: '500 Nodes',
-                  badgeBg: '#F5F3FF',
-                  badgeColor: '#6D28D9'
-                },
-                {
-                  id: 'custom',
-                  name: 'Curated Forensic Sample',
-                  path: 'synthetic_data/sample_custom_export.csv',
-                  desc: 'Clean sample export with verified ground truth labels',
-                  badge: 'Sample',
-                  badgeBg: '#F1F5F9',
-                  badgeColor: '#475569'
-                }
-              ].map(preset => {
-                const isSelected = selectedPresetFile === preset.path;
-                return (
-                  <div
-                    key={preset.id}
-                    onClick={() => setSelectedPresetFile(preset.path)}
-                    style={{
-                      padding: '14px',
-                      borderRadius: '8px',
-                      backgroundColor: isSelected ? '#EFF6FF' : '#F8FAFC',
-                      border: `1.5px solid ${isSelected ? '#2563EB' : '#E2E8F0'}`,
-                      cursor: 'pointer',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '6px',
-                      transition: 'all 0.15s ease'
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#0F172A' }}>
-                        {preset.name}
-                      </span>
-                      <span style={{
-                        padding: '2px 8px',
-                        borderRadius: '4px',
-                        backgroundColor: preset.badgeBg,
-                        color: preset.badgeColor,
-                        fontSize: '0.6875rem',
-                        fontWeight: 600
-                      }}>
-                        {preset.badge}
-                      </span>
-                    </div>
-                    <p style={{ fontSize: '0.75rem', color: '#64748B', margin: 0, lineHeight: 1.35 }}>
-                      {preset.desc}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            /* Mode 2: Drag & Drop Zone */
-            <div
-              onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
-              onDragLeave={() => setIsDragOver(false)}
-              onDrop={onDrop}
-              style={{
-                backgroundColor: isDragOver ? '#EFF6FF' : '#F8FAFC',
-                border: isDragOver ? '2px dashed #2563EB' : '2px dashed #CBD5E1',
-                borderRadius: '8px',
-                padding: '28px 20px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '12px',
-                textAlign: 'center',
-                transition: 'all 0.2s ease'
-              }}
-            >
-              <div style={{
-                width: '46px',
-                height: '46px',
-                borderRadius: '10px',
-                backgroundColor: '#EFF6FF',
-                color: '#2563EB',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
-                <Upload size={22} />
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                <p style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#0F172A', margin: 0 }}>
-                  Drag & drop evidence CSV or Parquet file here
-                </p>
-                <p style={{ fontSize: '0.75rem', color: '#64748B', margin: 0 }}>
-                  Supports bank transaction formats (HDFC, SBI, ICICI, Airtel Payments Bank, etc.) • processed 100% offline
-                </p>
-              </div>
-
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".csv,.parquet"
-                style={{ display: 'none' }}
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) handleFileUpload(f);
-                }}
-              />
-
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-                style={{
-                  backgroundColor: '#FFFFFF',
-                  color: '#2563EB',
-                  fontSize: '0.8125rem',
-                  fontWeight: 600,
-                  padding: '7px 18px',
-                  borderRadius: '6px',
-                  cursor: uploading ? 'wait' : 'pointer',
-                  border: '1px solid #BFDBFE'
-                }}
-              >
-                Browse Files
-              </button>
-            </div>
-          )}
-
-          {/* Action Trigger Button */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '12px' }}>
-            <button
-              onClick={() => handleLoadPreset(selectedPresetFile)}
-              disabled={uploading}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '11px 24px',
-                borderRadius: '8px',
-                backgroundColor: '#2563EB',
-                color: '#FFFFFF',
-                fontSize: '0.875rem',
-                fontWeight: 600,
-                cursor: uploading ? 'wait' : 'pointer',
-                border: 'none',
-                boxShadow: '0 2px 4px rgba(37,99,235,0.25)',
-                transition: 'background-color 0.15s'
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#1D4ED8')}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#2563EB')}
-            >
-              <Play size={16} color="#FFFFFF" />
-              <span>{uploading ? 'Indexing Study Data...' : 'Initialize & Index Study into DuckDB'}</span>
-              <ArrowRight size={16} />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* SECTION 2: Active Study Pipeline Status Card */}
-      <div style={{
-        backgroundColor: '#FFFFFF',
-        border: '1px solid #E2E8F0',
-        borderRadius: '12px',
-        padding: '24px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '20px',
-        boxShadow: '0 1px 3px rgba(15,23,42,0.04)'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: '8px',
-              backgroundColor: '#ECFDF5',
+              width: '46px',
+              height: '46px',
+              borderRadius: '10px',
+              backgroundColor: '#EFF6FF',
+              color: '#2563EB',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#059669'
+              boxShadow: '0 2px 6px rgba(37,99,235,0.15)'
             }}>
-              <Database size={20} />
+              <UploadCloud size={24} />
             </div>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <h2 style={{ fontSize: '1.0625rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>
-                  Active Forensic Study Pipeline
-                </h2>
-                <span style={{
-                  backgroundColor: '#ECFDF5',
-                  color: '#047857',
-                  fontSize: '0.6875rem',
-                  fontWeight: 600,
-                  padding: '2px 8px',
-                  borderRadius: '9999px',
-                  border: '1px solid #A7F3D0'
-                }}>
-                  Live in DuckDB
-                </span>
-              </div>
-              <span style={{ fontSize: '0.75rem', color: '#64748B', fontFamily: 'var(--font-mono)' }}>
-                {currentDatasetFilename}
-              </span>
-            </div>
-          </div>
 
-          {/* Quick Navigators */}
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <button
-              onClick={onNavigateToOverview}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '8px 16px',
-                borderRadius: '6px',
-                backgroundColor: '#2563EB',
-                color: '#FFFFFF',
-                fontSize: '0.8125rem',
-                fontWeight: 600,
-                border: 'none',
-                cursor: 'pointer',
-                boxShadow: '0 1px 2px rgba(37,99,235,0.2)'
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+              <p style={{ fontSize: '0.875rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>
+                Drag & drop bank statement CSV here
+              </p>
+              <p style={{ fontSize: '0.75rem', color: '#64748B', margin: 0 }}>
+                or click to browse your computer
+              </p>
+            </div>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv,.parquet"
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) handleFileUpload(f);
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#1D4ED8')}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#2563EB')}
-            >
-              <span>Open Overview Dashboard</span>
-              <ArrowRight size={14} />
-            </button>
+            />
 
-            <button
-              onClick={onNavigateToInvestigate}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '8px 16px',
-                borderRadius: '6px',
-                backgroundColor: '#FFFFFF',
-                color: '#334155',
-                fontSize: '0.8125rem',
-                fontWeight: 600,
-                border: '1px solid #CBD5E1',
-                cursor: 'pointer'
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F8FAFC')}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#FFFFFF')}
-            >
-              <span>Explore Money Trail Graph</span>
-              <ArrowRight size={14} />
-            </button>
-          </div>
-        </div>
-
-        {/* 4-Step Pipeline Status */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
-          gap: '8px',
-          padding: '14px 16px',
-          backgroundColor: '#F8FAFC',
-          borderRadius: '8px',
-          border: '1px solid #E2E8F0'
-        }}>
-          {[
-            { label: 'File Parsing', desc: 'DuckDB native CSV/Parquet reader', hasLine: true },
-            { label: 'Normalising', desc: 'Timestamp & Account harmonization', hasLine: true },
-            { label: 'Graph Indexing', desc: 'Adjacency matrix generation', hasLine: true },
-            { label: 'Mule Risk Engine', desc: 'Rules + Bounded LightGBM + TreeSHAP', hasLine: false }
-          ].map((step, idx) => (
-            <div key={idx} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{
-                  width: '20px',
-                  height: '20px',
-                  borderRadius: '9999px',
-                  backgroundColor: '#2563EB',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0
-                }}>
-                  <Check size={12} color="#FFFFFF" strokeWidth={3} />
-                </div>
-                {step.hasLine && (
-                  <div style={{
-                    flex: 1,
-                    height: '2px',
-                    backgroundColor: '#2563EB'
-                  }} />
-                )}
-              </div>
-              <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#0F172A', marginTop: '2px' }}>
-                {step.label}
-              </span>
-              <span style={{ fontSize: '0.6875rem', color: '#64748B' }}>
-                {step.desc}
-              </span>
-            </div>
-          ))}
-        </div>
-
-        {/* 4 Metric Badges */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
-          <div style={{
-            backgroundColor: '#F8FAFC',
-            border: '1px solid #E2E8F0',
-            borderRadius: '8px',
-            padding: '12px 16px'
-          }}>
-            <p style={{ fontSize: '0.75rem', color: '#64748B', margin: 0, fontWeight: 500 }}>
-              Transactions Indexed
-            </p>
-            <p style={{
-              fontSize: '1.25rem',
-              fontWeight: 700,
-              color: '#0F172A',
-              margin: '2px 0 0 0',
-              fontVariantNumeric: 'tabular-nums'
-            }}>
-              {totalRowsFormatted}
-            </p>
-          </div>
-
-          <div style={{
-            backgroundColor: '#F8FAFC',
-            border: '1px solid #E2E8F0',
-            borderRadius: '8px',
-            padding: '12px 16px'
-          }}>
-            <p style={{ fontSize: '0.75rem', color: '#64748B', margin: 0, fontWeight: 500 }}>
-              Unique Entities
-            </p>
-            <p style={{
-              fontSize: '1.25rem',
-              fontWeight: 700,
-              color: '#0F172A',
-              margin: '2px 0 0 0',
-              fontVariantNumeric: 'tabular-nums'
-            }}>
-              {totalAccountsFormatted}
-            </p>
-          </div>
-
-          <div style={{
-            backgroundColor: '#F8FAFC',
-            border: '1px solid #E2E8F0',
-            borderRadius: '8px',
-            padding: '12px 16px'
-          }}>
-            <p style={{ fontSize: '0.75rem', color: '#64748B', margin: 0, fontWeight: 500 }}>
-              Query Execution Latency
-            </p>
-            <p style={{
-              fontSize: '1.25rem',
-              fontWeight: 700,
-              color: '#047857',
-              margin: '2px 0 0 0',
-              fontVariantNumeric: 'tabular-nums'
-            }}>
-              &lt; 42 ms
-            </p>
-          </div>
-
-          <div style={{
-            backgroundColor: '#F8FAFC',
-            border: '1px solid #E2E8F0',
-            borderRadius: '8px',
-            padding: '12px 16px'
-          }}>
-            <p style={{ fontSize: '0.75rem', color: '#64748B', margin: 0, fontWeight: 500 }}>
-              Air-Gapped Status
-            </p>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
-              <ShieldCheck size={18} color="#059669" />
-              <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#047857' }}>
-                100% Offline
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* SECTION 3: Previous Studies & Historical Datasets Table */}
-      <div style={{
-        backgroundColor: '#FFFFFF',
-        border: '1px solid #E2E8F0',
-        borderRadius: '12px',
-        padding: '24px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '16px',
-        boxShadow: '0 1px 3px rgba(15,23,42,0.04)'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div>
-            <h2 style={{ fontSize: '1.0625rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>
-              Previous Forensic Studies & Historical Evidence Ledgers
-            </h2>
-            <p style={{ fontSize: '0.75rem', color: '#64748B', margin: '2px 0 0 0' }}>
-              Select any previous study or scenario to immediately reload its DuckDB graph index and view its overview
-            </p>
-          </div>
-
-          <button
-            onClick={fetchStudies}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '6px 12px',
+            <span style={{
+              marginTop: '4px',
+              fontSize: '11px',
+              color: '#2563EB',
+              backgroundColor: '#EFF6FF',
+              padding: '3px 10px',
               borderRadius: '6px',
-              backgroundColor: '#F8FAFC',
-              border: '1px solid #E2E8F0',
-              color: '#64748B',
-              fontSize: '0.75rem',
-              fontWeight: 600,
-              cursor: 'pointer'
-            }}
-          >
-            <RotateCcw size={13} />
-            <span>Refresh Studies</span>
-          </button>
-        </div>
-
-        {/* Studies Table */}
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-            <thead>
-              <tr style={{
-                borderBottom: '1px solid #E2E8F0',
-                backgroundColor: '#F8FAFC'
-              }}>
-                <th style={{ padding: '10px 14px', fontSize: '0.75rem', fontWeight: 600, color: '#64748B' }}>Study Name & Case FIR</th>
-                <th style={{ padding: '10px 14px', fontSize: '0.75rem', fontWeight: 600, color: '#64748B' }}>Dataset File</th>
-                <th style={{ padding: '10px 14px', fontSize: '0.75rem', fontWeight: 600, color: '#64748B' }}>Volume</th>
-                <th style={{ padding: '10px 14px', fontSize: '0.75rem', fontWeight: 600, color: '#64748B' }}>Analyst</th>
-                <th style={{ padding: '10px 14px', fontSize: '0.75rem', fontWeight: 600, color: '#64748B' }}>Status</th>
-                <th style={{ padding: '10px 14px', fontSize: '0.75rem', fontWeight: 600, color: '#64748B', textAlign: 'right' }}>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {studies.map((study) => {
-                const isActive = currentDatasetFilename.includes(study.dataset_filename) || study.dataset_filename.includes(currentDatasetFilename);
-                const isLoadingThis = loadingStudyId === study.id;
-                return (
-                  <tr
-                    key={study.id}
-                    style={{
-                      borderBottom: '1px solid #F1F5F9',
-                      backgroundColor: isActive ? '#F8FAFC' : '#FFFFFF',
-                      transition: 'background-color 0.15s ease'
-                    }}
-                  >
-                    <td style={{ padding: '12px 14px' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#0F172A' }}>
-                          {study.name}
-                        </span>
-                        <span style={{ fontSize: '0.6875rem', color: '#64748B' }}>
-                          {study.case_ref}
-                        </span>
-                      </div>
-                    </td>
-
-                    <td style={{ padding: '12px 14px' }}>
-                      <span style={{
-                        fontSize: '0.75rem',
-                        fontFamily: 'var(--font-mono)',
-                        color: '#334155'
-                      }}>
-                        {study.dataset_filename}
-                      </span>
-                    </td>
-
-                    <td style={{ padding: '12px 14px' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', fontSize: '0.75rem', color: '#475569' }}>
-                        <span>{study.rows.toLocaleString()} txns</span>
-                        <span style={{ fontSize: '0.6875rem', color: '#94A3B8' }}>{study.accounts.toLocaleString()} accounts</span>
-                      </div>
-                    </td>
-
-                    <td style={{ padding: '12px 14px' }}>
-                      <span style={{ fontSize: '0.75rem', color: '#475569' }}>
-                        {study.analyst}
-                      </span>
-                    </td>
-
-                    <td style={{ padding: '12px 14px' }}>
-                      {isActive ? (
-                        <span style={{
-                          padding: '3px 8px',
-                          borderRadius: '9999px',
-                          backgroundColor: '#ECFDF5',
-                          color: '#047857',
-                          fontSize: '0.6875rem',
-                          fontWeight: 600,
-                          border: '1px solid #A7F3D0'
-                        }}>
-                          Active Study
-                        </span>
-                      ) : (
-                        <span style={{
-                          padding: '3px 8px',
-                          borderRadius: '9999px',
-                          backgroundColor: '#F1F5F9',
-                          color: '#475569',
-                          fontSize: '0.6875rem',
-                          fontWeight: 600
-                        }}>
-                          {study.status}
-                        </span>
-                      )}
-                    </td>
-
-                    <td style={{ padding: '12px 14px', textAlign: 'right' }}>
-                      {isActive ? (
-                        <button
-                          onClick={onNavigateToOverview}
-                          style={{
-                            padding: '5px 12px',
-                            borderRadius: '6px',
-                            backgroundColor: '#EFF6FF',
-                            color: '#2563EB',
-                            fontSize: '0.75rem',
-                            fontWeight: 600,
-                            border: '1px solid #BFDBFE',
-                            cursor: 'pointer'
-                          }}
-                        >
-                          View Dashboard →
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => handleLoadPreset(study.filepath, study.id)}
-                          disabled={uploading}
-                          style={{
-                            padding: '5px 12px',
-                            borderRadius: '6px',
-                            backgroundColor: '#2563EB',
-                            color: '#FFFFFF',
-                            fontSize: '0.75rem',
-                            fontWeight: 600,
-                            border: 'none',
-                            cursor: 'pointer',
-                            opacity: uploading ? 0.6 : 1
-                          }}
-                        >
-                          {isLoadingThis ? 'Loading...' : 'Load This Study'}
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+              fontWeight: 600
+            }}>
+              Supports SBI, HDFC, ICICI, Axis, Airtel Payments & More
+            </span>
+          </div>
         </div>
       </div>
     </div>
   );
 };
+
+export default LoadDataTab;

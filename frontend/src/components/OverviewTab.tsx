@@ -186,35 +186,16 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
       }}>
         {/* Left: Overview Heading */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <h1 style={{
-              fontSize: '1.75rem',
-              fontWeight: 800,
-              color: '#0F172A',
-              letterSpacing: '-0.025em',
-              margin: 0,
-              lineHeight: 1.2
-            }}>
-              Overview
-            </h1>
-            <span style={{
-              display: 'inline-flex',
-              alignItems: 'baseline',
-              gap: '4px',
-              backgroundColor: '#EFF6FF',
-              border: '1px solid #DBEAFE',
-              padding: '2px 8px',
-              borderRadius: '6px'
-            }}>
-              <span style={{ fontSize: '11px', fontWeight: 800, color: '#1D4ED8', letterSpacing: '0.02em' }}>VAJRA</span>
-              <span className="brand-devanagari" style={{
-                fontFamily: "'Alkatra', 'Modak', cursive, sans-serif",
-                fontSize: '14px',
-                color: '#2563EB',
-                lineHeight: 1
-              }}>वज्र</span>
-            </span>
-          </div>
+          <h1 style={{
+            fontSize: '1.75rem',
+            fontWeight: 800,
+            color: '#0F172A',
+            letterSpacing: '-0.025em',
+            margin: 0,
+            lineHeight: 1.2
+          }}>
+            Overview
+          </h1>
           <div
             onClick={() => onNavigateTab && onNavigateTab('load')}
             title="Click to change or load dataset study"

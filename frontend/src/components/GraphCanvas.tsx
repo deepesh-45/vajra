@@ -824,20 +824,9 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         {/* Brand & Scale Indicators */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '5px' }}>
-              <span style={{ fontSize: '0.9375rem', fontWeight: 800, color: '#0F172A' }}>
-                VAJRA
-              </span>
-              <span className="brand-devanagari" style={{
-                fontFamily: "'Alkatra', 'Modak', cursive, sans-serif",
-                fontSize: '1.15rem',
-                color: '#2563EB',
-                lineHeight: 1
-              }}>
-                वज्र
-              </span>
-              <span style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#475569', marginLeft: '3px' }}>
-                OSINT Graph Explorer
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#0F172A' }}>
+                Money Trail Graph Explorer
               </span>
             </div>
             <span style={{

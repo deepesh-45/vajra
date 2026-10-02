@@ -269,16 +269,8 @@ export const BenchmarkTab: React.FC = () => {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <BookOpen size={16} color="#2563EB" />
-          <h3 style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#0F172A', margin: 0, display: 'flex', alignItems: 'baseline', gap: '5px' }}>
-            <span>Scientific Research Papers Fortifying VAJRA</span>
-            <span className="brand-devanagari" style={{
-              fontFamily: "'Alkatra', 'Modak', cursive, sans-serif",
-              fontSize: '1.15rem',
-              color: '#2563EB',
-              lineHeight: 1
-            }}>
-              वज्र
-            </span>
+          <h3 style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#0F172A', margin: 0 }}>
+            Scientific Research Papers & Benchmarks
           </h3>
         </div>
 
