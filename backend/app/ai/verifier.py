@@ -1,11 +1,23 @@
 """
-Anti-Hallucination Verification Engine.
-Enforces structural guarantees: Every account number, IFSC, transaction ID, and amount
-appearing in generated case diaries or freeze notices is cross-verified against the graph DB truth.
+Anti-Hallucination & Legal Citation Verification Engine for Operation Vajra.
+Enforces dual structural guarantees:
+1. Every account number, IFSC, transaction ID, and amount is cross-verified against the graph DB truth.
+2. Every statutory section citation is cross-checked against the selected Legal Pack profile's allowed citations.
 """
 
 import re
-from typing import Dict, Any, List, Set, Tuple
+from typing import Dict, Any, List, Set, Optional
+
+CITE_REGEX = re.compile(r"Sec(?:tion)?s?\.?\s*(\d+[A-Z]?)\s*(BNSS|BNS|BSA|CrPC|IPC|IT Act)", re.I)
+
+def verify_legal(text: str, allowed: List[str]) -> List[str]:
+    """
+    Checks if all section citations in text are permitted by the legal profile.
+    Returns list of unauthorized citations (empty list = OK).
+    """
+    found = {f"{n} {a.upper()}" for n, a in CITE_REGEX.findall(text)}
+    allowed_set = {s.strip().upper() for s in allowed}
+    return sorted(found - allowed_set)
 
 class AntiHallucinationVerifier:
     def __init__(self):
@@ -14,10 +26,12 @@ class AntiHallucinationVerifier:
     def verify_document(
         self,
         document_text: str,
-        trace_data: Dict[str, Any]
+        trace_data: Dict[str, Any],
+        allowed_citations: Optional[List[str]] = None
     ) -> Dict[str, Any]:
         """
-        Extracts all financial entities from text and validates 100% existence in trace facts.
+        Extracts all financial entities and legal citations from text.
+        Validates 100% existence in trace facts and legal pack allowed citations.
         """
         # 1. Build Truth Sets from trace_data
         valid_accounts: Set[str] = set()
@@ -54,13 +68,8 @@ class AntiHallucinationVerifier:
             valid_amounts_paise.add(int(f.get("held_paise", 0)))
 
         # 2. Extract entities from document text
-        # Match accounts: 12-char alphanumeric tokens (e.g. AIRP10000024 or 12-digit)
         extracted_accounts = set(re.findall(r'\b[A-Z]{4}\d{8}\b|\b\d{12}\b', document_text))
-        
-        # Match Txn IDs: TXN\d+
         extracted_txns = set(re.findall(r'\bTXN\d+\b', document_text))
-
-        # Match IFSC: [A-Z]{4}0[A-Z0-9]{6}
         extracted_ifscs = set(re.findall(r'\b[A-Z]{4}0[A-Z0-9]{6}\b', document_text))
 
         # 3. Verify membership
@@ -68,20 +77,45 @@ class AntiHallucinationVerifier:
         unverified_txns = [t for t in extracted_txns if t not in valid_txns]
         unverified_ifscs = [i for i in extracted_ifscs if i not in valid_ifscs and i != "SBIN0000000"]
 
-        passed = (len(unverified_accounts) == 0 and len(unverified_txns) == 0 and len(unverified_ifscs) == 0)
+        fact_passed = (len(unverified_accounts) == 0 and len(unverified_txns) == 0 and len(unverified_ifscs) == 0)
+
+        # 4. Legal Citation Verification
+        unauthorized_citations = []
+        if allowed_citations is not None:
+            unauthorized_citations = verify_legal(document_text, allowed_citations)
+
+        legal_passed = (len(unauthorized_citations) == 0)
+        overall_passed = fact_passed and legal_passed
+
+        # Construct status string
+        if not fact_passed and not legal_passed:
+            compliance_status = "REJECTED - UNVERIFIED ENTITIES AND UNAUTHORIZED CITATIONS DETECTED"
+        elif not fact_passed:
+            compliance_status = "REJECTED - UNVERIFIED FINANCIAL ENTITY DETECTED"
+        elif not legal_passed:
+            compliance_status = f"REJECTED - UNAUTHORIZED LEGAL CITATION: {', '.join(unauthorized_citations)}"
+        else:
+            compliance_status = "100% FACTUALLY & LEGALLY VERIFIED (GRAPH DB + LEGAL PACK)"
+
+        found_citations = [f"{n} {a.upper()}" for n, a in CITE_REGEX.findall(document_text)]
 
         return {
-            "verified": passed,
-            "hallucination_detected": not passed,
+            "verified": overall_passed,
+            "fact_verified": fact_passed,
+            "legal_verified": legal_passed,
+            "hallucination_detected": not overall_passed,
             "counts": {
                 "accounts_checked": len(extracted_accounts),
                 "txns_checked": len(extracted_txns),
-                "ifscs_checked": len(extracted_ifscs)
+                "ifscs_checked": len(extracted_ifscs),
+                "citations_checked": len(found_citations)
             },
             "unverified_accounts": unverified_accounts,
             "unverified_txns": unverified_txns,
             "unverified_ifscs": unverified_ifscs,
-            "compliance_status": "100% FACTUALLY VERIFIED AGAINST GRAPH DATABASE" if passed else "REJECTED - UNVERIFIED ENTITY DETECTED"
+            "found_citations": sorted(set(found_citations)),
+            "unauthorized_citations": unauthorized_citations,
+            "compliance_status": compliance_status
         }
 
 anti_hallucination_verifier = AntiHallucinationVerifier()

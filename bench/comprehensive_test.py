@@ -45,11 +45,31 @@ def test_all():
     print(f"   Verified: {diary['verification']['verified']} (Hallucination Detected: {diary['verification']['hallucination_detected']})")
     print(f"   SHA-256 Custody Hash: {diary['sha256']}")
 
-    print("\n5. Testing Statutory Bank Freeze Requisition (AXIS Bank)...")
-    status, freeze = post("/api/reports/freeze", {"victim_account": v, "target_bank": "AXIS"})
+    print("\n5. Testing Statutory Bank Freeze Requisition (Indore Default Profile)...")
+    status, freeze = post("/api/reports/freeze", {"victim_account": v, "target_bank": "AXIS", "profile_id": "indore_default"})
     assert status == 200
-    print(f"   Target Bank: {freeze['bank_name']} | Accounts to Freeze: {freeze['accounts_count']} | Total Lien: ₹{freeze['total_lien_inr']:,}")
-    print(f"   Verified: {freeze['verification']['verified']}")
+    print(f"   Target Bank: {freeze['bank_name']} | Accounts to Lien: {freeze['accounts_count']} | Total Lien: ₹{freeze['total_lien_inr']:,}")
+    print(f"   Pack: {freeze['pack_version']} | Engine: {freeze['writer_engine']}")
+    print(f"   Fact Verified: {freeze['verification']['fact_verified']} | Legal Verified: {freeze['verification']['legal_verified']}")
+    assert freeze['verification']['legal_verified'], "Legal citation verification failed"
+
+    print("\n5b. Testing Legal Profiles API & Bombay Profile Requisition...")
+    status, profs = get("/api/reports/profiles")
+    assert status == 200
+    assert len(profs['profiles']) == 4, f"Expected 4 profiles, got {len(profs['profiles'])}"
+    print(f"   Legal Pack: v{profs['pack_version']} ({profs['valid_as_of']}) | Stale: {profs['staleness']['is_stale']} | Profiles: {[p['id'] for p in profs['profiles']]}")
+
+    status, freeze_bombay = post("/api/reports/freeze", {"victim_account": v, "target_bank": "AXIS", "profile_id": "bombay_strict_107"})
+    assert status == 200
+    assert freeze_bombay['profile_id'] == "bombay_strict_107"
+    print(f"   Bombay Profile Verified: {freeze_bombay['verification']['legal_verified']}")
+
+    print("\n5c. Testing Human-Reviewed Hindi Statutory Notice Generation...")
+    status, freeze_hi = post("/api/reports/freeze-hindi", {"victim_account": v, "target_bank": "AXIS", "profile_id": "indore_default"})
+    assert status == 200
+    print(f"   Hindi Notice Engine: {freeze_hi['writer_engine']}")
+    print(f"   Hindi Compliance Status: {freeze_hi['verification']['compliance_status']}")
+    assert "प्रारूप (DRAFT)" in freeze_hi['raw_text']
 
     print("\n6. Testing Account Profile & Search...")
     status, acct = get(f"/api/accounts/{v}")

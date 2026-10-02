@@ -64,6 +64,8 @@ class FreezeRequest(BaseModel):
     victim_account: str
     target_bank: str
     case_ref: str = "CYBER/IND/2026/0891"
+    profile_id: Optional[str] = "indore_default"
+    use_ollama: Optional[bool] = True
 
 @app.get("/api/health")
 def health():
@@ -697,6 +699,18 @@ def generate_diary(req: DiaryRequest):
     )
     return diary
 
+@app.get("/api/reports/profiles")
+def get_legal_profiles():
+    from backend.app.reports.legal_pack import legal_pack
+    return {
+        "pack_version": legal_pack.pack_version,
+        "valid_as_of": legal_pack.valid_as_of,
+        "reviewed_by": legal_pack.reviewed_by,
+        "staleness": legal_pack.check_staleness(),
+        "profiles": legal_pack.list_profiles(),
+        "watch_list": legal_pack.watch_list
+    }
+
 @app.post("/api/reports/freeze")
 def generate_freeze(req: FreezeRequest):
     if not csr_graph.is_built():
@@ -710,7 +724,9 @@ def generate_freeze(req: FreezeRequest):
     notice = legal_generator.generate_bank_freeze_notice(
         trace_data=trace_data,
         target_bank=req.target_bank,
-        case_ref=req.case_ref
+        case_ref=req.case_ref,
+        profile_id=req.profile_id or "indore_default",
+        use_ollama=req.use_ollama if req.use_ollama is not None else True
     )
     if "error" in notice:
         raise HTTPException(status_code=400, detail=notice["error"])
@@ -729,7 +745,8 @@ def generate_freeze_hindi(req: FreezeRequest):
     notice = legal_generator.generate_hindi_freeze_notice(
         trace_data=trace_data,
         target_bank=req.target_bank,
-        case_ref=req.case_ref
+        case_ref=req.case_ref,
+        profile_id=req.profile_id or "indore_default"
     )
     if "error" in notice:
         raise HTTPException(status_code=400, detail=notice["error"])

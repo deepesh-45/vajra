@@ -168,39 +168,68 @@ Understanding evasion keeps the detector honest. Expected tactics and our counte
 
 ---
 
-## 4. Legal Framework & Notice Design
+## 4. Legal Framework & Notice Design (Updated as of 02 October 2026)
 
-> **Important.** This section reflects researched, publicly reported law as of the date above. **It is not legal advice.** The notice templates must be reviewed by an officer/legal adviser from the Police Commissionerate before real use. The system therefore makes the legal provision profile **configurable** (`LG-1`).
+> **Important Judicial Notice.** This section reflects statutory law and High Court precedents as of **02 October 2026**. **It is not legal advice.** Notice templates must be verified by an officer/legal adviser from the Police Commissionerate before operational dispatch. The system enforces that law comes from a human-reviewed, versioned configuration (`config/legal_pack.yaml`), making the legal provision profile configurable (`LG-1`).
 
-### 4.1 Provision map (CrPC → BNSS)
+### 4.1 Statutory Provision Map (CrPC → BNSS)
 
-| Purpose | Old (CrPC, 1973) | Current (BNSS, 2023) | Notes |
+| Purpose | Old (CrPC, 1973) | Current (BNSS, 2023) | Notes & Precedents |
 |---|---|---|---|
-| Summons/notice to produce document or thing (e.g. statements, KYC, account opening form) | **Sec. 91** | **Sec. 94** | The problem statement's "Sec. 91 CrPC / BNSS" notice maps here |
-| Police seizure of property (historically used to freeze bank accounts) | Sec. 102 | **Sec. 106** | Seizure *for evidence*; Sec. 106(3) requires reporting seizure to the Magistrate forthwith |
-| Attachment / forfeiture / restoration of **proceeds of crime** | (no direct equivalent) | **Sec. 107** | New; involves an application to the Magistrate |
-| Electronic evidence certificate | Sec. 65B Evidence Act | Sec. 63 Bharatiya Sakshya Adhiniyam, 2023 | Include certificate placeholder |
+| Summons/notice to produce documents or things (statements, KYC, IP logs, MAC) | **Sec. 91** | **Sec. 94** | Fundamental document requisition power |
+| Police seizure of property (historically used for bank accounts) | Sec. 102 | **Sec. 106** | Seizure *for evidence*; Sec. 106(3) mandates reporting seizure to the Magistrate forthwith |
+| Attachment / forfeiture / restoration of **proceeds of crime** | (no direct equivalent) | **Sec. 107** | Mandatory judicial application to the Magistrate for proceeds attachment |
+| Electronic evidence integrity certificate | Sec. 65B Evidence Act | **Sec. 63 BSA, 2023** | Mandates cryptographic hash and automated audit certificate |
 
-### 4.2 Why this matters (research findings)
-Recent High Court decisions reported in legal media show an evolving position:
-- Courts have recognised a bank account as "property" for seizure (Supreme Court, *Tapas D. Neogy*, 1999) and noted that BNSS Sec. 106 retains Sec. 102 CrPC, while Sec. 107 was added to deal with attachment of proceeds of crime.
-- The **Bombay High Court** held that an investigating agency cannot debit-freeze an account under Sec. 106 BNSS and may proceed under Sec. 107, with banks acting per the Citizen Financial Cyber Fraud Reporting and Management System.
-- The **Kerala High Court** (*Headstar Global*) distinguished seizure (106) from attachment (107). A reported **Delhi High Court** ruling goes further, requiring Magistrate approval for freezing under Sec. 107.
-- The **Allahabad High Court** quashed a notice that froze an entire account, stressing that action under Sec. 106 needs reasonable belief (not mere suspicion) and that a freeze should be **proportionate to the amount under suspicion**.
+### 4.2 Judicial Precedents & High Court Disagreements (October 2026 Status)
 
-**Design consequence:** the system must never produce a blunt "freeze entire account" notice. It must (a) cite a configurable provision set, (b) limit the lien to the **traced disputed amount**, (c) state the **basis of reasonable belief** with evidence references, and (d) include a **Magistrate-reporting/approval** reminder.
+Recent High Court decisions have fundamentally shifted the law governing bank account debit freezes in cyber fraud investigations:
 
-### 4.3 Legal requirements (LG-*)
+1. **Madhya Pradesh High Court (Indore Bench) — *Archana v State of Madhya Pradesh* (WP-29117-2026, July 2026)**:
+   - **Lien on Disputed Amount Only**: Freezing an entire bank account is an extraordinary measure violating Article 19(1)(g) and Article 300A of the Constitution. Investigating officers must ordinarily place a **debit lien strictly limited to the traced disputed amount**.
+   - **Magistrate Intimation**: The IO must report the lien to the jurisdictional Magistrate as soon as reasonably possible.
+   - **Binding Timelines & MHA SOP (10 April 2026)**:
+     - Banks must upload customer grievances to the portal within **7 days** of receipt.
+     - The Investigating Officer must adjudicate the grievance within **15 days**.
+     - If a grievance remains unadjudicated beyond **90 days**, the bank is empowered to release the hold after providing **15 days prior written notice** to the investigating agency.
 
-| ID | Requirement |
-|---|---|
-| **LG-1** | Provision profile is configurable (`legal_profile.yaml`): default = *Notice for production of documents under Sec. 94 BNSS (erstwhile Sec. 91 CrPC)* **plus** request to *mark lien on disputed amount* with a selectable basis (Sec. 106 / Sec. 107 BNSS) and an "approval/order reference" field. |
-| **LG-2** | Every generated legal document carries a prominent banner: **"DRAFT — to be reviewed and signed by the competent officer."** |
-| **LG-3** | **Amount-limited lien**: the notice states "mark lien/hold to the extent of ₹X (traced proceeds)" per account, never the whole account unless the officer overrides with justification. |
-| **LG-4** | **Basis of reasonable belief** paragraph: auto-built from verified claims (victim transfer ID, timestamps, onward transfers) with links to evidence rows. |
-| **LG-5** | Placeholder for **Sec. 63 BSA certificate** annex and a list of source files with SHA-256 hashes. |
-| **LG-6** | Fields requiring officer input are explicit blanks (FIR/Case No., PS name, IO name/rank/contact, magistrate order ref, date/time of issue). The system **never invents** these. |
-| **LG-7** | Response deadline, bank nodal-officer email/address are officer-editable fields with defaults from a local `banks.yaml` (no external lookup). |
+2. **High Court Conflicts on Section 106 vs. Section 107 BNSS**:
+   - **Bombay High Court**: Held that an investigating agency **has no power to debit-freeze bank accounts under Section 106 BNSS**. Banks may place a lien on disputed amounts under internal guidelines/CFCFRMS, while the police agency must proceed under **Section 107 BNSS** by applying to the Magistrate for formal attachment.
+   - **Delhi High Court**: Held that Section 106 BNSS is confined to seizure of property as physical/material evidence; attachment of proceeds of crime strictly requires an order from the Magistrate under Section 107 BNSS.
+   - **Allahabad High Court**: Follows a more permissive police line, holding that police can direct a freeze under Section 106 BNSS without prior notice, provided the freeze is strictly proportionate to the suspicious amount.
+
+**System Design Consequence**:
+The default configuration (`indore_default`) mandates a **lien limited exclusively to the traced disputed amount** (`{AMT}`), never a blanket whole-account freeze. The statutory basis (Section 106 vs 107 route) is implemented as **switchable profiles** selectable by the Commissionerate's Legal Cell.
+
+### 4.3 Architecture: Ollama as the Writer, Not the Source of Law
+
+Local LLMs (e.g. Qwen 2.5 7B, Llama 3.1 8B) have training cutoffs that predate 2026 rulings; if asked to generate law, they hallucinate section numbers and invent non-existent powers. In Vajra, **the model is strictly a prose writer, never the source of law**:
+
+```
+Trace facts ─────► claims (placeholders) ───┐
+                                            ├─► Ollama (wording only, JSON-schema) ─► render ─► Dual Verifier (Facts + Legal Citations) ─► DRAFT notice
+Legal pack (YAML) ─► clauses chosen by CODE ─┘
+```
+
+1. **No Vector Database**: The legal pack contains a concise set of human-reviewed clauses. Deterministic code selection per profile is transparent and reproducible.
+2. **Versioned Legal Pack (`config/legal_pack.yaml`)**: Law is decoupled from model weights into a human-reviewed, versioned file with checksum and officer sign-off.
+3. **Reviewed Fixed Hindi Text**: Hindi legal text comes from human-reviewed statutory clauses; LLMs are never used for legal Hindi translation.
+4. **Schema-Constrained Local Model Call**: Ollama runs on `127.0.0.1:11434` with temperature 0.1, fixed seed 42, and strict JSON schema. If unreachable or timing out (> 25s), the system seamlessly executes the deterministic template fallback.
+5. **Dual Verification Guardrail**:
+   - **Fact Verifier (AST)**: Cross-checks all accounts, amounts, UTRs, and IFSCs against DuckDB.
+   - **Legal-Citation Verifier**: Regex engine extracts all `Sec. X [Act]` citations and rejects the draft if any citation is not in the profile's `allowed_citations`.
+
+### 4.4 Legal Requirements Specification (LG-*)
+
+| ID | Requirement | Implementation in Vajra |
+|---|---|---|
+| **LG-1** | **Switchable Provision Profiles**: Support `indore_default` (Archana ruling), `bombay_strict_107`, `delhi_magistrate_attachment`, and `permissive_106` via `config/legal_pack.yaml`. | Loaded via `LegalPackManager` with profile selector in UI. |
+| **LG-2** | **Mandatory DRAFT Banner**: Every generated notice displays: `"DRAFT — to be reviewed and signed by the competent officer."` | Enforced at top of raw text and in UI preview. |
+| **LG-3** | **Amount-Limited Lien**: Notices specify: `"Mark debit lien strictly limited to ₹{AMT} (traced disputed proceeds)"`. | Computed from causal FIFO taint trace; whole-account freeze prohibited by default. |
+| **LG-4** | **Magistrate Intimation & Grievance Schedule**: Must state Magistrate intimation line, 7-day bank upload, 15-day IO decision, and 90-day expiry timeline. | Populated from reviewed clauses `MAGISTRATE_INTIMATION` and `GRIEVANCE_REVIEW`. |
+| **LG-5** | **Electronic Evidence Certificate**: Mandatory Section 63 BSA certificate with SHA-256 digital custody hash. | Embedded in document footer with SHA-256 digest. |
+| **LG-6** | **Legal Staleness Warning**: If `valid_as_of` > 30 days old or `reviewed_by` is blank, display: `"Legal pack not recently reviewed — confirm current law before use."` | Evaluated dynamically on load and displayed as an alert banner. |
+| **LG-7** | **Legal-Citation Verification**: Automated rejection if any citation in generated notice is outside the profile's `allowed_citations`. | Regex verifier `verify_legal(text, allowed)` in `verifier.py`. |
 
 ---
 
