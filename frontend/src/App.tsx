@@ -72,7 +72,7 @@ export const App: React.FC = () => {
       height: '100vh',
       width: '100vw',
       display: 'flex',
-      backgroundColor: '#F4F7FB',
+      backgroundColor: '#F4EDE4',
       overflow: 'hidden'
     }}>
       {/* Left Sidebar (Full Height Pastel Almond) */}

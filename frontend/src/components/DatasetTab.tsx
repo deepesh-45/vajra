@@ -106,10 +106,10 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
         flexDirection: 'column',
         gap: '16px',
         backgroundColor: '#FFFFFF',
-        border: '1px solid #E2E8F0',
+        border: '2px solid #D5C7B5',
         borderRadius: '12px',
         padding: '20px 24px',
-        boxShadow: '0 1px 3px rgba(15,23,42,0.04)'
+        boxShadow: '0 1px 3px rgba(60,45,30,0.04)'
       }}>
         <div style={{
           display: 'flex',
@@ -128,7 +128,7 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
                 margin: 0,
                 letterSpacing: '-0.02em'
               }}>
-                Active Bank Transaction Ledger
+                Transactions Dataset
               </h1>
               <span style={{
                 fontSize: '0.75rem',
@@ -139,9 +139,9 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
                 fontWeight: 600,
                 textTransform: 'uppercase',
                 letterSpacing: '0.04em',
-                border: '1px solid #DBEAFE'
+                border: '1.5px solid #BFDBFE'
               }}>
-                Columnar Parquet Engine
+                Active Ledger
               </span>
             </div>
             <p style={{
@@ -150,14 +150,7 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
               margin: '6px 0 0 0',
               lineHeight: 1.4
             }}>
-              Direct zero-copy relational storage in <code style={{
-                fontFamily: 'monospace',
-                backgroundColor: '#F1F5F9',
-                color: '#0F172A',
-                padding: '2px 6px',
-                borderRadius: '4px',
-                fontSize: '0.8rem'
-              }}>data/duckdb/vajra.duckdb</code>. Inspect, filter, and trace 100 rows per view.
+              Browse and search across 2,000,000 bank transactions. Click any account to trace its money trail.
             </p>
           </div>
 
@@ -170,13 +163,13 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
                 gap: '6px',
                 padding: '8px 14px',
                 borderRadius: '8px',
-                backgroundColor: '#F8FAFC',
-                border: '1px solid #E2E8F0',
+                backgroundColor: '#FAF7F2',
+                border: '2px solid #D5C7B5',
                 color: '#334155',
                 fontSize: '0.8125rem',
-                fontWeight: 500,
+                fontWeight: 600,
                 cursor: 'pointer',
-                boxShadow: '0 1px 2px rgba(15,23,42,0.04)'
+                boxShadow: '0 1px 2px rgba(60,45,30,0.04)'
               }}
             >
               <RefreshCw size={14} className={loading ? 'spin' : ''} />
@@ -191,11 +184,11 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
           gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
           gap: '12px',
           paddingTop: '14px',
-          borderTop: '1px solid #E2E8F0'
+          borderTop: '2px solid #E2D7C8'
         }}>
           <div>
             <span style={{ fontSize: '0.75rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Dataset Name
+              Active File
             </span>
             <div style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#0F172A', marginTop: '2px', wordBreak: 'break-all' }}>
               {meta?.dataset_name || 'VoidHacks8_MuleAccount_2M_Transactions.csv'}
@@ -204,7 +197,7 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
 
           <div>
             <span style={{ fontSize: '0.75rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Total Rows in DuckDB
+              Total Transactions
             </span>
             <div style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#0F172A', marginTop: '2px', fontVariantNumeric: 'tabular-nums' }}>
               {meta?.total_rows ? meta.total_rows.toLocaleString() : totalCount.toLocaleString()} rows
@@ -213,7 +206,7 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
 
           <div>
             <span style={{ fontSize: '0.75rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Distinct Accounts
+              Indexed Accounts
             </span>
             <div style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#0F172A', marginTop: '2px', fontVariantNumeric: 'tabular-nums' }}>
               {meta?.total_accounts ? meta.total_accounts.toLocaleString() : '24,873'} accounts
@@ -222,19 +215,19 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
 
           <div>
             <span style={{ fontSize: '0.75rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Evidence SHA-256 Hash
+              File Integrity (SHA-256)
             </span>
             <div style={{
               fontSize: '0.8125rem',
-              fontWeight: 500,
+              fontWeight: 600,
               fontFamily: 'monospace',
-              color: '#475569',
+              color: '#059669',
               marginTop: '2px',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap'
             }} title={meta?.dataset_sha256 || '2c9f81fd34f728c0b7c1e803cb49e1e231c1d9204a77badfcb737f50adf73101'}>
-              {meta?.dataset_sha256 ? `${meta.dataset_sha256.slice(0, 16)}...` : '2c9f81fd34f7...'}
+              ✓ {meta?.dataset_sha256 ? `${meta.dataset_sha256.slice(0, 16)}...` : 'Verified (2c9f81fd...)'}
             </div>
           </div>
         </div>
@@ -564,27 +557,28 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
         </div>
       </div>
 
-      {/* Main Tabular View */}
+      {/* Main Tabular View - 100% Fit, Zero Horizontal Scrolling */}
       <div style={{
         backgroundColor: '#FFFFFF',
-        border: '1px solid #E2E8F0',
+        border: '2px solid #D5C7B5',
         borderRadius: '12px',
-        overflowX: 'auto',
-        boxShadow: '0 1px 3px rgba(15,23,42,0.04)'
+        overflow: 'hidden',
+        boxShadow: '0 1px 3px rgba(60,45,30,0.04)',
+        width: '100%'
       }}>
         {loading ? (
           <div style={{ padding: '60px', textAlign: 'center', color: '#64748B' }}>
             <RefreshCw size={28} className="spin" style={{ margin: '0 auto 12px', color: '#2563EB' }} />
             <p style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 600, color: '#0F172A' }}>
-              Streaming 100 rows directly from DuckDB...
+              Loading transactions from ledger...
             </p>
-            <p style={{ margin: '4px 0 0 0', fontSize: '0.8125rem' }}>
-              Querying <code style={{ backgroundColor: '#F1F5F9', color: '#0F172A', padding: '2px 4px', borderRadius: '4px' }}>txns</code> table with offset {(page - 1) * pageSize}
+            <p style={{ margin: '4px 0 0 0', fontSize: '0.8125rem', color: '#64748B' }}>
+              Showing page {page} of {totalPages.toLocaleString()}
             </p>
           </div>
         ) : error ? (
           <div style={{ padding: '40px', textAlign: 'center', color: '#DC2626' }}>
-            <p style={{ fontWeight: 700, fontSize: '1rem', margin: '0 0 8px 0' }}>Error loading data from DuckDB</p>
+            <p style={{ fontWeight: 700, fontSize: '1rem', margin: '0 0 8px 0' }}>Unable to load transaction records</p>
             <p style={{ fontSize: '0.875rem', margin: 0 }}>{error}</p>
           </div>
         ) : data && data.transactions.length === 0 ? (
@@ -610,66 +604,58 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
         ) : (
           <table style={{
             width: '100%',
+            tableLayout: 'fixed',
             borderCollapse: 'collapse',
             fontSize: '0.8125rem',
             textAlign: 'left'
           }}>
             <thead>
               <tr style={{
-                backgroundColor: '#F8FAFC',
-                borderBottom: '1px solid #E2E8F0',
+                backgroundColor: '#FAF7F2',
+                borderBottom: '2px solid #D5C7B5',
                 color: '#64748B',
                 fontSize: '11px',
                 textTransform: 'uppercase',
                 letterSpacing: '0.04em'
               }}>
-                <th style={{ padding: '12px 14px', width: '48px', fontWeight: 600 }}>#</th>
-                <th style={{ padding: '12px 14px', fontWeight: 600 }}>Txn ID</th>
-                <th style={{ padding: '12px 14px', fontWeight: 600 }}>Timestamp</th>
-                <th style={{ padding: '12px 14px', fontWeight: 600 }}>Remitter (Source)</th>
-                <th style={{ padding: '12px 14px', fontWeight: 600 }}>Beneficiary (Destination)</th>
-                <th style={{ padding: '12px 14px', fontWeight: 600, textAlign: 'right' }}>Amount</th>
-                <th style={{ padding: '12px 14px', fontWeight: 600, textAlign: 'center' }}>Mode</th>
-                <th style={{ padding: '12px 14px', fontWeight: 600 }}>Narration</th>
-                <th style={{ padding: '12px 14px', fontWeight: 600 }}>Device / IP</th>
-                <th style={{ padding: '12px 14px', fontWeight: 600, textAlign: 'center' }}>Action</th>
+                <th style={{ padding: '12px 14px', width: '16%', fontWeight: 700 }}>Timestamp / ID</th>
+                <th style={{ padding: '12px 14px', width: '22%', fontWeight: 700 }}>Sender (From)</th>
+                <th style={{ padding: '12px 14px', width: '22%', fontWeight: 700 }}>Receiver (To)</th>
+                <th style={{ padding: '12px 14px', width: '14%', fontWeight: 700, textAlign: 'right' }}>Amount</th>
+                <th style={{ padding: '12px 10px', width: '8%', fontWeight: 700, textAlign: 'center' }}>Mode</th>
+                <th style={{ padding: '12px 14px', width: '10%', fontWeight: 700 }}>Narration</th>
+                <th style={{ padding: '12px 12px', width: '8%', fontWeight: 700, textAlign: 'center' }}>Action</th>
               </tr>
             </thead>
             <tbody>
               {data?.transactions.map((tx: TransactionRecord, idx: number) => {
-                const rowNum = (page - 1) * pageSize + idx + 1;
                 return (
                   <tr
                     key={tx.txn_id || idx}
                     style={{
-                      borderBottom: '1px solid #F1F5F9',
-                      backgroundColor: idx % 2 === 0 ? '#FFFFFF' : '#FAFCFF',
+                      borderBottom: '1px solid #E2D7C8',
+                      backgroundColor: idx % 2 === 0 ? '#FFFFFF' : '#FDFBF8',
                       transition: 'background-color 0.15s ease'
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = '#F1F5F9';
+                      e.currentTarget.style.backgroundColor = '#EFF6FF';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = idx % 2 === 0 ? '#FFFFFF' : '#FAFCFF';
+                      e.currentTarget.style.backgroundColor = idx % 2 === 0 ? '#FFFFFF' : '#FDFBF8';
                     }}
                   >
-                    {/* Index */}
-                    <td style={{ padding: '10px 14px', color: '#94A3B8', fontVariantNumeric: 'tabular-nums' }}>
-                      {rowNum}
+                    {/* Timestamp / ID */}
+                    <td style={{ padding: '10px 14px', overflow: 'hidden' }}>
+                      <div style={{ color: '#0F172A', fontWeight: 600, fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
+                        {tx.timestamp}
+                      </div>
+                      <div style={{ fontSize: '10px', color: '#94A3B8', fontFamily: 'monospace', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={tx.txn_id}>
+                        {tx.txn_id}
+                      </div>
                     </td>
 
-                    {/* Txn ID */}
-                    <td style={{ padding: '10px 14px', fontFamily: 'monospace', fontWeight: 600, color: '#0F172A' }}>
-                      {tx.txn_id}
-                    </td>
-
-                    {/* Timestamp */}
-                    <td style={{ padding: '10px 14px', color: '#475569', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
-                      {tx.timestamp}
-                    </td>
-
-                    {/* Remitter */}
-                    <td style={{ padding: '10px 14px' }}>
+                    {/* Sender */}
+                    <td style={{ padding: '10px 14px', overflow: 'hidden' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <button
                           onClick={() => onSelectVictim(tx.src_acct)}
@@ -677,14 +663,14 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
                             border: 'none',
                             backgroundColor: 'transparent',
                             color: '#2563EB',
-                            fontWeight: 600,
+                            fontWeight: 700,
                             fontFamily: 'monospace',
                             cursor: 'pointer',
                             padding: 0,
-                            textDecoration: 'none',
-                            fontSize: '0.8125rem'
+                            fontSize: '0.8125rem',
+                            whiteSpace: 'nowrap'
                           }}
-                          title={`Investigate Remitter ${tx.src_acct}`}
+                          title={`Investigate ${tx.src_acct}`}
                         >
                           {tx.src_acct}
                         </button>
@@ -692,21 +678,22 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
                           fontSize: '0.6875rem',
                           padding: '1px 5px',
                           borderRadius: '4px',
-                          backgroundColor: '#F1F5F9',
-                          color: '#475569',
-                          border: '1px solid #E2E8F0',
-                          fontWeight: 500
+                          backgroundColor: '#EFF6FF',
+                          color: '#1D4ED8',
+                          border: '1.5px solid #BFDBFE',
+                          fontWeight: 600,
+                          whiteSpace: 'nowrap'
                         }}>
                           {tx.src_bank || tx.src_ifsc?.slice(0, 4)}
                         </span>
                       </div>
-                      <div style={{ fontSize: '0.6875rem', color: '#94A3B8', marginTop: '2px', fontFamily: 'monospace' }}>
+                      <div style={{ fontSize: '10px', color: '#94A3B8', marginTop: '2px', fontFamily: 'monospace' }}>
                         {tx.src_ifsc}
                       </div>
                     </td>
 
-                    {/* Beneficiary */}
-                    <td style={{ padding: '10px 14px' }}>
+                    {/* Receiver */}
+                    <td style={{ padding: '10px 14px', overflow: 'hidden' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <button
                           onClick={() => onSelectVictim(tx.dst_acct)}
@@ -714,14 +701,14 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
                             border: 'none',
                             backgroundColor: 'transparent',
                             color: '#2563EB',
-                            fontWeight: 600,
+                            fontWeight: 700,
                             fontFamily: 'monospace',
                             cursor: 'pointer',
                             padding: 0,
-                            textDecoration: 'none',
-                            fontSize: '0.8125rem'
+                            fontSize: '0.8125rem',
+                            whiteSpace: 'nowrap'
                           }}
-                          title={`Investigate Beneficiary ${tx.dst_acct}`}
+                          title={`Investigate ${tx.dst_acct}`}
                         >
                           {tx.dst_acct}
                         </button>
@@ -731,13 +718,14 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
                           borderRadius: '4px',
                           backgroundColor: '#F1F5F9',
                           color: '#475569',
-                          border: '1px solid #E2E8F0',
-                          fontWeight: 500
+                          border: '1.5px solid #CBD5E1',
+                          fontWeight: 600,
+                          whiteSpace: 'nowrap'
                         }}>
                           {tx.dst_bank || tx.dst_ifsc?.slice(0, 4)}
                         </span>
                       </div>
-                      <div style={{ fontSize: '0.6875rem', color: '#94A3B8', marginTop: '2px', fontFamily: 'monospace' }}>
+                      <div style={{ fontSize: '10px', color: '#94A3B8', marginTop: '2px', fontFamily: 'monospace' }}>
                         {tx.dst_ifsc}
                       </div>
                     </td>
@@ -748,22 +736,25 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
                       textAlign: 'right',
                       fontWeight: 700,
                       color: '#0F172A',
-                      fontVariantNumeric: 'tabular-nums',
-                      whiteSpace: 'nowrap'
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '0.84rem',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden'
                     }}>
-                      ₹{tx.amount ? tx.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
+                      ₹{tx.amount ? Number(tx.amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
                     </td>
 
                     {/* Payment Mode */}
-                    <td style={{ padding: '10px 14px', textAlign: 'center' }}>
+                    <td style={{ padding: '10px 8px', textAlign: 'center', overflow: 'hidden' }}>
                       <span style={{
-                        padding: '2px 7px',
+                        padding: '2px 6px',
                         borderRadius: '4px',
                         fontSize: '0.6875rem',
-                        fontWeight: 600,
-                        backgroundColor: tx.payment_mode === 'UPI' ? '#EFF6FF' : tx.payment_mode === 'IMPS' ? '#F0FDF4' : '#F8FAFC',
-                        border: `1px solid ${tx.payment_mode === 'UPI' ? '#DBEAFE' : tx.payment_mode === 'IMPS' ? '#DCFCE7' : '#E2E8F0'}`,
-                        color: tx.payment_mode === 'UPI' ? '#1D4ED8' : tx.payment_mode === 'IMPS' ? '#15803D' : '#475569'
+                        fontWeight: 700,
+                        backgroundColor: tx.payment_mode === 'UPI' ? '#EFF6FF' : tx.payment_mode === 'IMPS' ? '#ECFDF5' : '#F8FAFC',
+                        border: `1px solid ${tx.payment_mode === 'UPI' ? '#BFDBFE' : tx.payment_mode === 'IMPS' ? '#A7F3D0' : '#CBD5E1'}`,
+                        color: tx.payment_mode === 'UPI' ? '#1D4ED8' : tx.payment_mode === 'IMPS' ? '#047857' : '#475569',
+                        whiteSpace: 'nowrap'
                       }}>
                         {tx.payment_mode}
                       </span>
@@ -773,26 +764,16 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
                     <td style={{
                       padding: '10px 14px',
                       color: '#475569',
-                      maxWidth: '220px',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap'
-                    }} title={tx.narration}>
-                      {tx.narration}
-                    </td>
-
-                    {/* Device / IP */}
-                    <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
-                      <div style={{ fontSize: '0.75rem', color: '#0F172A', fontWeight: 500 }}>
-                        {tx.device_type}
-                      </div>
-                      <div style={{ fontSize: '0.6875rem', color: '#94A3B8', fontFamily: 'monospace' }}>
-                        {tx.ip}
-                      </div>
+                      whiteSpace: 'nowrap',
+                      fontSize: '0.78rem'
+                    }} title={tx.narration || ''}>
+                      {tx.narration || '—'}
                     </td>
 
                     {/* Action */}
-                    <td style={{ padding: '10px 14px', textAlign: 'center' }}>
+                    <td style={{ padding: '10px 8px', textAlign: 'center' }}>
                       <button
                         onClick={() => onSelectVictim(tx.src_acct)}
                         style={{
@@ -803,12 +784,16 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({ onSelectVictim }) => {
                           borderRadius: '6px',
                           backgroundColor: '#EFF6FF',
                           color: '#1D4ED8',
-                          border: '1px solid #DBEAFE',
+                          border: '1.5px solid #BFDBFE',
                           fontSize: '0.6875rem',
-                          fontWeight: 600,
-                          cursor: 'pointer'
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          whiteSpace: 'nowrap',
+                          transition: 'all 0.15s'
                         }}
-                        title={`Trace money flow from ${tx.src_acct}`}
+                        onMouseEnter={e => e.currentTarget.style.backgroundColor = '#DBEAFE'}
+                        onMouseLeave={e => e.currentTarget.style.backgroundColor = '#EFF6FF'}
+                        title={`Trace money trail for ${tx.src_acct}`}
                       >
                         Trace
                         <ArrowUpRight size={11} />

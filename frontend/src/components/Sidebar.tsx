@@ -41,7 +41,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       width: isCollapsed ? '76px' : '240px',
       minWidth: isCollapsed ? '76px' : '240px',
       backgroundColor: 'var(--sidebar-bg, #F4EDE4)',
-      borderRight: '1px solid var(--sidebar-border, #E2D7C8)',
+      borderRight: '2px solid var(--sidebar-border, #D5C7B5)',
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'space-between',
@@ -83,7 +83,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           alignItems: 'center',
           justifyContent: isCollapsed ? 'center' : 'space-between',
           paddingBottom: '16px',
-          borderBottom: '1px solid #E2D7C8'
+          borderBottom: '2px solid #D5C7B5'
         }}>
           <div style={{
             display: 'flex',
@@ -96,7 +96,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               height: '40px',
               borderRadius: '10px',
               backgroundColor: '#FFFFFF',
-              border: '1px solid #E2D7C8',
+              border: '2px solid #D5C7B5',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',

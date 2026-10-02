@@ -72,24 +72,26 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header className="no-print" style={{
       backgroundColor: '#FFFFFF',
-      borderBottom: '1px solid #E2E8F0',
+      borderBottom: '2px solid var(--sidebar-border, #D5C7B5)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
       padding: '0 20px',
-      height: '62px',
+      height: '64px',
       flexShrink: 0,
       zIndex: 50,
-      boxShadow: '0 1px 2px rgba(15, 23, 42, 0.02)'
+      boxShadow: '0 1px 3px rgba(60, 45, 30, 0.04)',
+      gap: '18px'
     }}>
-      {/* Left: Creative Modern Hamburger + Fast Global Search */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexShrink: 0 }}>
+      {/* Left: Creative Modern Hamburger + Hindi वज्र Branding */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
         {onToggleSidebar && (
           <button
             onClick={onToggleSidebar}
             className={`hamburger-btn ${isSidebarCollapsed ? 'collapsed' : ''}`}
             title={isSidebarCollapsed ? "Expand Navigation Dock" : "Collapse Navigation Dock"}
             aria-label="Toggle navigation"
+            style={{ border: '2px solid #D5C7B5' }}
           >
             <span className="hamburger-line hamburger-line-1" />
             <span className="hamburger-line hamburger-line-2" />
@@ -97,23 +99,47 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
         )}
 
-        {/* Global Account / Transaction Search Box */}
-        <div ref={searchRef} style={{ width: '380px', position: 'relative' }}>
+        <span className="brand-devanagari" style={{
+          fontFamily: "'Alkatra', 'Modak', cursive, sans-serif",
+          fontSize: '1.85rem',
+          lineHeight: 1,
+          color: '#2563EB',
+          fontWeight: 700,
+          letterSpacing: '0.04em',
+          userSelect: 'none',
+          marginLeft: '2px',
+          textShadow: '0 1px 2px rgba(37,99,235,0.1)'
+        }}>
+          वज्र
+        </span>
+      </div>
+
+      {/* Center: Full Navbar Global Search Command Bar */}
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '12px',
+        minWidth: 0
+      }}>
+        <div ref={searchRef} style={{ width: '100%', maxWidth: '820px', position: 'relative' }}>
           <div style={{
             display: 'flex',
             alignItems: 'center',
             gap: '10px',
-            padding: '0 12px',
-            height: '38px',
-            borderRadius: '9px',
-            backgroundColor: '#F8FAFC',
-            border: '1px solid #E2E8F0',
-            transition: 'border-color 0.2s, box-shadow 0.2s'
+            padding: '0 14px',
+            height: '40px',
+            borderRadius: '10px',
+            backgroundColor: '#FAF7F2',
+            border: '2px solid #D5C7B5',
+            boxShadow: '0 1px 2px rgba(60, 45, 30, 0.03)',
+            transition: 'border-color 0.2s, box-shadow 0.2s, background-color 0.2s'
           }}>
-            <Search size={15} color="#64748B" />
+            <Search size={16} color="#64748B" />
             <input
               type="text"
-              placeholder="Search suspect account, UTR, or bank..."
+              placeholder="Search suspect account, UTR, IFSC, or bank across 2,000,000 records..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               onFocus={() => {
@@ -136,7 +162,7 @@ export const Header: React.FC<HeaderProps> = ({
                 outline: 'none',
                 width: '100%',
                 fontFamily: 'var(--font-sans)',
-                fontSize: '0.8125rem',
+                fontSize: '0.84rem',
                 color: '#0F172A'
               }}
             />
@@ -156,7 +182,7 @@ export const Header: React.FC<HeaderProps> = ({
                   display: 'flex'
                 }}
               >
-                <X size={14} />
+                <X size={15} />
               </button>
             ) : (
               <span style={{
@@ -164,9 +190,9 @@ export const Header: React.FC<HeaderProps> = ({
                 fontWeight: 600,
                 color: '#64748B',
                 backgroundColor: '#FFFFFF',
-                border: '1px solid #CBD5E1',
-                borderRadius: '4px',
-                padding: '2px 5px',
+                border: '1.5px solid #D5C7B5',
+                borderRadius: '5px',
+                padding: '2px 6px',
                 fontFamily: 'var(--font-mono)',
                 whiteSpace: 'nowrap'
               }}>
@@ -179,17 +205,17 @@ export const Header: React.FC<HeaderProps> = ({
           {showSearchDropdown && searchResults && (
             <div style={{
               position: 'absolute',
-              top: '44px',
+              top: '46px',
               left: 0,
               right: 0,
               backgroundColor: '#FFFFFF',
-              border: '1px solid #E2E8F0',
+              border: '2px solid #D5C7B5',
               borderRadius: '10px',
-              boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)',
+              boxShadow: '0 12px 28px -4px rgba(60, 45, 30, 0.12)',
               zIndex: 100,
-              maxHeight: '360px',
+              maxHeight: '380px',
               overflowY: 'auto',
-              padding: '6px'
+              padding: '8px'
             }}>
               {searchResults.accounts && searchResults.accounts.length > 0 && (
                 <div style={{ marginBottom: '8px' }}>
@@ -205,13 +231,13 @@ export const Header: React.FC<HeaderProps> = ({
                         setShowSearchDropdown(false);
                       }}
                       style={{
-                        padding: '6px 10px',
+                        padding: '8px 12px',
                         borderRadius: '6px',
                         cursor: 'pointer',
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
-                        fontSize: '12px'
+                        fontSize: '12.5px'
                       }}
                       onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#EFF6FF')}
                       onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
@@ -221,13 +247,14 @@ export const Header: React.FC<HeaderProps> = ({
                       </span>
                       <span style={{
                         fontSize: '10px',
-                        padding: '2px 6px',
+                        padding: '2px 8px',
                         borderRadius: '4px',
                         backgroundColor: acct.is_mule ? '#FEE2E2' : '#E2E8F0',
                         color: acct.is_mule ? '#DC2626' : '#475569',
-                        fontWeight: 600
+                        fontWeight: 700,
+                        border: `1px solid ${acct.is_mule ? '#FCA5A5' : '#CBD5E1'}`
                       }}>
-                        {acct.is_mule ? 'SUSPECT' : 'NORMAL'}
+                        {acct.is_mule ? 'SUSPECT MULE' : 'ACCOUNT'}
                       </span>
                     </div>
                   ))}
@@ -239,7 +266,7 @@ export const Header: React.FC<HeaderProps> = ({
                   <div style={{ fontSize: '10px', fontWeight: 700, color: '#64748B', padding: '4px 8px', textTransform: 'uppercase' }}>
                     Matching Transactions ({searchResults.transactions.length})
                   </div>
-                  {searchResults.transactions.slice(0, 5).map((tx: any, idx: number) => (
+                  {searchResults.transactions.slice(0, 6).map((tx: any, idx: number) => (
                     <div
                       key={idx}
                       onClick={() => {
@@ -248,13 +275,13 @@ export const Header: React.FC<HeaderProps> = ({
                         setShowSearchDropdown(false);
                       }}
                       style={{
-                        padding: '6px 10px',
+                        padding: '8px 12px',
                         borderRadius: '6px',
                         cursor: 'pointer',
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
-                        fontSize: '12px'
+                        fontSize: '12.5px'
                       }}
                       onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#EFF6FF')}
                       onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
@@ -263,12 +290,12 @@ export const Header: React.FC<HeaderProps> = ({
                         <span style={{ fontFamily: 'var(--font-mono)', color: '#2563EB', fontWeight: 600 }}>
                           {tx.src_acct}
                         </span>
-                        <span style={{ color: '#94A3B8', margin: '0 6px' }}>➔</span>
+                        <span style={{ color: '#94A3B8', margin: '0 8px' }}>➔</span>
                         <span style={{ fontFamily: 'var(--font-mono)', color: '#0F172A' }}>
                           {tx.dst_acct}
                         </span>
                       </div>
-                      <span style={{ fontWeight: 600, color: '#0F172A' }}>
+                      <span style={{ fontWeight: 700, color: '#0F172A', fontFamily: 'var(--font-mono)' }}>
                         ₹{Number(tx.amount).toLocaleString('en-IN')}
                       </span>
                     </div>
@@ -278,53 +305,30 @@ export const Header: React.FC<HeaderProps> = ({
 
               {(!searchResults.accounts || searchResults.accounts.length === 0) &&
                (!searchResults.transactions || searchResults.transactions.length === 0) && (
-                <div style={{ padding: '12px', textAlign: 'center', fontSize: '12px', color: '#64748B' }}>
+                <div style={{ padding: '14px', textAlign: 'center', fontSize: '12.5px', color: '#64748B' }}>
                   No matching account or transaction found.
                 </div>
               )}
             </div>
           )}
         </div>
-      </div>
 
-      {/* Center Utility Area: Screen Utility Text OR Big Hindi वज्र */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flex: 1,
-        minWidth: 0,
-        padding: '0 16px'
-      }}>
-        {utilityText ? (
+        {utilityText && (
           <div style={{
             display: 'inline-flex',
             alignItems: 'center',
             gap: '8px',
-            padding: '5px 16px',
-            borderRadius: '20px',
+            padding: '5px 14px',
+            borderRadius: '8px',
             backgroundColor: '#EFF6FF',
-            border: '1px solid #DBEAFE',
+            border: '1.5px solid #BFDBFE',
             color: '#1D4ED8',
             fontSize: '0.8125rem',
             fontWeight: 600,
-            boxShadow: '0 1px 2px rgba(37,99,235,0.06)'
+            whiteSpace: 'nowrap'
           }}>
             {utilityText}
           </div>
-        ) : (
-          <span className="brand-devanagari" style={{
-            fontFamily: "'Alkatra', 'Modak', cursive, sans-serif",
-            fontSize: '2.1rem',
-            lineHeight: 1,
-            color: '#2563EB',
-            fontWeight: 700,
-            letterSpacing: '0.04em',
-            userSelect: 'none',
-            textShadow: '0 1px 2px rgba(37,99,235,0.1)'
-          }}>
-            वज्र
-          </span>
         )}
       </div>
 
