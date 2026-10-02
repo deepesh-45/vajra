@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, Play, Pause, RotateCcw, Download, ArrowRight, Zap, Layers, Sparkles, CheckCircle2, AlertTriangle, ShieldAlert, Eye, X } from 'lucide-react';
+import { Search, Play, Pause, RotateCcw, Download, ArrowRight, Zap, Layers, CheckCircle2, AlertTriangle, ShieldAlert, Eye, X } from 'lucide-react';
 import type { TraceResponse, NodeData, FreezeRecommendation, EdgeData } from '../types';
 import { GraphCanvas } from './GraphCanvas';
 
@@ -344,30 +344,28 @@ export const InvestigateTab: React.FC<InvestigateTabProps> = ({ initialVictim, o
                   alignItems: 'center',
                   gap: '8px',
                   padding: '7px 12px',
-                  borderRadius: '8px',
-                  backgroundColor: p.isStress
-                    ? (isSelected ? '#EA580C' : '#FFF7ED')
-                    : (isSelected ? 'var(--primary)' : 'var(--surface-2)'),
-                  color: p.isStress
-                    ? (isSelected ? '#FFFFFF' : '#EA580C')
-                    : (isSelected ? '#FFFFFF' : 'var(--text)'),
-                  border: p.isStress
-                    ? '1.5px solid #EA580C'
-                    : (isSelected ? '1px solid var(--primary)' : '1px solid var(--border)'),
+                  borderRadius: '6px',
+                  backgroundColor: isSelected 
+                    ? 'var(--primary)' 
+                    : (p.isStress ? 'var(--surface-pista)' : '#FAF8F5'),
+                  color: isSelected 
+                    ? '#FFFFFF' 
+                    : (p.isStress ? 'var(--primary)' : 'var(--text)'),
+                  border: isSelected 
+                    ? '1px solid var(--primary)' 
+                    : (p.isStress ? '1px solid var(--border-pista)' : '1px solid var(--border-subtle)'),
                   fontSize: '12px',
-                  fontWeight: isSelected || p.isStress ? 700 : 500,
+                  fontWeight: isSelected || p.isStress ? 600 : 500,
                   cursor: switchingDataset ? 'wait' : 'pointer',
-                  transition: 'all 0.15s ease',
-                  boxShadow: p.isStress && !isSelected ? '0 1px 3px rgba(234,88,12,0.15)' : 'none'
+                  transition: 'background-color 0.15s, border-color 0.15s'
                 }}
               >
-                {p.isStress ? <Sparkles size={14} /> : <Layers size={14} />}
                 <span>{p.name}</span>
                 <span style={{
                   fontSize: '10px',
                   padding: '2px 6px',
-                  borderRadius: '10px',
-                  backgroundColor: isSelected ? 'rgba(255,255,255,0.25)' : '#E2E8F0',
+                  borderRadius: '4px',
+                  backgroundColor: isSelected ? 'rgba(255,255,255,0.2)' : 'var(--surface-2)',
                   color: isSelected ? '#FFFFFF' : 'var(--text-muted)'
                 }}>
                   {p.badge}

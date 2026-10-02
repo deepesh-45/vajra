@@ -292,8 +292,8 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
     canvas.height = rect.height * dpr;
     ctx.scale(dpr, dpr);
 
-    // Slate dark/light background
-    ctx.fillStyle = '#FFFFFF';
+    // Cream background
+    ctx.fillStyle = '#FAF8F5';
     ctx.fillRect(0, 0, rect.width, rect.height);
 
     ctx.save();
@@ -313,8 +313,8 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       const bandHeight = Math.max(680, (bounds.maxY - bounds.minY) + 140);
 
       bands.forEach(b => {
-        ctx.fillStyle = '#F8FAFC';
-        ctx.strokeStyle = '#E2E8F0';
+        ctx.fillStyle = '#F3EFE6';
+        ctx.strokeStyle = '#E0D8CA';
         ctx.lineWidth = 1 / zoom;
         ctx.beginPath();
         // roundRect fallback
@@ -326,12 +326,12 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         ctx.fill();
         ctx.stroke();
 
-        ctx.fillStyle = '#64748B';
+        ctx.fillStyle = '#536458';
         ctx.font = '700 10px JetBrains Mono, monospace';
         ctx.textAlign = 'left';
         ctx.fillText(b.name, b.x + 12, 50);
 
-        ctx.fillStyle = '#94A3B8';
+        ctx.fillStyle = '#8C7853';
         ctx.font = '500 9px Inter, sans-serif';
         ctx.fillText(b.desc, b.x + 12, 64);
       });
@@ -350,13 +350,13 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
 
       ctx.beginPath();
       if (isSelected) {
-        ctx.strokeStyle = '#EA580C';
+        ctx.strokeStyle = '#065F46';
         ctx.lineWidth = 3 / Math.sqrt(zoom);
       } else if (isTainted) {
-        ctx.strokeStyle = '#DC2626';
+        ctx.strokeStyle = '#991B1B';
         ctx.lineWidth = Math.min(4.5, Math.max(1.2, Math.log10(Math.max(10, edge.amount_paise / 1000)))) / Math.sqrt(zoom);
       } else {
-        ctx.strokeStyle = '#CBD5E1';
+        ctx.strokeStyle = '#D8CFBF';
         ctx.lineWidth = 1 / Math.sqrt(zoom);
       }
 
@@ -378,7 +378,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         const px = uu * u * p1.x + 3 * uu * t * cp1x + 3 * u * tt * cp2x + tt * t * p2.x;
         const py = uu * u * p1.y + 3 * uu * t * p1.y + 3 * u * tt * p2.y + tt * t * p2.y;
 
-        ctx.fillStyle = isSelected ? '#EA580C' : '#DC2626';
+        ctx.fillStyle = isSelected ? '#065F46' : '#991B1B';
         ctx.beginPath();
         ctx.arc(px, py, (displayNodes.length > 200 ? 2.5 : 3.5) / Math.sqrt(zoom), 0, Math.PI * 2);
         ctx.fill();
@@ -392,7 +392,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       const ax = u * u * u * p1.x + 3 * u * u * arrowT * cp1x + 3 * u * arrowT * arrowT * cp2x + arrowT * arrowT * arrowT * p2.x;
       const ay = u * u * u * p1.y + 3 * u * u * arrowT * p1.y + 3 * u * arrowT * arrowT * p2.y + arrowT * arrowT * arrowT * p2.y;
 
-      ctx.fillStyle = isTainted ? '#DC2626' : '#94A3B8';
+      ctx.fillStyle = isTainted ? '#991B1B' : '#8C7853';
       ctx.beginPath();
       ctx.arc(ax, ay, 2.5 / Math.sqrt(zoom), 0, Math.PI * 2);
       ctx.fill();
@@ -417,19 +417,19 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       const isSelected = selectedNode?.acct_no === node.acct_no;
       const isHovered = hoveredNode?.acct_no === node.acct_no;
 
-      let baseColor = '#EA580C'; // L1
-      if (node.isSupernode) baseColor = '#EA580C'; // Supernode
-      else if (node.hop === 0) baseColor = '#7C3AED'; // Victim
-      else if (node.hop === 1) baseColor = '#EA580C'; // L1 Smurfing Dispatch
-      else if (node.hop === 2) baseColor = '#F59E0B'; // L2 Layering Mule
-      else if (node.hop === 3) baseColor = '#C2410C'; // L3 Aggregator
-      else baseColor = '#16A34A'; // L4 Cashout Exit
+      let baseColor = '#065F46'; // L1 Emerald
+      if (node.isSupernode) baseColor = '#065F46'; // Supernode
+      else if (node.hop === 0) baseColor = '#5B21B6'; // Victim Purple
+      else if (node.hop === 1) baseColor = '#065F46'; // L1 Smurfing Dispatch (Emerald)
+      else if (node.hop === 2) baseColor = '#B45309'; // L2 Layering Mule (Ochre)
+      else if (node.hop === 3) baseColor = '#477343'; // L3 Aggregator (Pista)
+      else baseColor = '#991B1B'; // L4 Cashout Exit (Burgundy)
 
       // Supernode Outer Dashed Ring
       if (node.isSupernode) {
         ctx.save();
         ctx.setLineDash([4, 4]);
-        ctx.strokeStyle = '#F97316';
+        ctx.strokeStyle = '#477343';
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.arc(pos.x, pos.y, pos.r + 7, 0, Math.PI * 2);
