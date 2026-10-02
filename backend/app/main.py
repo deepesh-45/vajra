@@ -367,6 +367,72 @@ async def upload_and_ingest(file: UploadFile = File(...)):
     stats = ingest_engine.ingest_csv(str(target_path), dataset_label=file.filename)
     return stats
 
+@app.get("/api/studies")
+def list_studies():
+    studies = [
+        {
+            "id": "study-default-2m",
+            "name": "Operation Vajra: Nationwide Mule Syndicate Ring",
+            "case_ref": "FIR No. 412/2024 - Crime Branch Indore",
+            "dataset_filename": "VoidHacks8_MuleAccount_2M_Transactions.csv",
+            "filepath": "data/raw/VoidHacks8_MuleAccount_2M_Transactions.csv",
+            "rows": 2000000,
+            "accounts": 24873,
+            "analyst": "Ayush Sharma (Lead Cyber Analyst)",
+            "status": "Active Study",
+            "date": "2024-10-02"
+        },
+        {
+            "id": "study-scenario-1",
+            "name": "Study: Fast Smurfing & Layering Topology",
+            "case_ref": "GD No. 89/2024 Cyber PS Indore",
+            "dataset_filename": "scenario_1_fast_smurfing.csv",
+            "filepath": "synthetic_data/scenario_1_fast_smurfing.csv",
+            "rows": 12500,
+            "accounts": 820,
+            "analyst": "Forensics Unit #2",
+            "status": "Ready",
+            "date": "2024-10-01"
+        },
+        {
+            "id": "study-scenario-2",
+            "name": "Study: High-Yield Fake Telegram Investment Scam",
+            "case_ref": "FIR No. 209/2024 u/s 420 IPC",
+            "dataset_filename": "scenario_2_investment_scam.csv",
+            "filepath": "synthetic_data/scenario_2_investment_scam.csv",
+            "rows": 18240,
+            "accounts": 1140,
+            "analyst": "Cyber Cell Unit #1",
+            "status": "Ready",
+            "date": "2024-09-28"
+        },
+        {
+            "id": "study-scenario-3",
+            "name": "Study: Cyclic Multi-Hop Laundering Loop",
+            "case_ref": "Enquiry Case No. 71/2024",
+            "dataset_filename": "scenario_3_cyclic_ring.csv",
+            "filepath": "synthetic_data/scenario_3_cyclic_ring.csv",
+            "rows": 14100,
+            "accounts": 950,
+            "analyst": "Special Task Force",
+            "status": "Ready",
+            "date": "2024-09-24"
+        },
+        {
+            "id": "study-scenario-4",
+            "name": "Study: High-Capacity Stress Test Network (500 Nodes)",
+            "case_ref": "Benchmark Lab Case #04",
+            "dataset_filename": "scenario_4_mega_capacity_stress_test_500nodes.csv",
+            "filepath": "synthetic_data/scenario_4_mega_capacity_stress_test_500nodes.csv",
+            "rows": 22400,
+            "accounts": 1680,
+            "analyst": "Research & Evaluation Team",
+            "status": "Ready",
+            "date": "2024-09-20"
+        }
+    ]
+    return {"studies": studies}
+
 @app.get("/api/models")
 def get_models_info():
     return {

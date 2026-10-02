@@ -12,7 +12,7 @@ import { SettingsTab } from './components/SettingsTab';
 import type { OverviewData } from './types';
 
 export const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<string>('overview');
+  const [activeTab, setActiveTab] = useState<string>('load');
   const [selectedVictim, setSelectedVictim] = useState<string>('AIRP10000077');
   const [overviewData, setOverviewData] = useState<OverviewData | null>(null);
 
@@ -97,6 +97,7 @@ export const App: React.FC = () => {
             <OverviewTab
               data={overviewData}
               onSelectVictim={handleSelectVictim}
+              onNavigateTab={setActiveTab}
             />
           )}
 
@@ -140,6 +141,7 @@ export const App: React.FC = () => {
               onDatasetChange={loadOverview}
               onSelectVictim={handleSelectVictim}
               onNavigateToInvestigate={() => setActiveTab('investigate')}
+              onNavigateToOverview={() => setActiveTab('overview')}
             />
           )}
 

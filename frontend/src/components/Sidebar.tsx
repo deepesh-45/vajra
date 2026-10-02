@@ -1,14 +1,14 @@
 import React from 'react';
 import {
+  FolderOpen,
   LayoutDashboard,
-  Users,
   Network,
+  Users,
+  Share2,
   FileText,
   Database,
-  UploadCloud,
   Settings,
-  ShieldCheck,
-  ShieldAlert
+  ShieldCheck
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -16,14 +16,15 @@ interface SidebarProps {
   setActiveTab: (tab: string) => void;
 }
 
+// Ordered as requested: Load Data (Studies) first, followed by Overview, Graph Explorer, Accounts, Syndicates, Dataset, Reports, Settings
 const navItems = [
+  { id: 'load', label: 'Load Data', icon: FolderOpen },
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
   { id: 'investigate', label: 'Graph Explorer', icon: Network },
   { id: 'accounts', label: 'Accounts', icon: Users },
-  { id: 'syndicates', label: 'Syndicates', icon: Network },
-  { id: 'legal', label: 'Reports', icon: FileText },
+  { id: 'syndicates', label: 'Syndicates', icon: Share2 },
   { id: 'dataset', label: 'Dataset', icon: Database },
-  { id: 'load', label: 'Load Data', icon: UploadCloud },
+  { id: 'legal', label: 'Reports', icon: FileText },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
@@ -33,37 +34,69 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
       width: '250px',
       minWidth: '250px',
       backgroundColor: '#091326',
-      backgroundImage: 'linear-gradient(180deg, #0A1428 0%, #060D1D 100%)',
       borderRight: '1px solid #142038',
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'space-between',
       padding: '20px 16px',
       flexShrink: 0,
-      userSelect: 'none'
+      userSelect: 'none',
+      position: 'relative',
+      overflow: 'hidden'
     }}>
-      {/* Top Brand Header */}
-      <div>
+      {/* Subtle atmospheric command center background image with low opacity */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        backgroundImage: 'url(/sidebar_bg.jpg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center bottom',
+        opacity: 0.12,
+        pointerEvents: 'none',
+        zIndex: 0
+      }} />
+
+      {/* Dark overlay gradient to ensure clean readability */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        background: 'linear-gradient(180deg, rgba(9,19,38,0.92) 0%, rgba(9,19,38,0.82) 40%, rgba(9,19,38,0.96) 100%)',
+        pointerEvents: 'none',
+        zIndex: 1
+      }} />
+
+      {/* Content wrapper with z-index to stay above background image */}
+      <div style={{ position: 'relative', zIndex: 2, display: 'flex', flexDirection: 'column' }}>
+        {/* Top Brand Header with Official Vajra Logo */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
           gap: '12px',
-          padding: '0 8px 24px 8px',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.07)'
+          padding: '0 6px 20px 6px',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
         }}>
-          {/* Shield Badge Icon */}
+          {/* Logo container using user's uploaded official Vajra emblem */}
           <div style={{
-            width: '38px',
-            height: '38px',
+            width: '42px',
+            height: '42px',
             borderRadius: '10px',
-            backgroundColor: 'rgba(37, 99, 235, 0.15)',
-            border: '1px solid rgba(59, 130, 246, 0.4)',
+            backgroundColor: 'rgba(255, 255, 255, 0.04)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 0 12px rgba(37, 99, 235, 0.3)'
+            overflow: 'hidden',
+            flexShrink: 0
           }}>
-            <ShieldAlert size={20} color="#60A5FA" />
+            <img
+              src="/vajra_logo.png"
+              alt="Vajra"
+              style={{
+                width: '36px',
+                height: '36px',
+                objectFit: 'contain'
+              }}
+            />
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -78,7 +111,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
             </span>
             <span style={{
               fontSize: '0.6875rem',
-              color: '#8FA0BE',
+              color: '#94A3B8',
               fontWeight: 500,
               letterSpacing: '0.01em'
             }}>
@@ -88,7 +121,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
         </div>
 
         {/* Navigation Items */}
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '20px' }}>
+        <nav style={{ display: 'flex', flexDirection: 'column', gap: '5px', marginTop: '18px' }}>
           {navItems.map(item => {
             const isActive = activeTab === item.id;
             const Icon = item.icon;
@@ -100,18 +133,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
                   display: 'flex',
                   alignItems: 'center',
                   gap: '12px',
-                  padding: '10px 14px',
+                  padding: '9px 14px',
                   borderRadius: '8px',
                   backgroundColor: isActive ? '#2563EB' : 'transparent',
                   color: isActive ? '#FFFFFF' : '#94A3B8',
                   fontSize: '0.875rem',
                   fontWeight: isActive ? 600 : 500,
                   cursor: 'pointer',
-                  transition: 'all 0.15s ease-in-out',
+                  transition: 'background-color 0.15s, color 0.15s',
                   textAlign: 'left',
                   border: 'none',
                   width: '100%',
-                  boxShadow: isActive ? '0 2px 8px rgba(37, 99, 235, 0.35)' : 'none'
+                  boxShadow: isActive ? '0 1px 3px rgba(0, 0, 0, 0.3)' : 'none'
                 }}
                 onMouseEnter={e => {
                   if (!isActive) {
@@ -140,31 +173,35 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
 
       {/* Bottom Cyber Security Badge Card */}
       <div style={{
-        padding: '14px',
-        backgroundColor: '#0D1A34',
+        position: 'relative',
+        zIndex: 2,
+        padding: '12px 14px',
+        backgroundColor: 'rgba(13, 25, 50, 0.85)',
+        backdropFilter: 'blur(8px)',
         borderRadius: '10px',
         border: '1px solid rgba(255, 255, 255, 0.08)',
         display: 'flex',
         alignItems: 'center',
         gap: '12px',
-        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.25)'
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)'
       }}>
         <div style={{
           width: '32px',
           height: '32px',
           borderRadius: '8px',
-          backgroundColor: 'rgba(37, 99, 235, 0.2)',
+          backgroundColor: 'rgba(37, 99, 235, 0.15)',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center'
+          justifyContent: 'center',
+          flexShrink: 0
         }}>
-          <ShieldCheck size={18} color="#60A5FA" />
+          <ShieldCheck size={18} color="#3B82F6" />
         </div>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#F8FAFC' }}>
             Fraud Detection
           </span>
-          <span style={{ fontSize: '0.6875rem', color: '#64748B' }}>
+          <span style={{ fontSize: '0.6875rem', color: '#94A3B8' }}>
             For a Safer Tomorrow
           </span>
         </div>
