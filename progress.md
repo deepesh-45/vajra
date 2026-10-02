@@ -216,6 +216,11 @@ To rigorously test Operation Vajra beyond standard benchmarks, we implemented **
      - One-click **"Isolate Multi-Hop Trail"** action that focuses upstream and downstream path while dimming unrelated nodes
      - Real-time connected transaction log showing directional flow (IN/OUT), counterparty, timestamp, and amount.
 
+6. **Overlap-Free Dynamic Stage Lanes & Immersive Fullscreen Mode:**
+   - **Guaranteed Zero-Collision Separation:** Nodes are positioned across dynamic multi-column stage lanes with guaranteed horizontal separation ($dx \ge 115\text{ px}$) and vertical staggered spacing ($dy \ge 56\text{ px}$), followed by a 5-pass circle-circle relaxation sweep ensuring no nodes touch or overlap even in 500+ node networks.
+   - **Clutter-Free Minimalist Visualization:** Eliminates noisy floating labels, rupee amounts, and text tags from the global canvas view. Nodes display clean, high-contrast bank initials (`SB`, `HD`, `IC`) inside uniform circles. Full account details and recoverable rupee sums appear upon hover in an elevated tooltip or in the inspector panel when selected.
+   - **100vw × 100vh Fullscreen Canvas:** Features an expand-to-fullscreen button and keyboard hotkey (`F` to toggle, `Escape` to exit). Fullscreen provides an unconstrained canvas with floating HUD controls (`Fit View`, `Zoom`, `Motif Filters`, `Cluster Toggles`) and automatic window-fit auto-framing.
+
 ---
 
 ## 8. Current Project Status
