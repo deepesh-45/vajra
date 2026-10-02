@@ -54,6 +54,9 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
+  // Graph size threshold: > 25 nodes uses vertical graph with single spine; <= 25 keeps horizontal flow
+  const isLargeGraph = nodes.length > 25;
+
   // Pan & Zoom
   const [zoom, setZoom] = useState<number>(0.85);
   const [pan, setPan] = useState<{ x: number; y: number }>({ x: 50, y: 70 });
@@ -88,24 +91,62 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
     return { childrenMap: cMap };
   }, [edges]);
 
-  // Initialize expansion: Roots (Victim) & Layer 1 expanded by default
+  // Single Direct Spine from Victim (Top) to Terminal Cashout (Bottom) for > 25 nodes
+  const initialSpineNodes = useMemo(() => {
+    if (!isLargeGraph || nodes.length === 0) return new Set<string>();
+
+    const spine = new Set<string>();
+    const roots = nodes.filter(n => n.hop === 0);
+    const rootAcct = roots.length > 0 ? roots[0].acct_no : nodes[0]?.acct_no;
+    if (!rootAcct) return spine;
+    spine.add(rootAcct);
+
+    // Group outgoing edges sorted descending by amount
+    const outEdges = new Map<string, EdgeData[]>();
+    edges.forEach(e => {
+      if (!outEdges.has(e.src_acct)) outEdges.set(e.src_acct, []);
+      outEdges.get(e.src_acct)!.push(e);
+    });
+    outEdges.forEach(list => list.sort((a, b) => b.amount_paise - a.amount_paise));
+
+    // Greedy highest-value trail down to cashout
+    let current = rootAcct;
+    const visited = new Set<string>([current]);
+
+    while (true) {
+      const outgoing = outEdges.get(current);
+      if (!outgoing || outgoing.length === 0) break;
+
+      const nextEdge = outgoing.find(e => !visited.has(e.dst_acct));
+      if (!nextEdge) break;
+
+      current = nextEdge.dst_acct;
+      visited.add(current);
+      spine.add(current);
+
+      const nodeObj = nodes.find(n => n.acct_no === current);
+      if (nodeObj && (nodeObj.hop >= 4 || nodeObj.held_paise > 0)) {
+        break; // reached cashout off-ramp
+      }
+      if (visited.size > 8) break;
+    }
+
+    return spine;
+  }, [nodes, edges, isLargeGraph]);
+
+  // Initialize expansion:
+  // <= 25 nodes: keep same, expand all
+  // > 25 nodes: start with only the single spine from victim to cashout
   useEffect(() => {
     if (nodes.length === 0) return;
     const initial = new Set<string>();
 
-    if (nodes.length <= 16) {
-      // Small graphs: expand all
+    if (!isLargeGraph) {
       nodes.forEach(n => initial.add(n.acct_no));
-    } else {
-      // Large graphs: expand victim and Layer 1 nodes so initial fraud flow is visible
-      nodes.forEach(n => {
-        if (n.hop <= 1) {
-          initial.add(n.acct_no);
-        }
-      });
     }
+    // When > 25 nodes, start with empty expandedNodes so only initialSpineNodes are shown!
     setExpandedNodes(initial);
-  }, [nodes]);
+  }, [nodes, isLargeGraph]);
 
   // Animation loop for currency flow particles
   useEffect(() => {
@@ -161,35 +202,43 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
     });
   }, [edges, maxTimestamp, timeMode, activeMotif, isolatedPathNodeIds]);
 
-  // OSINT Node Visibility Computation (Nodes expand on click, collapse to clean clutter)
+  // OSINT Node Visibility Computation
+  // <= 25 nodes: All nodes visible
+  // > 25 nodes: Single layer from victim to cashout initially; expands further downstream when user clicks
   const { osintNodes, osintEdges } = useMemo(() => {
     const visibleAccts = new Set<string>();
 
-    // 1. Always include root nodes (Victim / Hop 0)
-    const roots = nodes.filter(n => n.hop === 0);
-    roots.forEach(r => visibleAccts.add(r.acct_no));
+    if (!isLargeGraph) {
+      nodes.forEach(n => visibleAccts.add(n.acct_no));
+    } else {
+      // 1. Always include victim root
+      const roots = nodes.filter(n => n.hop === 0);
+      roots.forEach(r => visibleAccts.add(r.acct_no));
 
-    // 2. Breadth-First traversal: add children only if parent is expanded
-    const queue = roots.map(r => r.acct_no);
-    const visited = new Set<string>(queue);
+      // 2. Include initial spine (victim down to cashout)
+      initialSpineNodes.forEach(acct => visibleAccts.add(acct));
 
-    while (queue.length > 0) {
-      const curr = queue.shift()!;
-      if (expandedNodes.has(curr)) {
-        const children = childrenMap.get(curr);
-        if (children) {
-          children.forEach(childAcct => {
-            visibleAccts.add(childAcct);
-            if (!visited.has(childAcct)) {
-              visited.add(childAcct);
-              queue.push(childAcct);
-            }
-          });
+      // 3. Expand further nodes only after user clicks show on that node and so on
+      const queue = Array.from(visibleAccts);
+      const visited = new Set<string>(queue);
+
+      while (queue.length > 0) {
+        const curr = queue.shift()!;
+        if (expandedNodes.has(curr)) {
+          const children = childrenMap.get(curr);
+          if (children) {
+            children.forEach(childAcct => {
+              visibleAccts.add(childAcct);
+              if (!visited.has(childAcct)) {
+                visited.add(childAcct);
+                queue.push(childAcct);
+              }
+            });
+          }
         }
       }
     }
 
-    // Filter nodes and edges
     const filteredNodes = nodes.filter(n => visibleAccts.has(n.acct_no));
     const filteredEdges = visibleEdges.filter(e => visibleAccts.has(e.src_acct) && visibleAccts.has(e.dst_acct));
 
@@ -197,7 +246,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       osintNodes: filteredNodes.length > 0 ? filteredNodes : nodes,
       osintEdges: filteredEdges
     };
-  }, [nodes, visibleEdges, expandedNodes, childrenMap]);
+  }, [nodes, visibleEdges, expandedNodes, childrenMap, isLargeGraph, initialSpineNodes]);
 
   // Focused connections when an account is selected or hovered
   const focusedNodeConnections = useMemo(() => {
@@ -221,8 +270,10 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
     return { connectedNodeIds, directEdgeIds, targetAcct };
   }, [selectedNode, hoveredNode, osintEdges]);
 
-  // Overlap-Free OSINT Card Layout Engine (Horizontal Hierarchical DAG)
-  const { nodePositions, stageLanes, bounds } = useMemo(() => {
+  // Layout Engine:
+  // <= 25 nodes: Horizontal Hierarchical DAG (unchanged)
+  // > 25 nodes: Vertical DAG with Victim on TOP and Cashout on BOTTOM; grows horizontally as nodes expand
+  const { nodePositions, stageLanes, stageBands, bounds } = useMemo(() => {
     const positions = new Map<string, { x: number; y: number; w: number; h: number }>();
     const hopGroups: Record<number, NodeData[]> = { 0: [], 1: [], 2: [], 3: [], 4: [] };
 
@@ -240,59 +291,112 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       { name: "STAGE 4: CASHOUT OFF-RAMPS", desc: "Terminal ATMs & P2P" }
     ];
 
-    const laneConfigs: { subCols: number; laneWidth: number; startX: number }[] = [];
-    let cumulativeX = 60;
-
-    [0, 1, 2, 3, 4].forEach(hop => {
-      const count = hopGroups[hop]?.length || 0;
-      let subCols = 1;
-      if (count > 24) subCols = 3;
-      else if (count > 8) subCols = 2;
-
-      const laneWidth = subCols * CARD_WIDTH + (subCols - 1) * 24 + 60;
-      laneConfigs.push({ subCols, laneWidth, startX: cumulativeX });
-      cumulativeX += laneWidth + 110; // 110px clear inter-stage conduit
-    });
-
-    const rowSpacing = CARD_HEIGHT + 24; // 100px vertical spacing between cards
     let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
 
-    [0, 1, 2, 3, 4].forEach(hop => {
-      const group = hopGroups[hop];
-      if (!group || group.length === 0) return;
-      const conf = laneConfigs[hop];
+    if (!isLargeGraph) {
+      // ----------------------------------------------------
+      // MODE A (<= 25 nodes): Horizontal Flow (Exactly as before)
+      // ----------------------------------------------------
+      const laneConfigs: { subCols: number; laneWidth: number; startX: number }[] = [];
+      let cumulativeX = 60;
 
-      group.forEach((node, idx) => {
-        const colIdx = idx % conf.subCols;
-        const rowIdx = Math.floor(idx / conf.subCols);
-        const stagger = (colIdx % 2) * (rowSpacing * 0.45);
+      [0, 1, 2, 3, 4].forEach(hop => {
+        const count = hopGroups[hop]?.length || 0;
+        let subCols = 1;
+        if (count > 24) subCols = 3;
+        else if (count > 8) subCols = 2;
 
-        const x = conf.startX + 28 + colIdx * (CARD_WIDTH + 24);
-        const y = 140 + rowIdx * rowSpacing + stagger;
-
-        positions.set(node.acct_no, { x, y, w: CARD_WIDTH, h: CARD_HEIGHT });
-
-        if (x < minX) minX = x;
-        if (x + CARD_WIDTH > maxX) maxX = x + CARD_WIDTH;
-        if (y < minY) minY = y;
-        if (y + CARD_HEIGHT > maxY) maxY = y + CARD_HEIGHT;
+        const laneWidth = subCols * CARD_WIDTH + (subCols - 1) * 24 + 60;
+        laneConfigs.push({ subCols, laneWidth, startX: cumulativeX });
+        cumulativeX += laneWidth + 110;
       });
-    });
 
-    const stageLanes = [0, 1, 2, 3, 4].map(hop => ({
-      name: stageMeta[hop].name,
-      desc: stageMeta[hop].desc,
-      x: laneConfigs[hop].startX,
-      width: laneConfigs[hop].laneWidth,
-      count: hopGroups[hop]?.length || 0
-    }));
+      const rowSpacing = CARD_HEIGHT + 24;
 
-    return {
-      nodePositions: positions,
-      stageLanes,
-      bounds: { minX, maxX, minY, maxY }
-    };
-  }, [osintNodes]);
+      [0, 1, 2, 3, 4].forEach(hop => {
+        const group = hopGroups[hop];
+        if (!group || group.length === 0) return;
+        const conf = laneConfigs[hop];
+
+        group.forEach((node, idx) => {
+          const colIdx = idx % conf.subCols;
+          const rowIdx = Math.floor(idx / conf.subCols);
+          const stagger = (colIdx % 2) * (rowSpacing * 0.45);
+
+          const x = conf.startX + 28 + colIdx * (CARD_WIDTH + 24);
+          const y = 140 + rowIdx * rowSpacing + stagger;
+
+          positions.set(node.acct_no, { x, y, w: CARD_WIDTH, h: CARD_HEIGHT });
+
+          if (x < minX) minX = x;
+          if (x + CARD_WIDTH > maxX) maxX = x + CARD_WIDTH;
+          if (y < minY) minY = y;
+          if (y + CARD_HEIGHT > maxY) maxY = y + CARD_HEIGHT;
+        });
+      });
+
+      const stageLanes = [0, 1, 2, 3, 4].map(hop => ({
+        name: stageMeta[hop].name,
+        desc: stageMeta[hop].desc,
+        x: laneConfigs[hop].startX,
+        width: laneConfigs[hop].laneWidth,
+        count: hopGroups[hop]?.length || 0
+      }));
+
+      return {
+        nodePositions: positions,
+        stageLanes,
+        stageBands: [],
+        bounds: { minX, maxX, minY, maxY }
+      };
+    } else {
+      // ----------------------------------------------------
+      // MODE B (> 25 nodes): Vertical Flow (Victim TOP, Cashout BOTTOM)
+      // Grows horizontally within each hop as nodes are expanded by user
+      // ----------------------------------------------------
+      const tierSpacingY = 165; // vertical distance between hops
+      const cardSpacingX = CARD_WIDTH + 28; // horizontal spacing between sibling cards
+
+      [0, 1, 2, 3, 4].forEach(hop => {
+        const group = hopGroups[hop];
+        if (!group || group.length === 0) return;
+
+        const count = group.length;
+        const tierWidth = count * cardSpacingX - 28;
+        const startX = 600 - tierWidth / 2; // centered horizontally around x=600
+        const y = 120 + hop * tierSpacingY;
+
+        group.forEach((node, idx) => {
+          const x = startX + idx * cardSpacingX;
+          positions.set(node.acct_no, { x, y, w: CARD_WIDTH, h: CARD_HEIGHT });
+
+          if (x < minX) minX = x;
+          if (x + CARD_WIDTH > maxX) maxX = x + CARD_WIDTH;
+          if (y < minY) minY = y;
+          if (y + CARD_HEIGHT > maxY) maxY = y + CARD_HEIGHT;
+        });
+      });
+
+      // Horizontal bands for stages in vertical mode
+      const stageBands = [0, 1, 2, 3, 4].map(hop => {
+        const y = 100 + hop * tierSpacingY;
+        return {
+          name: hop === 0 ? "STAGE 0: VICTIM ORIGIN (TOP)" : (hop === 4 ? "STAGE 4: CASHOUT OFF-RAMPS (BOTTOM)" : stageMeta[hop].name),
+          desc: stageMeta[hop].desc,
+          y,
+          height: 120,
+          count: hopGroups[hop]?.length || 0
+        };
+      });
+
+      return {
+        nodePositions: positions,
+        stageLanes: [],
+        stageBands,
+        bounds: { minX, maxX, minY, maxY }
+      };
+    }
+  }, [osintNodes, isLargeGraph]);
 
   // Fit View
   const fitToView = useCallback(() => {
@@ -337,13 +441,13 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, rect.width, rect.height);
 
-    // 1. Draw Subtle Architectural Background Grid
-    ctx.fillStyle = '#F4F7FB';
+    // 1. Subtle Architectural Background Grid
+    ctx.fillStyle = '#F4EDE4';
     ctx.fillRect(0, 0, rect.width, rect.height);
 
     // Grid dots
     ctx.save();
-    ctx.fillStyle = 'rgba(148, 163, 184, 0.35)';
+    ctx.fillStyle = 'rgba(148, 163, 184, 0.4)';
     const gridSize = 32 * zoom;
     const offsetX = pan.x % gridSize;
     const offsetY = pan.y % gridSize;
@@ -358,26 +462,51 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
     ctx.translate(pan.x, pan.y);
     ctx.scale(zoom, zoom);
 
-    // 2. Draw Stage Corridor Backgrounds
-    stageLanes.forEach(lane => {
-      const laneH = Math.max(700, (bounds.maxY - bounds.minY) + 260);
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-      roundRect(ctx, lane.x, 80, lane.width, laneH, 10);
-      ctx.fill();
-      ctx.strokeStyle = '#E2E8F0';
-      ctx.lineWidth = 1;
-      ctx.stroke();
+    // 2. Stage Corridor Backgrounds
+    if (!isLargeGraph) {
+      // Horizontal mode: Vertical stage lanes
+      stageLanes.forEach(lane => {
+        const laneH = Math.max(700, (bounds.maxY - bounds.minY) + 260);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+        roundRect(ctx, lane.x, 80, lane.width, laneH, 10);
+        ctx.fill();
+        ctx.strokeStyle = '#D5C7B5';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
 
-      // Lane Header Title
-      ctx.fillStyle = '#0F172A';
-      ctx.font = '700 11.5px Inter, sans-serif';
-      ctx.textAlign = 'left';
-      ctx.fillText(lane.name, lane.x + 16, 106);
+        ctx.fillStyle = '#0F172A';
+        ctx.font = '700 11.5px Inter, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText(lane.name, lane.x + 16, 106);
 
-      ctx.fillStyle = '#64748B';
-      ctx.font = '500 9.5px Inter, sans-serif';
-      ctx.fillText(`${lane.desc} (${lane.count} visible)`, lane.x + 16, 122);
-    });
+        ctx.fillStyle = '#64748B';
+        ctx.font = '500 9.5px Inter, sans-serif';
+        ctx.fillText(`${lane.desc} (${lane.count} visible)`, lane.x + 16, 122);
+      });
+    } else {
+      // Vertical mode: Horizontal stage bands
+      const bandWidth = Math.max(1400, (bounds.maxX - bounds.minX) + 160);
+      const bandX = Math.min(bounds.minX - 60, 100);
+
+      stageBands.forEach(band => {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.88)';
+        roundRect(ctx, bandX, band.y, bandWidth, band.height, 10);
+        ctx.fill();
+        ctx.strokeStyle = '#D5C7B5';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Stage Title
+        ctx.fillStyle = '#0F172A';
+        ctx.font = '700 11px Inter, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText(band.name, bandX + 16, band.y + 18);
+
+        ctx.fillStyle = '#64748B';
+        ctx.font = '500 9px Inter, sans-serif';
+        ctx.fillText(`${band.desc} • ${band.count} active`, bandX + 16, band.y + 32);
+      });
+    }
 
     const isFocusActive = !!focusedNodeConnections;
 
@@ -387,25 +516,41 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       const p2 = nodePositions.get(edge.dst_acct);
       if (!p1 || !p2) return;
 
-      // Source port: Right edge midpoint of parent card
-      const srcX = p1.x + CARD_WIDTH;
-      const srcY = p1.y + CARD_HEIGHT / 2;
+      let srcX: number, srcY: number, dstX: number, dstY: number;
+      let cp1x: number, cp1y: number, cp2x: number, cp2y: number;
 
-      // Destination port: Left edge midpoint of child card
-      const dstX = p2.x;
-      const dstY = p2.y + CARD_HEIGHT / 2;
+      if (!isLargeGraph) {
+        // Horizontal Mode: Source is right midpoint, dest is left midpoint
+        srcX = p1.x + CARD_WIDTH;
+        srcY = p1.y + CARD_HEIGHT / 2;
+        dstX = p2.x;
+        dstY = p2.y + CARD_HEIGHT / 2;
+
+        const dx = dstX - srcX;
+        const cpDist = Math.max(30, dx * 0.45);
+        cp1x = srcX + cpDist;
+        cp1y = srcY;
+        cp2x = dstX - cpDist;
+        cp2y = dstY;
+      } else {
+        // Vertical Mode: Source is bottom midpoint of parent, dest is top midpoint of child
+        srcX = p1.x + CARD_WIDTH / 2;
+        srcY = p1.y + CARD_HEIGHT;
+        dstX = p2.x + CARD_WIDTH / 2;
+        dstY = p2.y;
+
+        const dy = dstY - srcY;
+        const cpDist = Math.max(25, dy * 0.45);
+        cp1x = srcX;
+        cp1y = srcY + cpDist;
+        cp2x = dstX;
+        cp2y = dstY - cpDist;
+      }
 
       const isDirectlyFocused = focusedNodeConnections?.directEdgeIds.has(`${edge.src_acct}->${edge.dst_acct}`);
       const isDimmed = isFocusActive && !isDirectlyFocused && edgeViewMode === 'focused';
 
-      const dx = dstX - srcX;
-      const cpDist = Math.max(30, dx * 0.45);
-      const cp1x = srcX + cpDist;
-      const cp1y = srcY;
-      const cp2x = dstX - cpDist;
-      const cp2y = dstY;
-
-      // Draw Base Flow Curve
+      // Draw Flow Curve
       ctx.beginPath();
       ctx.moveTo(srcX, srcY);
       ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, dstX, dstY);
@@ -464,9 +609,11 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       const isDimmed = isFocusActive && !isConnected && edgeViewMode === 'focused';
 
       const isExpanded = expandedNodes.has(node.acct_no);
-      const childCount = childrenMap.get(node.acct_no)?.size || 0;
+      const allChildren = Array.from(childrenMap.get(node.acct_no) || []);
+      const childCount = allChildren.length;
+      const unexpandedCount = allChildren.filter(c => !osintNodes.some(n => n.acct_no === c)).length;
 
-      // Color Terminology Palette based on OSINT Investigative Standards
+      // Color Terminology Palette
       let theme = {
         border: '#2563EB',
         headerBg: '#1E40AF',
@@ -614,29 +761,31 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
 
       // 4.7 OSINT Expand / Collapse Pill
       if (childCount > 0) {
-        const pillW = isExpanded ? 36 : 56;
-        const pillH = 15;
+        const hasUnexpanded = unexpandedCount > 0;
+        const pillText = hasUnexpanded ? `⊕ SHOW ${unexpandedCount}` : (isExpanded ? '⊖ LESS' : `⊕ ${childCount}`);
+        const pillW = Math.max(54, ctx.measureText(pillText).width + 12);
+        const pillH = 16;
         const pillX = x + w - pillW - 6;
-        const pillY = y + 58;
+        const pillY = y + 57;
 
         ctx.save();
         roundRect(ctx, pillX, pillY, pillW, pillH, 4);
-        ctx.fillStyle = isExpanded ? '#E5E7EB' : theme.headerBg;
+        ctx.fillStyle = hasUnexpanded ? '#2563EB' : (isExpanded ? '#E2E8F0' : theme.headerBg);
         ctx.fill();
 
         ctx.font = '700 8.5px Inter, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillStyle = isExpanded ? '#374151' : '#FFFFFF';
-        ctx.fillText(isExpanded ? '⊖ LESS' : `⊕ ${childCount} MORE`, pillX + pillW / 2, pillY + pillH / 2 + 1);
+        ctx.fillStyle = hasUnexpanded ? '#FFFFFF' : (isExpanded ? '#334155' : '#FFFFFF');
+        ctx.fillText(pillText, pillX + pillW / 2, pillY + pillH / 2 + 1);
         ctx.restore();
       }
     });
 
     ctx.restore();
     ctx.restore();
-  }, [osintNodes, osintEdges, nodePositions, pan, zoom, animTime, stageLanes, bounds, focusedNodeConnections, edgeViewMode, expandedNodes, childrenMap, selectedNode, hoveredNode]);
+  }, [osintNodes, osintEdges, nodePositions, pan, zoom, animTime, stageLanes, stageBands, bounds, focusedNodeConnections, edgeViewMode, expandedNodes, childrenMap, selectedNode, hoveredNode, isLargeGraph]);
 
-  // Click handler: Expand / Collapse OSINT subtrees or Select Node
+  // Click handler: Toggle expansion of children on node click or select node
   const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -649,9 +798,9 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       if (!pos) continue;
 
       if (clickX >= pos.x && clickX <= pos.x + pos.w && clickY >= pos.y && clickY <= pos.y + pos.h) {
-        // Toggle expansion if node has children
+        // If node has children, toggle expansion
         const hasChildren = (childrenMap.get(node.acct_no)?.size || 0) > 0;
-        if (hasChildren) {
+        if (hasChildren && isLargeGraph) {
           setExpandedNodes(prev => {
             const next = new Set(prev);
             if (next.has(node.acct_no)) {
@@ -671,19 +820,15 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
     onSelectNode(null);
   };
 
-  // Expand All / Collapse All OSINT Controls
+  // Expand All / Reset to Spine
   const handleExpandAll = () => {
     const all = new Set<string>();
     nodes.forEach(n => all.add(n.acct_no));
     setExpandedNodes(all);
   };
 
-  const handleCollapseToL1 = () => {
-    const initial = new Set<string>();
-    nodes.forEach(n => {
-      if (n.hop <= 1) initial.add(n.acct_no);
-    });
-    setExpandedNodes(initial);
+  const handleResetToSpine = () => {
+    setExpandedNodes(new Set());
   };
 
   // Pan Handlers
@@ -698,49 +843,42 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
     const rect = canvas.getBoundingClientRect();
 
     if (isDragging) {
-      setPan({
-        x: e.clientX - dragStart.x,
-        y: e.clientY - dragStart.y
-      });
-      return;
-    }
+      setPan({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
+    } else {
+      const mouseX = (e.clientX - rect.left - pan.x) / zoom;
+      const mouseY = (e.clientY - rect.top - pan.y) / zoom;
 
-    const mouseX = (e.clientX - rect.left - pan.x) / zoom;
-    const mouseY = (e.clientY - rect.top - pan.y) / zoom;
-
-    let found: NodeData | null = null;
-    for (const node of osintNodes) {
-      const pos = nodePositions.get(node.acct_no);
-      if (!pos) continue;
-      if (mouseX >= pos.x && mouseX <= pos.x + pos.w && mouseY >= pos.y && mouseY <= pos.y + pos.h) {
-        found = node;
-        break;
+      let found: NodeData | null = null;
+      for (const node of osintNodes) {
+        const pos = nodePositions.get(node.acct_no);
+        if (pos && mouseX >= pos.x && mouseX <= pos.x + pos.w && mouseY >= pos.y && mouseY <= pos.y + pos.h) {
+          found = node;
+          break;
+        }
       }
+      setHoveredNode(found);
     }
-    setHoveredNode(found);
   };
 
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
+  const handleMouseUp = () => setIsDragging(false);
 
   const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
     e.preventDefault();
+    const factor = e.deltaY < 0 ? 1.15 : 0.87;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
-
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
 
-    const zoomFactor = e.deltaY < 0 ? 1.15 : 0.87;
-    const newZoom = Math.max(0.2, Math.min(3.8, zoom * zoomFactor));
-
-    setPan({
-      x: mouseX - (mouseX - pan.x) * (newZoom / zoom),
-      y: mouseY - (mouseY - pan.y) * (newZoom / zoom)
+    setZoom(prevZoom => {
+      const nextZoom = Math.min(3.8, Math.max(0.2, prevZoom * factor));
+      setPan(prevPan => ({
+        x: mouseX - (mouseX - prevPan.x) * (nextZoom / prevZoom),
+        y: mouseY - (mouseY - prevPan.y) * (nextZoom / prevZoom)
+      }));
+      return nextZoom;
     });
-    setZoom(newZoom);
   };
 
   return (
@@ -751,7 +889,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         width: '100%',
         height: '100%',
         overflow: 'hidden',
-        backgroundColor: '#F8FAFC',
+        backgroundColor: '#F4EDE4',
         userSelect: 'none'
       }}
     >
@@ -781,54 +919,61 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         justifyContent: 'space-between',
         flexWrap: 'wrap',
         gap: '12px',
-        backgroundColor: 'rgba(255, 255, 255, 0.94)',
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
         padding: '7px 14px',
         borderRadius: '8px',
-        border: '1px solid #E2E8F0',
+        border: '2px solid #D5C7B5',
         boxShadow: '0 2px 8px rgba(15, 23, 42, 0.06)',
         backdropFilter: 'blur(8px)',
         zIndex: 10
       }}>
-        {/* Left: Visible Nodes and Trail Count + Legend */}
+        {/* Left: Visible Nodes count and Layout Mode Pill */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <span style={{ fontSize: '0.78rem', color: '#334155', fontWeight: 600 }}>
             <strong style={{ color: '#2563EB' }}>{osintNodes.length}</strong> of <strong>{nodes.length}</strong> Accounts Visible · <strong>{osintEdges.length}</strong> Flows
           </span>
           <span style={{ color: '#CBD5E1' }}>|</span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.72rem', fontWeight: 600 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '2px', backgroundColor: '#1E40AF' }} />
-              <span style={{ color: '#1E40AF' }}>Victim</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '2px', backgroundColor: '#B45309' }} />
-              <span style={{ color: '#B45309' }}>L1 Smurf</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '2px', backgroundColor: '#6D28D9' }} />
-              <span style={{ color: '#6D28D9' }}>L2 Layer</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '2px', backgroundColor: '#991B1B' }} />
-              <span style={{ color: '#991B1B' }}>L3 Mule</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '2px', backgroundColor: '#1F2937' }} />
-              <span style={{ color: '#1F2937' }}>Cash-Out</span>
-            </div>
-          </div>
+          <span style={{
+            fontSize: '0.7rem',
+            fontWeight: 700,
+            padding: '2px 8px',
+            borderRadius: '6px',
+            backgroundColor: isLargeGraph ? '#EFF6FF' : '#ECFDF5',
+            color: isLargeGraph ? '#1D4ED8' : '#047857',
+            border: `1px solid ${isLargeGraph ? '#BFDBFE' : '#A7F3D0'}`
+          }}>
+            {isLargeGraph ? "Vertical Drill-Down (Victim ➔ Cashout)" : "Horizontal Flow (≤25 Nodes)"}
+          </span>
         </div>
 
         {/* Right: Quick Graph Actions */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {isLargeGraph && (
+            <button
+              onClick={handleResetToSpine}
+              title="Collapse to single layer path from victim to cashout"
+              style={{
+                padding: '4px 10px',
+                borderRadius: '6px',
+                border: '1.5px solid #D5C7B5',
+                backgroundColor: '#FAF7F2',
+                color: '#0F172A',
+                fontSize: '0.72rem',
+                fontWeight: 600,
+                cursor: 'pointer'
+              }}
+            >
+              ⊖ Single Spine
+            </button>
+          )}
           <button
             onClick={handleExpandAll}
             title="Expand all downstream nodes across all hops"
             style={{
-              padding: '4px 9px',
+              padding: '4px 10px',
               borderRadius: '6px',
-              border: '1px solid #E2E8F0',
-              backgroundColor: '#F8FAFC',
+              border: '1.5px solid #D5C7B5',
+              backgroundColor: '#FAF7F2',
               color: '#0F172A',
               fontSize: '0.72rem',
               fontWeight: 600,
@@ -838,29 +983,13 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
             ⊕ Expand All
           </button>
           <button
-            onClick={handleCollapseToL1}
-            title="Collapse deep branches to Layer 1 for clean investigation"
-            style={{
-              padding: '4px 9px',
-              borderRadius: '6px',
-              border: '1px solid #E2E8F0',
-              backgroundColor: '#F8FAFC',
-              color: '#0F172A',
-              fontSize: '0.72rem',
-              fontWeight: 600,
-              cursor: 'pointer'
-            }}
-          >
-            ⊖ Smart Collapse
-          </button>
-          <button
             onClick={fitToView}
             title="Fit entire graph into view"
             style={{
-              padding: '4px 9px',
+              padding: '4px 10px',
               borderRadius: '6px',
-              border: '1px solid #E2E8F0',
-              backgroundColor: '#F8FAFC',
+              border: '1.5px solid #D5C7B5',
+              backgroundColor: '#FAF7F2',
               color: '#0F172A',
               fontSize: '0.72rem',
               fontWeight: 600,
@@ -873,10 +1002,10 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
             onClick={() => setEdgeViewMode(m => m === 'focused' ? 'all' : 'focused')}
             title="Toggle between focused connection trail vs all links"
             style={{
-              padding: '4px 9px',
+              padding: '4px 10px',
               borderRadius: '6px',
-              border: '1px solid #E2E8F0',
-              backgroundColor: edgeViewMode === 'focused' ? '#EFF6FF' : '#F8FAFC',
+              border: '1.5px solid #D5C7B5',
+              backgroundColor: edgeViewMode === 'focused' ? '#EFF6FF' : '#FAF7F2',
               color: edgeViewMode === 'focused' ? '#1D4ED8' : '#0F172A',
               fontSize: '0.72rem',
               fontWeight: 600,
@@ -891,8 +1020,8 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
               style={{
                 padding: '4px 8px',
                 borderRadius: '5px',
-                border: '1px solid #E2E8F0',
-                backgroundColor: '#F8FAFC',
+                border: '1.5px solid #D5C7B5',
+                backgroundColor: '#FAF7F2',
                 color: '#0F172A',
                 fontSize: '0.75rem',
                 fontWeight: 700,
@@ -906,8 +1035,8 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
               style={{
                 padding: '4px 8px',
                 borderRadius: '5px',
-                border: '1px solid #E2E8F0',
-                backgroundColor: '#F8FAFC',
+                border: '1.5px solid #D5C7B5',
+                backgroundColor: '#FAF7F2',
                 color: '#0F172A',
                 fontSize: '0.75rem',
                 fontWeight: 700,
@@ -931,7 +1060,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
           overflowY: 'auto',
           backgroundColor: '#FFFFFF',
           borderRadius: '12px',
-          border: '1px solid #E2E8F0',
+          border: '2px solid #D5C7B5',
           boxShadow: '0 8px 24px rgba(15, 23, 42, 0.1)',
           padding: '16px',
           display: 'flex',
@@ -974,9 +1103,9 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
             gridTemplateColumns: '1fr 1fr',
             gap: '8px',
             padding: '10px',
-            backgroundColor: '#F8FAFC',
+            backgroundColor: '#FAF7F2',
             borderRadius: '8px',
-            border: '1px solid #E2E8F0',
+            border: '1px solid #D5C7B5',
             fontSize: '0.75rem'
           }}>
             <div>
@@ -1005,9 +1134,9 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
           {nodeDetail?.shap_explanation?.top_drivers?.length > 0 && (
             <div style={{
               padding: '8px 10px',
-              backgroundColor: '#F8FAFC',
+              backgroundColor: '#FAF7F2',
               borderRadius: '8px',
-              border: '1px solid #E2E8F0',
+              border: '1px solid #D5C7B5',
               fontSize: '0.6875rem'
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
@@ -1083,13 +1212,15 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         backgroundColor: 'rgba(255, 255, 255, 0.95)',
         padding: '6px 14px',
         borderRadius: '8px',
-        border: '1px solid #E2E8F0',
+        border: '1.5px solid #D5C7B5',
         fontSize: '0.75rem',
         color: '#475569',
         boxShadow: '0 2px 8px rgba(15, 23, 42, 0.06)'
       }}>
-        <span>💡 <strong>Click card</strong> to toggle downstream branch expansion · <strong>Drag</strong> to pan canvas · <strong>Scroll</strong> to zoom</span>
+        <span>💡 <strong>Click card / ⊕ SHOW</strong> to expand downstream branches · <strong>Drag</strong> to pan · <strong>Scroll</strong> to zoom</span>
       </div>
     </div>
   );
 };
+
+export default GraphCanvas;
