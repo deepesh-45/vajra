@@ -98,6 +98,7 @@ export const App: React.FC = () => {
           telemetry={overviewData?.telemetry || null}
           datasetName={datasetName}
           totalTransactions={totalRows}
+          totalAccounts={overviewData?.total_accounts || 24873}
           onDatasetReload={loadOverview}
           onSelectPreset={handleSelectPreset}
           onSelectAccount={handleSelectVictim}

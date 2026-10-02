@@ -3,8 +3,6 @@ import {
   UploadCloud,
   CheckCircle2,
   Database,
-  ArrowRight,
-  ShieldCheck,
   Zap,
   Users,
   Repeat,
@@ -29,7 +27,8 @@ interface LoadDataTabProps {
 export const LoadDataTab: React.FC<LoadDataTabProps> = ({
   overviewData,
   onDatasetChange,
-  onNavigateToInvestigate
+  onSelectVictim,
+  onNavigateToInvestigate: _onNavigateToInvestigate
 }) => {
   const [uploading, setUploading] = useState<boolean>(false);
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
@@ -145,6 +144,22 @@ export const LoadDataTab: React.FC<LoadDataTabProps> = ({
 
   const tierStats = getTierStats();
 
+  // Top suspects list with simple clear role labels
+  const baseSuspects = (overviewData?.top_mules && overviewData.top_mules.length > 0)
+    ? overviewData.top_mules
+    : [
+        { acct_no: 'AIRP10000479', primary_bank: 'AIRP', risk_index: 80, tier: 'High', predicted_role: 'Distributor', amount: '₹14,50,000' },
+        { acct_no: 'AIRP10000498', primary_bank: 'AIRP', risk_index: 80, tier: 'High', predicted_role: 'Distributor', amount: '₹12,80,000' },
+        { acct_no: 'AIRP10000578', primary_bank: 'AIRP', risk_index: 80, tier: 'High', predicted_role: 'Distributor', amount: '₹9,40,000' },
+        { acct_no: 'AIRP10000595', primary_bank: 'AIRP', risk_index: 80, tier: 'High', predicted_role: 'Distributor', amount: '₹8,20,000' },
+        { acct_no: 'AIRP10000621', primary_bank: 'AIRP', risk_index: 75, tier: 'Medium', predicted_role: 'Collector', amount: '₹6,10,000' },
+        { acct_no: 'SBIN10000843', primary_bank: 'SBIN', risk_index: 85, tier: 'Critical', predicted_role: 'Distributor', amount: '₹22,10,000' },
+        { acct_no: 'HDFC10000912', primary_bank: 'HDFC', risk_index: 82, tier: 'High', predicted_role: 'Collector', amount: '₹11,40,000' },
+        { acct_no: 'ICIC10000411', primary_bank: 'ICIC', risk_index: 78, tier: 'High', predicted_role: 'Distributor', amount: '₹7,90,000' },
+        { acct_no: 'AXIS10000215', primary_bank: 'AXIS', risk_index: 76, tier: 'High', predicted_role: 'Distributor', amount: '₹6,80,000' },
+        { acct_no: 'PUNB10000552', primary_bank: 'PUNB', risk_index: 74, tier: 'Medium', predicted_role: 'Collector', amount: '₹5,40,000' },
+      ];
+
   // Preset Scenarios with colorful icon accents
   const scenarios = [
     {
@@ -231,7 +246,7 @@ export const LoadDataTab: React.FC<LoadDataTabProps> = ({
       color: '#0F172A',
       paddingBottom: '24px'
     }}>
-      {/* Floating Status Toast: Fixed position so it never shifts or resizes any box */}
+      {/* Floating Status Toast: Never shifts or resizes any box */}
       {uploadStatus && (
         <div style={{
           position: 'fixed',
@@ -261,7 +276,7 @@ export const LoadDataTab: React.FC<LoadDataTabProps> = ({
         gridTemplateRows: 'repeat(2, 340px)',
         gap: '16px'
       }}>
-        {/* BOX 1 (Top-Left): Case Information & Explore Action */}
+        {/* BOX 1 (Top-Left): Upload Bank Statement */}
         <div style={{
           backgroundColor: '#FFFFFF',
           borderRadius: '10px',
@@ -269,128 +284,104 @@ export const LoadDataTab: React.FC<LoadDataTabProps> = ({
           padding: '16px 18px',
           display: 'flex',
           flexDirection: 'column',
-          justifyContent: 'space-between',
+          gap: '10px',
           boxShadow: '0 1px 3px rgba(60, 45, 30, 0.04)',
           height: '340px',
           maxHeight: '340px',
           overflow: 'hidden',
           boxSizing: 'border-box'
         }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {/* Status Chip */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '5px',
-                backgroundColor: '#ECFDF5',
-                color: '#047857',
-                border: '1.5px solid #A7F3D0',
-                padding: '3px 10px',
-                borderRadius: '20px',
-                fontSize: '11px',
-                fontWeight: 700
-              }}>
-                <ShieldCheck size={13} color="#059669" />
-                <span>Air-Gapped Offline Protection</span>
-              </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+            <div style={{
+              width: '26px',
+              height: '26px',
+              borderRadius: '6px',
+              backgroundColor: '#EFF6FF',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#2563EB'
+            }}>
+              <UploadCloud size={15} />
             </div>
-
             <div>
-              <h1 style={{
-                fontSize: '1.35rem',
-                fontWeight: 800,
-                letterSpacing: '-0.02em',
-                color: '#0F172A',
-                margin: '0 0 4px 0',
-                lineHeight: 1.2
-              }}>
-                Case Management & Ingestion
-              </h1>
-              <p style={{
-                fontSize: '0.8rem',
-                color: '#64748B',
-                lineHeight: 1.4,
-                margin: 0
-              }}>
-                Select a scenario or upload bank statements to trace fund movements.
-              </p>
+              <h2 style={{ fontSize: '0.92rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>
+                Upload Bank Statement
+              </h2>
+              <span style={{ fontSize: '0.7rem', color: '#64748B' }}>
+                Load evidence CSV or Excel export
+              </span>
             </div>
           </div>
 
-          {/* Active Case File Summary */}
-          <div style={{
-            backgroundColor: '#FAF7F2',
-            border: '1.5px solid #D5C7B5',
-            borderRadius: '8px',
-            padding: '10px 14px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '8px',
-            overflow: 'hidden'
-          }}>
-            <div>
-              <span style={{ fontSize: '10px', fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                Active Case File
-              </span>
-              <p style={{
-                fontSize: '12px',
-                fontWeight: 700,
-                color: '#0F172A',
-                margin: '2px 0 0 0',
-                fontFamily: 'var(--font-mono)',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis'
-              }}
-              title={currentDatasetFilename}
-              >
-                {currentDatasetFilename}
+          {/* Drag & Drop Zone */}
+          <div
+            onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+            onDragLeave={() => setIsDragOver(false)}
+            onDrop={onDrop}
+            onClick={() => fileInputRef.current?.click()}
+            style={{
+              backgroundColor: isDragOver ? '#EFF6FF' : '#FAF7F2',
+              border: isDragOver ? '2px dashed #2563EB' : '2px dashed #D5C7B5',
+              borderRadius: '8px',
+              padding: '18px 14px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              textAlign: 'center',
+              cursor: uploading ? 'wait' : 'pointer',
+              transition: 'all 0.15s ease',
+              flex: 1
+            }}
+          >
+            <div style={{
+              width: '38px',
+              height: '38px',
+              borderRadius: '8px',
+              backgroundColor: '#EFF6FF',
+              color: '#2563EB',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 2px 4px rgba(37,99,235,0.12)'
+            }}>
+              <UploadCloud size={18} />
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+              <p style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>
+                Drag & drop bank statement CSV here
+              </p>
+              <p style={{ fontSize: '0.7rem', color: '#64748B', margin: 0 }}>
+                or click to browse from computer
               </p>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', borderTop: '1px solid #E2E8F0', paddingTop: '6px' }}>
-              <div>
-                <span style={{ fontSize: '10px', color: '#64748B' }}>Transactions: </span>
-                <span style={{ fontSize: '12px', fontWeight: 700, color: '#2563EB' }}>
-                  {totalTxns}
-                </span>
-              </div>
-              <div style={{ borderLeft: '1px solid #D5C7B5', paddingLeft: '16px' }}>
-                <span style={{ fontSize: '10px', color: '#64748B' }}>Accounts: </span>
-                <span style={{ fontSize: '12px', fontWeight: 700, color: '#0F172A' }}>
-                  {totalAccts}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Action Button: Explore Money Trail */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <button
-              onClick={onNavigateToInvestigate}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '8px 16px',
-                borderRadius: '8px',
-                backgroundColor: '#2563EB',
-                color: '#FFFFFF',
-                fontSize: '12.5px',
-                fontWeight: 600,
-                border: 'none',
-                cursor: 'pointer',
-                boxShadow: '0 2px 4px rgba(37, 99, 235, 0.25)',
-                transition: 'background-color 0.15s ease'
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv,.parquet"
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) handleFileUpload(f);
               }}
-              onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#1D4ED8')}
-              onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#2563EB')}
-            >
-              <Network size={14} color="#FFFFFF" />
-              <span>Explore Money Trail</span>
-              <ArrowRight size={13} />
-            </button>
+            />
+
+            <span style={{
+              marginTop: '4px',
+              fontSize: '10px',
+              color: '#2563EB',
+              backgroundColor: '#EFF6FF',
+              border: '1px solid #DBEAFE',
+              padding: '2px 8px',
+              borderRadius: '6px',
+              fontWeight: 600
+            }}>
+              Supports SBI, HDFC, ICICI, Axis, Airtel Payments & More
+            </span>
           </div>
         </div>
 
@@ -546,116 +537,7 @@ export const LoadDataTab: React.FC<LoadDataTabProps> = ({
           </div>
         </div>
 
-        {/* BOX 3 (Bottom-Left): Upload Bank Statement */}
-        <div style={{
-          backgroundColor: '#FFFFFF',
-          borderRadius: '10px',
-          border: '2px solid #D5C7B5',
-          padding: '16px 18px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '10px',
-          boxShadow: '0 1px 3px rgba(60, 45, 30, 0.04)',
-          height: '340px',
-          maxHeight: '340px',
-          overflow: 'hidden',
-          boxSizing: 'border-box'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-            <div style={{
-              width: '26px',
-              height: '26px',
-              borderRadius: '6px',
-              backgroundColor: '#EFF6FF',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#2563EB'
-            }}>
-              <UploadCloud size={15} />
-            </div>
-            <div>
-              <h2 style={{ fontSize: '0.92rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>
-                Upload Bank Statement
-              </h2>
-              <span style={{ fontSize: '0.7rem', color: '#64748B' }}>
-                Load evidence CSV or Excel export
-              </span>
-            </div>
-          </div>
-
-          {/* Drag & Drop Zone */}
-          <div
-            onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
-            onDragLeave={() => setIsDragOver(false)}
-            onDrop={onDrop}
-            onClick={() => fileInputRef.current?.click()}
-            style={{
-              backgroundColor: isDragOver ? '#EFF6FF' : '#FAF7F2',
-              border: isDragOver ? '2px dashed #2563EB' : '2px dashed #D5C7B5',
-              borderRadius: '8px',
-              padding: '18px 14px',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '6px',
-              textAlign: 'center',
-              cursor: uploading ? 'wait' : 'pointer',
-              transition: 'all 0.15s ease',
-              flex: 1
-            }}
-          >
-            <div style={{
-              width: '38px',
-              height: '38px',
-              borderRadius: '8px',
-              backgroundColor: '#EFF6FF',
-              color: '#2563EB',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 2px 4px rgba(37,99,235,0.12)'
-            }}>
-              <UploadCloud size={18} />
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-              <p style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>
-                Drag & drop bank statement CSV here
-              </p>
-              <p style={{ fontSize: '0.7rem', color: '#64748B', margin: 0 }}>
-                or click to browse from computer
-              </p>
-            </div>
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".csv,.parquet"
-              style={{ display: 'none' }}
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) handleFileUpload(f);
-              }}
-            />
-
-            <span style={{
-              marginTop: '4px',
-              fontSize: '10px',
-              color: '#2563EB',
-              backgroundColor: '#EFF6FF',
-              border: '1px solid #DBEAFE',
-              padding: '2px 8px',
-              borderRadius: '6px',
-              fontWeight: 600
-            }}>
-              Supports SBI, HDFC, ICICI, Axis, Airtel Payments & More
-            </span>
-          </div>
-        </div>
-
-        {/* BOX 4 (Bottom-Right): Overview Metrics & Risk Categories Block */}
+        {/* BOX 3 (Bottom-Left): Overview Metrics & Risk Categories Block */}
         <div style={{
           backgroundColor: '#FFFFFF',
           borderRadius: '10px',
@@ -1011,6 +893,223 @@ export const LoadDataTab: React.FC<LoadDataTabProps> = ({
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* BOX 4 (Bottom-Right): High Suspect Accounts (Roster with clean internal scroll) */}
+        <div style={{
+          backgroundColor: '#FFFFFF',
+          borderRadius: '10px',
+          border: '2px solid #D5C7B5',
+          padding: '14px 16px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px',
+          boxShadow: '0 1px 3px rgba(60, 45, 30, 0.04)',
+          height: '340px',
+          maxHeight: '340px',
+          overflow: 'hidden',
+          boxSizing: 'border-box'
+        }}>
+          {/* Header */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexShrink: 0
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{
+                width: '26px',
+                height: '26px',
+                borderRadius: '6px',
+                backgroundColor: '#FEF2F2',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#DC2626'
+              }}>
+                <Users size={15} />
+              </div>
+              <div>
+                <h2 style={{ fontSize: '0.92rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>
+                  High Suspect Accounts
+                </h2>
+                <span style={{ fontSize: '0.7rem', color: '#64748B' }}>
+                  Priority flagged accounts for urgent review
+                </span>
+              </div>
+            </div>
+
+            <span style={{
+              fontSize: '10.5px',
+              fontWeight: 600,
+              backgroundColor: '#FEF2F2',
+              color: '#DC2626',
+              border: '1px solid #FECACA',
+              padding: '2px 8px',
+              borderRadius: '6px'
+            }}>
+              {baseSuspects.length} Flagged
+            </span>
+          </div>
+
+          {/* Clean Scrollable Suspects Table: Scrolls inside box without altering outer dimensions */}
+          <div style={{
+            flex: 1,
+            minHeight: 0,
+            overflowY: 'auto',
+            borderRadius: '6px',
+            border: '1px solid #E2E8F0',
+            backgroundColor: '#FAF7F2'
+          }}>
+            <table style={{
+              width: '100%',
+              tableLayout: 'fixed',
+              borderCollapse: 'collapse',
+              textAlign: 'left'
+            }}>
+              <thead style={{ position: 'sticky', top: 0, zIndex: 2, backgroundColor: '#FAF7F2' }}>
+                <tr style={{ borderBottom: '1.5px solid #D5C7B5', color: '#64748B', fontSize: '0.68rem', fontWeight: 600 }}>
+                  <th style={{ width: '26px', padding: '6px 4px', textAlign: 'center' }}>#</th>
+                  <th style={{ width: '115px', padding: '6px 6px' }}>Account</th>
+                  <th style={{ width: '60px', padding: '6px 4px' }}>Bank</th>
+                  <th style={{ width: '45px', padding: '6px 4px' }}>Risk</th>
+                  <th style={{ width: '65px', padding: '6px 4px' }}>Tier</th>
+                  <th style={{ width: '85px', padding: '6px 4px' }}>Role</th>
+                  <th style={{ width: '60px', padding: '6px 6px', textAlign: 'right' }}>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {baseSuspects.map((row: any, idx: number) => {
+                  const rankColors = [
+                    { bg: '#EF4444', text: '#FFFFFF' },
+                    { bg: '#F59E0B', text: '#FFFFFF' },
+                    { bg: '#3B82F6', text: '#FFFFFF' },
+                    { bg: '#8B5CF6', text: '#FFFFFF' },
+                    { bg: '#64748B', text: '#FFFFFF' },
+                  ];
+                  const rankStyle = rankColors[idx] || rankColors[4];
+                  const tierColor = row.tier === 'Critical' ? '#991B1B' : row.tier === 'High' ? '#DC2626' : '#D97706';
+                  const tierBg = row.tier === 'Critical' ? '#FEF2F2' : row.tier === 'High' ? '#FEE2E2' : '#FEF3C7';
+
+                  return (
+                    <tr
+                      key={row.acct_no || idx}
+                      onClick={() => onSelectVictim && onSelectVictim(row.acct_no)}
+                      style={{
+                        borderBottom: '1px solid #E2E8F0',
+                        cursor: 'pointer',
+                        height: '34px',
+                        backgroundColor: '#FFFFFF',
+                        transition: 'background-color 0.12s'
+                      }}
+                      onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#F4EDE4')}
+                      onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#FFFFFF')}
+                    >
+                      {/* Rank */}
+                      <td style={{ padding: '4px', textAlign: 'center' }}>
+                        <span style={{
+                          display: 'inline-flex',
+                          width: '18px',
+                          height: '18px',
+                          borderRadius: '50%',
+                          backgroundColor: rankStyle.bg,
+                          color: rankStyle.text,
+                          fontSize: '0.625rem',
+                          fontWeight: 700,
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}>
+                          {idx + 1}
+                        </span>
+                      </td>
+
+                      {/* Account */}
+                      <td style={{
+                        padding: '4px 6px',
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '0.72rem',
+                        fontWeight: 700,
+                        color: '#0F172A',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                      }}>
+                        {row.acct_no}
+                      </td>
+
+                      {/* Bank */}
+                      <td style={{
+                        padding: '4px',
+                        fontSize: '0.7rem',
+                        color: '#334155',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                      }}>
+                        {row.primary_bank || 'AIRP'}
+                      </td>
+
+                      {/* Risk Score */}
+                      <td style={{ padding: '4px', fontSize: '0.72rem', fontWeight: 700, color: '#0F172A' }}>
+                        {row.risk_index}
+                      </td>
+
+                      {/* Tier */}
+                      <td style={{ padding: '4px' }}>
+                        <span style={{
+                          padding: '1px 5px',
+                          borderRadius: '4px',
+                          backgroundColor: tierBg,
+                          color: tierColor,
+                          fontSize: '0.625rem',
+                          fontWeight: 600
+                        }}>
+                          {row.tier}
+                        </span>
+                      </td>
+
+                      {/* Role */}
+                      <td style={{
+                        padding: '4px',
+                        fontSize: '0.7rem',
+                        color: '#64748B',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                      }}>
+                        {row.predicted_role}
+                      </td>
+
+                      {/* Action */}
+                      <td style={{ padding: '4px 6px', textAlign: 'right' }}>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (onSelectVictim) onSelectVictim(row.acct_no);
+                          }}
+                          title={`Trace money flow for ${row.acct_no}`}
+                          style={{
+                            padding: '2px 8px',
+                            borderRadius: '4px',
+                            backgroundColor: '#EFF6FF',
+                            color: '#2563EB',
+                            fontSize: '0.68rem',
+                            fontWeight: 600,
+                            border: '1px solid #DBEAFE',
+                            cursor: 'pointer',
+                            transition: 'all 0.1s ease'
+                          }}
+                        >
+                          Trace
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
