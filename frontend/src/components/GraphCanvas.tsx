@@ -715,6 +715,15 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       ctx.restore();
     });
 
+    // 4. Precompute Flow Statistics for Non-Duplicated Forensic Intelligence
+    const flowStatsMap = new Map<string, { inCount: number; outCount: number }>();
+    edges.forEach(e => {
+      if (!flowStatsMap.has(e.src_acct)) flowStatsMap.set(e.src_acct, { inCount: 0, outCount: 0 });
+      if (!flowStatsMap.has(e.dst_acct)) flowStatsMap.set(e.dst_acct, { inCount: 0, outCount: 0 });
+      flowStatsMap.get(e.src_acct)!.outCount += 1;
+      flowStatsMap.get(e.dst_acct)!.inCount += 1;
+    });
+
     // 4. Draw Large-Sized OSINT Entity Cards
     osintNodes.forEach(node => {
       const pos = nodePositions.get(node.acct_no);
@@ -743,9 +752,9 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
 
       if (node.isSupernode) {
         theme = {
-          border: '#059669',
-          headerBg: '#065F46',
-          bodyBg: '#ECFDF5',
+          border: '#0D9488',
+          headerBg: '#0F766E',
+          bodyBg: '#F0FDFA',
           badgeText: `SYNDICATE CLUSTER (${node.subNodeCount})`
         };
       } else if (node.hop === 0) {
@@ -804,14 +813,57 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         ctx.restore();
       }
 
-      // 4.2 Card Body Background
+      // 4.2 Importance-Based Border Stroke & Style Hierarchy
+      let borderStrokeWidth = 1.5;
+      let borderStrokeColor = isDimmed ? '#D1D5DB' : theme.border;
+      let borderLineDash: number[] = [];
+      let importanceGlow = false;
+
+      if (node.held_paise > 0) {
+        // Priority 1: Actionable Recovery Target (Held Lien Funds to freeze immediately)
+        borderStrokeWidth = (isTarget || isHovered) ? 4.0 : 3.2;
+        borderStrokeColor = '#059669'; // Vivid Emerald Green
+        borderLineDash = [];
+        importanceGlow = true;
+      } else if (node.hop === 0) {
+        // Priority 2: Victim Origin / Complainant
+        borderStrokeWidth = (isTarget || isHovered) ? 3.5 : 2.8;
+        borderStrokeColor = '#2563EB'; // Royal Blue
+        borderLineDash = [];
+      } else if (node.isSupernode) {
+        // Priority 3: Syndicate Cluster Ring
+        borderStrokeWidth = (isTarget || isHovered) ? 3.0 : 2.5;
+        borderStrokeColor = '#0D9488'; // Syndicate Teal
+        borderLineDash = [6, 3];
+      } else if (node.hop >= 4) {
+        // Priority 4: Terminal Cashout Off-Ramp
+        borderStrokeWidth = (isTarget || isHovered) ? 3.0 : 2.4;
+        borderStrokeColor = '#DC2626'; // Alert Crimson
+        borderLineDash = [4, 2];
+      } else if ((node.taint_in_paise || 0) >= 25000000) {
+        // Priority 5: High-Value Collector Funnel (>= ₹2.5L)
+        borderStrokeWidth = (isTarget || isHovered) ? 2.8 : 2.2;
+        borderStrokeColor = '#D97706'; // Amber
+        borderLineDash = [];
+      } else {
+        // Priority 6: Standard Intermediary Mule
+        borderStrokeWidth = (isTarget || isHovered) ? 2.0 : 1.2;
+        borderStrokeColor = isDimmed ? '#D1D5DB' : '#94A3B8';
+        borderLineDash = [];
+      }
+
+      // 4.2 Card Body Background with Importance Border Stroke
       ctx.save();
+      if (importanceGlow && !isDimmed) {
+        ctx.shadowColor = 'rgba(5, 150, 105, 0.35)';
+        ctx.shadowBlur = 8;
+      }
       roundRect(ctx, x, y, w, h, CARD_RADIUS);
       ctx.fillStyle = isDimmed ? '#F3F4F6' : theme.bodyBg;
       ctx.fill();
-      ctx.strokeStyle = isDimmed ? '#D1D5DB' : theme.border;
-      ctx.lineWidth = (isTarget || isHovered) ? 2.5 : 1.5;
-      if (node.isSupernode) ctx.setLineDash([5, 3]);
+      ctx.strokeStyle = borderStrokeColor;
+      ctx.lineWidth = borderStrokeWidth;
+      if (borderLineDash.length > 0) ctx.setLineDash(borderLineDash);
       ctx.stroke();
       ctx.restore();
 
@@ -826,11 +878,11 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       ctx.lineTo(x, y + CARD_RADIUS);
       ctx.quadraticCurveTo(x, y, x + CARD_RADIUS, y);
       ctx.closePath();
-      ctx.fillStyle = isDimmed ? '#9CA3AF' : theme.headerBg;
+      ctx.fillStyle = isDimmed ? '#9CA3AF' : (node.held_paise > 0 ? '#065F46' : theme.headerBg);
       ctx.fill();
       ctx.restore();
 
-      // Header Left: Bank Tag
+      // Header Left: Bank Identifier Tag
       const bankTag = node.isSupernode ? 'CLUSTER' : (node.bank || 'BANK').slice(0, 5).toUpperCase();
       ctx.font = '700 9px JetBrains Mono, monospace';
       ctx.fillStyle = '#FFFFFF';
@@ -838,26 +890,40 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       ctx.textBaseline = 'middle';
       ctx.fillText(`[${bankTag}]`, x + 8, y + 11);
 
-      // Header Right: Role Tag
+      // Header Right: Role Tag or Actionable Lien Alert
       ctx.font = '700 8.5px Inter, sans-serif';
       ctx.textAlign = 'right';
       ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-      ctx.fillText(theme.badgeText, x + w - 8, y + 11);
+      const headerRole = node.held_paise > 0 ? '🔒 LIEN TARGET' : theme.badgeText;
+      ctx.fillText(headerRole, x + w - 8, y + 11);
 
-      // 4.4 Card Body (Account Number & Subtitle)
+      // 4.4 Card Body: Account Number (Line 1)
       ctx.textAlign = 'left';
       ctx.textBaseline = 'top';
       ctx.font = '700 12.5px JetBrains Mono, monospace';
       ctx.fillStyle = isDimmed ? '#9CA3AF' : '#111827';
-      const labelText = node.isSupernode ? node.bank : node.acct_no;
+      const labelText = node.isSupernode ? `${node.bank} Cluster (${node.subNodeCount})` : node.acct_no;
       ctx.fillText(labelText, x + 10, y + 28);
 
-      ctx.font = '500 9px Inter, sans-serif';
-      ctx.fillStyle = isDimmed ? '#9CA3AF' : '#4B5563';
-      const ifscText = node.isSupernode ? `${node.subNodeCount} Mules Grouped` : `${node.ifsc || 'Branch Account'}`;
-      ctx.fillText(ifscText, x + 10, y + 43);
+      // 4.5 Line 2: Forensic Intelligence (In/Out Flow Velocity instead of duplicated IFSC)
+      const flows = flowStatsMap.get(node.acct_no) || { inCount: 0, outCount: 0 };
+      let forensicMetric = '';
+      if (node.isSupernode) {
+        forensicMetric = `👥 ${node.subNodeCount} Mules Grouped · ${flows.inCount + flows.outCount} Txns`;
+      } else if (node.held_paise > 0) {
+        forensicMetric = `🎯 Actionable Target (${flows.inCount} Inflows)`;
+      } else if (node.hop === 0) {
+        forensicMetric = `🚨 Complainant Account · Loss Siphoned`;
+      } else if (node.hop >= 4) {
+        forensicMetric = `🏧 Terminal Cashout · ${flows.inCount} Deposits`;
+      } else {
+        forensicMetric = `⚡ ${flows.inCount} In · ${flows.outCount} Out Flows`;
+      }
+      ctx.font = '600 9px Inter, sans-serif';
+      ctx.fillStyle = isDimmed ? '#9CA3AF' : (node.held_paise > 0 ? '#047857' : '#475569');
+      ctx.fillText(forensicMetric, x + 10, y + 43);
 
-      // 4.5 Divider
+      // 4.6 Divider
       ctx.beginPath();
       ctx.moveTo(x, y + 55);
       ctx.lineTo(x + w, y + 55);
@@ -865,18 +931,35 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       ctx.lineWidth = 1;
       ctx.stroke();
 
-      // 4.6 Card Footer: Financial Lien Status
+      // 4.7 Card Footer: Actionable Financial Status & Recovery Badge
       ctx.textBaseline = 'middle';
       if (node.held_paise > 0) {
-        ctx.font = '700 9px Inter, sans-serif';
+        ctx.font = '700 9.5px Inter, sans-serif';
         ctx.fillStyle = isDimmed ? '#9CA3AF' : '#059669';
         const heldStr = `₹${(node.held_paise / 100).toLocaleString('en-IN')}`;
-        ctx.fillText(`🔒 ${heldStr} HELD`, x + 10, y + 65);
+        ctx.fillText(`🔒 ${heldStr}`, x + 10, y + 65);
+
+        ctx.font = '700 7.5px Inter, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillStyle = isDimmed ? '#9CA3AF' : '#047857';
+        ctx.fillText('100% RECOVERABLE', x + w - 10, y + 65);
+        ctx.textAlign = 'left';
+      } else if (node.taint_out_paise > 0) {
+        ctx.font = '500 8.5px Inter, sans-serif';
+        ctx.fillStyle = isDimmed ? '#9CA3AF' : '#6B7280';
+        const movedStr = `₹${(node.taint_out_paise / 100).toLocaleString('en-IN')}`;
+        ctx.fillText(`💸 ${movedStr}`, x + 10, y + 65);
+
+        ctx.font = '600 7.5px Inter, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillStyle = isDimmed ? '#9CA3AF' : '#94A3B8';
+        ctx.fillText('LAYERED', x + w - 10, y + 65);
+        ctx.textAlign = 'left';
       } else {
         ctx.font = '500 8.5px Inter, sans-serif';
         ctx.fillStyle = isDimmed ? '#9CA3AF' : '#6B7280';
         const movedStr = `₹${(node.taint_in_paise / 100).toLocaleString('en-IN')}`;
-        ctx.fillText(`MOVED ${movedStr}`, x + 10, y + 65);
+        ctx.fillText(`INFLOW ₹${movedStr}`, x + 10, y + 65);
       }
 
       // 4.7 Right Edge Expand/Collapse Toggle Button (+ / −)

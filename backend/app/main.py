@@ -812,6 +812,35 @@ def generate_freeze_hindi(req: FreezeRequest):
 def get_benchmarks():
     return telemetry.get_system_stats()
 
+class AIChatRequest(BaseModel):
+    message: str
+    selected_account: Optional[str] = None
+
+@app.post("/api/ai/chat")
+async def chat_with_ai(req: AIChatRequest):
+    from backend.app.ai.chatbot import query_ai_chatbot
+    conn = ingest_engine.get_connection()
+    result = await query_ai_chatbot(req.message, conn, req.selected_account)
+    return result
+
+@app.get("/api/ai/status")
+def get_ai_status():
+    import os
+    ollama_host = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
+    ollama_model = os.environ.get("OLLAMA_MODEL", "llama3.2")
+    return {
+        "ollama_host": ollama_host,
+        "ollama_model": ollama_model,
+        "guardrail_active": True,
+        "features": [
+            "Anti-Prompt-Injection & Anomaly Guardrail",
+            "BNSS 106 & 107 Statutory Notice Drafter",
+            "Money Trail Flow Summarization",
+            "Mule Account Forensic Profiler",
+            "Local Ollama Integration with Offline Deterministic Engine"
+        ]
+    }
+
 # Mount frontend build static directory if present
 STATIC_DIR = Path("frontend/dist")
 if STATIC_DIR.exists():

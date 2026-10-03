@@ -8,6 +8,7 @@ import { LegalReportsTab } from './components/LegalReportsTab';
 import { DatasetTab } from './components/DatasetTab';
 import { LoadDataTab } from './components/LoadDataTab';
 import { SettingsTab } from './components/SettingsTab';
+import { AIChatModal } from './components/AIChatModal';
 import type { OverviewData } from './types';
 
 export const App: React.FC = () => {
@@ -176,6 +177,9 @@ export const App: React.FC = () => {
           </div>
         </main>
       </div>
+
+      {/* Floating AI Utility Copilot Window at bottom right of all screens */}
+      <AIChatModal currentAccount={selectedVictim} />
     </div>
   );
 };
