@@ -81,11 +81,11 @@ def build_account_ledger(
         )
 
     # 4. Tier Assignment
-    if clipped_risk >= 85.0:
+    if clipped_risk >= 75.0:
         tier = "Critical"
-    elif clipped_risk >= 65.0:
-        tier = "High"
     elif clipped_risk >= 40.0:
+        tier = "High"
+    elif clipped_risk >= 20.0:
         tier = "Medium"
     else:
         tier = "Low"

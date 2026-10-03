@@ -72,10 +72,10 @@ pseudo_labels:
 # 7. Decision Threshold & Tiers
 flag_threshold: "auto"     # "auto" (calibrated in [55, 80] via mixture/elbow) or numeric
 tiers:
-  low: [0.0, 39.9]
-  medium: [40.0, 64.9]
-  high: [65.0, 84.9]
-  critical: [85.0, 100.0]
+  low: [0.0, 19.9]
+  medium: [20.0, 39.9]
+  high: [40.0, 74.9]
+  critical: [75.0, 100.0]
 
 # 8. Automatic Fallback Gate Constraints
 fallback_limits:

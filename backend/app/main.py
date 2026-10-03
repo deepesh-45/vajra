@@ -128,6 +128,7 @@ def overview():
     try:
         tier_counts = dict(conn.execute("SELECT tier, count(*) FROM account_scores GROUP BY tier;").fetchall())
         role_counts = dict(conn.execute("SELECT predicted_role, count(*) FROM account_scores GROUP BY predicted_role;").fetchall())
+        mule_count = conn.execute("SELECT count(*) FROM account_scores WHERE tier IN ('High', 'Critical');").fetchone()[0]
         top_mules = conn.execute("""
             SELECT acct_no, primary_bank, risk_index, tier, predicted_role, score_velocity, score_topology, score_cashout,
                    COALESCE(isolation_anomaly_score, 0.0) AS isolation_anomaly_score,
@@ -142,6 +143,7 @@ def overview():
         print("Error reading account scores:", e)
         tier_counts = {}
         role_counts = {}
+        mule_count = 0
         top_mules = []
 
     # Get sample known victim accounts with fraudulent inflows
@@ -160,6 +162,7 @@ def overview():
         "dataset_sha256": dataset_sha256,
         "total_transactions": total_txns,
         "total_accounts": total_accts,
+        "mule_accounts": mule_count,
         "tier_distribution": tier_counts,
         "role_distribution": role_counts,
         "top_mules": top_mules,
@@ -468,8 +471,15 @@ def get_models_info():
 def train_detector():
     conn = get_db()
     feature_engine.compute_features(conn)
+    rule_scoring_engine.compute_scores(conn)
     metrics = isolation_detector.train_unsupervised_model(conn)
     return metrics
+
+@app.post("/api/detect/rescore")
+def rescore_rules():
+    conn = get_db()
+    stats = rule_scoring_engine.compute_scores(conn)
+    return stats
 
 
 class InjectionTestRequest(BaseModel):
