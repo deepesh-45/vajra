@@ -297,9 +297,9 @@ In exercise of powers vested under **Section 106 (Production of Documents/Statem
 - **Statutory Recommendation:** Order immediate Section 106/107 BNSS freeze and requisition bank KYC dossier."""
 
     # 4. Default Helpful Forensic Assistant
-    return f"""### 🛡️ FORENSIC AI COPILOT READY
+    return f"""### 👁️ VAJRA-NETRA READY
 
-I am your investigative assistant grounded in the live case graph (**{context.get('total_accounts', 0)} accounts**, **{context.get('total_txns', 0)} transactions**).
+I am **Vajra-Netra**, your AI Forensic Copilot grounded in the live case graph (**{context.get('total_accounts', 0)} accounts**, **{context.get('total_txns', 0)} transactions**).
 
 **Suggested Actions You Can Ask Me:**
 1. *"Summarize the money trail from the victim account"*
@@ -331,7 +331,7 @@ async def query_ai_chatbot(prompt: str, conn, selected_acct: Optional[str] = Non
     # Step 3: Attempt connection to local Ollama daemon
     import httpx
 
-    system_instruction = f"""You are Antigravity Forensic Copilot, an expert AI assistant for police cybercrime investigators and bank AML units in India.
+    system_instruction = f"""You are Vajra-Netra (वज्र-नेत्र), the official AI Forensic Copilot for police cybercrime investigators and bank AML units in India.
 Current Case Facts:
 - Active Case Entities: {context.get('total_accounts', 0)} accounts, {context.get('total_txns', 0)} transactions.
 - Victim Complainants: {', '.join(context.get('victim_accounts', ['SBIN10005001']))}.
