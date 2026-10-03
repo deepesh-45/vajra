@@ -228,6 +228,17 @@ def _get_case_snapshot(conn) -> Dict[str, Any]:
 
     return snap
 
+def _has_word(query: str, words: List[str]) -> bool:
+    """Matches words or phrases safely respecting word boundaries for single words."""
+    for w in words:
+        if " " in w or "_" in w:
+            if w in query:
+                return True
+        else:
+            if re.search(r"\b" + re.escape(w) + r"\b", query):
+                return True
+    return False
+
 # ---------------------------------------------------------------------------
 # 3. Comprehensive Forensic Analytical Engine
 # ---------------------------------------------------------------------------
@@ -240,12 +251,44 @@ def generate_deterministic_reply(prompt: str, conn, selected_acct: Optional[str]
 
     # -----------------------------------------------------------------------
     # Pattern A: Specific Account Search / Audit / Profile
-    # Check if a specific account number is mentioned in the prompt or passed from UI
+    # ONLY triggers if:
+    # 1. An account number is explicitly written in the prompt (e.g. "AIRP10000936", "Why is SBIN10000772 flagged?")
+    #    AND it is NOT a notice drafting or general case query
+    # 2. OR selected_acct is passed AND user explicitly asked to inspect/audit "this account"
     # -----------------------------------------------------------------------
+    is_notice_query = _has_word(p_lower, [
+        "draft", "notice under", "generate notice", "create notice", "requisition under", 
+        "section 106 notice", "section 107 notice", "bnss notice", "crpc notice", "order to bank", "legal notice", "freeze notice"
+    ])
+    is_general_query = _has_word(p_lower, [
+        "who is the victim", "complainant", "who lost money", "who was scammed", "stolen from",
+        "how much", "total loss", "stolen", "volume", "turnover", "how much money",
+        "which account", "which accounts", "where is the money", "where are the funds", "recoverable",
+        "top mule", "mules", "suspect", "high risk", "most suspicious", "who received",
+        "which bank", "what bank", "banks involved", "participating bank",
+        "cashout", "cash out", "atm", "crypto", "withdrawal",
+        "next step", "what should i do", "what to do", "recommendation", "action plan",
+        "smurfing", "layering", "modus operandi", "summarize", "money trail", "overview", "what happened",
+        "how many account", "how many transaction", "dataset",
+        "same answer", "same qus", "same question", "giving same", "repeating", "expected answer", 
+        "who are you", "help", "hello", "hi", "hey"
+    ])
+
     acct_match = re.search(r"\b([A-Z]{4}\d{4,16}|\d{10,18})\b", prompt.upper())
-    explicit_acct = acct_match.group(1) if acct_match else (selected_acct.strip().upper() if selected_acct else None)
     
-    if explicit_acct:
+    audit_target_acct = None
+    if acct_match and not is_notice_query and not is_general_query:
+        audit_target_acct = acct_match.group(1)
+    elif selected_acct and _has_word(p_lower, [
+        "this account", "selected account", "current account", "why flagged", 
+        "why is it flagged", "is it flagged", "is this a mule", "is it a mule", 
+        "audit", "role of this", "risk score of this", "inspect this", "profile this",
+        "tell me about this account", "what is this account"
+    ]):
+        audit_target_acct = selected_acct.strip().upper()
+
+    if audit_target_acct:
+        explicit_acct = audit_target_acct
         try:
             # 1. Check account scores (exact schema without nonexistent columns)
             s_row = conn.execute("""
@@ -493,8 +536,9 @@ Serve statutory debit-freeze notices under **Section 106 & 107 BNSS, 2023** to t
     # Pattern E: Top Suspects, Mule Rings & High-Risk Accounts
     # -----------------------------------------------------------------------
     if any(k in p_lower for k in [
-        "suspect", "top mule", "mules", "high risk", "critical account", "most suspicious", 
-        "who received", "beneficiar", "fraudster", "ring", "dangerous", "top accounts", 
+        "mule", "mules", "suspect", "suspects", "collector", "collectors", "distributor", "distributors",
+        "top mule", "high risk", "critical account", "most suspicious", 
+        "who received", "beneficiar", "fraudster", "fraudsters", "ring", "dangerous", "top accounts", 
         "flagged", "who to arrest", "criminals", "culprits", "mastermind"
     ]):
         try:
@@ -794,8 +838,10 @@ The unsupervised **Isolation Forest** model identified statistical topological a
     # Pattern M: Chatbot Meta, Troubleshooting & Quality Guidance
     # -----------------------------------------------------------------------
     if any(k in p_lower for k in [
-        "not answering", "not related", "incorrect", "wrong answer", "improve", 
-        "ensure it answers", "without fail", "expected answer", "chatbot", "vajra-netra", "who are you"
+        "same answer", "same qus", "same question", "giving same", "repeating", "repeats",
+        "vajra net", "vajra netra", "not answering", "not related", "incorrect", "wrong answer", 
+        "improve", "ensure it answers", "without fail", "expected answer", "chatbot", "who are you",
+        "help", "hello", "hi", "hey"
     ]):
         v_loss = _format_inr(snap["victim_loss"])
         v_acct = snap["victim_acct"] or "AXIS10000018"
