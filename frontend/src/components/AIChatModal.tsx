@@ -32,9 +32,8 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ currentAccount }) => {
     {
       id: 'welcome',
       sender: 'assistant',
-      text: `### 👁️ VAJRA-NETRA READY\n\nI am **Vajra-Netra**, your AI Forensic Copilot powered by a local **Ollama** model and protected by an **Anti-Injection Guardrail**.\n\n**Operational Capabilities:**\n- 📊 **Money Trail Summaries**: Graph traversal, hop breakdown, and fund siphoning flows.\n- 🏛️ **BNSS Statutory Notices**: Instant Section 106 & 107 freeze requisitions for Axis, SBI, HDFC, ICICI.\n- 🔍 **Mule Profiling**: Identifying smurfing rings, collector hubs, and actionable recoverable liens.\n\n*Select a quick prompt below or type your investigative inquiry.*`,
+      text: `### 👁️ Vajra-Netra\nActive forensic copilot. Ask a trail question or select an action below.`,
       isSafe: true,
-      engine: 'vajra-netra-engine',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
   ]);
@@ -119,19 +118,18 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ currentAccount }) => {
       {
         id: `welcome-${Date.now()}`,
         sender: 'assistant',
-        text: 'Session reset. Vajra-Netra ready for your investigation queries.',
+        text: 'Session reset. Ask a question or select a prompt below.',
         isSafe: true,
-        engine: 'vajra-netra-engine',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }
     ]);
   };
 
   const quickPrompts = [
-    { label: '📊 Summarize Trail', query: 'Summarize the multi-hop money trail for this case' },
-    { label: '🏛️ Draft BNSS Notice', query: 'Draft a Section 106 and 107 BNSS freeze notice for Axis Bank' },
+    { label: '📊 Trail Summary', query: 'Summarize the multi-hop money trail for this case' },
+    { label: '🏛️ Freeze Notice', query: 'Draft a Section 106 and 107 BNSS freeze notice for Axis Bank' },
     { label: '🔒 Recoverable Funds', query: 'Which accounts are holding recoverable funds right now?' },
-    { label: '🚨 Inspect Mule Hubs', query: 'Identify top money mule collector accounts in Stage 1 and Stage 2' }
+    { label: '🚨 Top Mules', query: 'Identify top money mule collector accounts in Stage 1 and Stage 2' }
   ];
 
   return (
@@ -198,22 +196,7 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ currentAccount }) => {
             <span style={{ fontWeight: 800, fontSize: '0.86rem', color: '#0F172A', letterSpacing: '0.01em', lineHeight: 1.2 }}>
               Vajra-Netra
             </span>
-            <span style={{ fontSize: '0.66rem', color: '#64748B', fontWeight: 600 }}>
-              AI Forensic Copilot
-            </span>
           </div>
-          <span style={{
-            fontSize: '0.66rem',
-            fontWeight: 700,
-            padding: '2px 7px',
-            backgroundColor: '#EFF6FF',
-            color: '#1D4ED8',
-            borderRadius: '6px',
-            border: '1px solid #DBEAFE',
-            marginLeft: '4px'
-          }}>
-            Ollama
-          </span>
         </button>
       )}
 
@@ -223,9 +206,9 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ currentAccount }) => {
           position: 'fixed',
           bottom: '22px',
           right: '24px',
-          width: '440px',
+          width: '560px',
           maxWidth: 'calc(100vw - 36px)',
-          height: '620px',
+          height: '650px',
           maxHeight: 'calc(100vh - 44px)',
           zIndex: 10000,
           backgroundColor: '#FFFFFF',
@@ -248,37 +231,36 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ currentAccount }) => {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <div style={{
-                width: '34px',
-                height: '34px',
-                borderRadius: '10px',
+                width: '32px',
+                height: '32px',
+                borderRadius: '8px',
                 backgroundColor: '#2563EB',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: '0 2px 8px rgba(37, 99, 235, 0.3)'
+                boxShadow: '0 2px 6px rgba(37, 99, 235, 0.25)'
               }}>
-                <Eye size={18} color="#FFFFFF" />
+                <Eye size={17} color="#FFFFFF" />
               </div>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ color: '#0F172A', fontWeight: 800, fontSize: '0.92rem' }}>
-                    Vajra-Netra
-                  </span>
-                  <span style={{
-                    fontSize: '0.65rem',
-                    fontWeight: 700,
-                    padding: '1px 6px',
-                    borderRadius: '4px',
-                    backgroundColor: '#ECFDF5',
-                    color: '#059669',
-                    border: '1px solid #A7F3D0'
-                  }}>
-                    🛡️ Guarded
-                  </span>
-                </div>
-                <div style={{ color: '#64748B', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <span>Local Ollama · Anti-Injection Active</span>
-                </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ color: '#0F172A', fontWeight: 800, fontSize: '0.94rem' }}>
+                  Vajra-Netra
+                </span>
+                <span style={{
+                  fontSize: '0.66rem',
+                  fontWeight: 600,
+                  padding: '1px 7px',
+                  borderRadius: '9999px',
+                  backgroundColor: '#ECFDF5',
+                  color: '#059669',
+                  border: '1px solid #A7F3D0',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}>
+                  <span style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: '#10B981' }} />
+                  Active
+                </span>
               </div>
             </div>
 
@@ -458,31 +440,28 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ currentAccount }) => {
                     })}
                   </div>
 
-                  {/* Assistant Message Footer: Engine Tag & Copy Button */}
+                  {/* Assistant Message Footer: Copy Button */}
                   {msg.sender === 'assistant' && (
                     <div style={{
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'space-between',
-                      marginTop: '8px',
-                      paddingTop: '6px',
-                      borderTop: '1px solid #F1E9DF',
-                      fontSize: '0.67rem',
-                      color: '#64748B'
+                      justifyContent: 'flex-end',
+                      marginTop: '6px',
+                      paddingTop: '4px'
                     }}>
-                      <span>{msg.engine}</span>
                       <button
                         onClick={() => handleCopyText(msg.id, msg.text)}
                         title="Copy text"
                         style={{
                           background: 'none',
                           border: 'none',
-                          color: copiedId === msg.id ? '#059669' : '#64748B',
+                          color: copiedId === msg.id ? '#059669' : '#94A3B8',
                           cursor: 'pointer',
                           display: 'flex',
                           alignItems: 'center',
                           gap: '3px',
                           padding: '2px 4px',
+                          fontSize: '0.68rem',
                           fontWeight: 600
                         }}
                       >
@@ -519,7 +498,7 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ currentAccount }) => {
                   <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#2563EB', animation: 'pulse 1s infinite 0.4s' }} />
                 </div>
                 <span style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 500 }}>
-                  Vajra-Netra is analyzing graph & law...
+                  Analyzing...
                 </span>
               </div>
             )}
@@ -542,7 +521,7 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ currentAccount }) => {
               <input
                 ref={inputRef}
                 type="text"
-                placeholder="Ask trail questions, draft freeze notices, audit mules..."
+                placeholder="Ask about money trail, freeze notice, or accounts..."
                 value={inputMessage}
                 onChange={e => setInputMessage(e.target.value)}
                 disabled={isLoading}
@@ -581,18 +560,6 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ currentAccount }) => {
                 <Send size={15} />
               </button>
             </form>
-
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginTop: '8px',
-              fontSize: '0.66rem',
-              color: '#64748B'
-            }}>
-              <span>🛡️ Anti-Injection Guardrail Active</span>
-              <span>Ollama: 127.0.0.1:11434</span>
-            </div>
           </div>
         </div>
       )}

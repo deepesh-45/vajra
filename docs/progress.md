@@ -224,9 +224,36 @@ To rigorously test Operation Vajra beyond standard benchmarks, we implemented **
 
 ---
 
-## 8. Current Project Status
+## 8. Latest Forensic Enhancements & Milestones
 
-- **Codebase:** Clean, fully modular architecture across `backend/`, `frontend/`, `bench/`, `data/synthetic/`, and `config/`.
+### 8.1 Vajra-Netra (वज्र-नेत्र) AI Forensic Copilot
+- **Local Ollama Integration**: Operates locally with Ollama (`http://localhost:11434`, model `llama3.2`) with grounded real-time DuckDB graph facts.
+- **Anti-Injection & Anomaly Guardrail**: Multi-stage pre-execution prompt validation:
+  - Neutralizes prompt-injection attempts ("DAN", developer mode, system override, instruction dumping).
+  - Sanitizes and blocks database/code execution payloads (`DROP TABLE`, `UNION SELECT`, script tags, OS calls).
+  - Rejects anomalous off-topic queries (recipes, poetry, gaming, general chat) to maintain strict evidentiary scope.
+- **Statutory Notice Generation (BNSS 2023 / CrPC)**: Generates instant debit-freeze requisitions under Section 106 & 107 BNSS for Nodal Officers of SBI, Axis, HDFC, ICICI, etc.
+- **Zero-Hallucination Fallback**: Deterministic fallback engine generates 100% verified money trail summaries and account risk audits when Ollama is offline.
+- **Enterprise Chat Interface**: 560px clean modal styled with warm almond (`#FAF6F0`), clean card white (`#FFFFFF`), warm borders (`#D5C7B5`), and royal cobalt (`#2563EB`).
+
+### 8.2 Adaptive 25-Node Vertical Topology & Layeric Right-Expansion
+- **Adaptive 25-Node Threshold**: For graphs with $\le 25$ nodes, displays standard Sugiyama layout. For graphs with $> 25$ nodes, automatically activates a vertical single-spine flow (Victim on top $\to$ Cashout on bottom).
+- **Expand-on-Demand via Right-Edge Trigger**: Nodes feature an interactive `(+)` button on their right boundary. Clicking expands downstream connections horizontally to the right into the next discrete vertical column layer.
+- **6x Layer Separation & Center-to-Center Geometry**: Vertical layers spaced at ~600px with center-to-center cubic bezier edges.
+- **Ergonomic Trackpad Pinch-to-Zoom**: Non-linear exponential dampening curve (`Math.exp(-deltaY * 0.0015)`) for both macOS and Windows trackpads.
+- **Visual Node Hierarchy**: Replaced repetitive IFSC text with `⚡ X In · Y Out Flows`, and introduced border stroke importance (3.5px emerald lien targets, 3.0px royal blue victim, 2.8px dashed teal clusters, 2.5px dashed red cashouts).
+
+### 8.3 Uniform Bento Grid on Load Data Screen
+- **4 Equal-Sized Bento Cards**: Perfectly equal length and width across all 4 grid cells.
+- **Upload Box Relocation**: Ingestion box positioned in the top slot.
+- **Scrollable High Suspect Accounts**: Positioned in the bottom-right card with smooth internal scrolling (`overflow-y: auto`) without altering the card geometry.
+- **Navigation Bar Telemetry**: Active file name and dataset status relocated directly to the top navigation bar.
+
+---
+
+## 9. Current Project Status
+
+- **Codebase:** Clean, fully modular architecture across `backend/`, `frontend/`, `bench/`, `synthetic_data/`, and `config/`.
 - **Git Repository:** Synced and pushed to [https://github.com/Void-Hacks-8-0-2/paradox](https://github.com/Void-Hacks-8-0-2/paradox) on branch `main`.
 - **Git LFS:** Tracking the 286 MB 2-million-row transaction dataset and model weights.
 - **Static Frontend Assets:** Pre-compiled into `frontend/dist/` and served directly by FastAPI for single-command startup.
@@ -236,7 +263,7 @@ To rigorously test Operation Vajra beyond standard benchmarks, we implemented **
 
 ---
 
-## 9. How to Run & Verify
+## 10. How to Run & Verify
 
 ### One-Command Launch:
 ```bash

@@ -444,22 +444,97 @@ Vajra guarantees **100% Zero-Hallucination Evidence Generation** via a determini
 
 ---
 
+---
+
 ## 8. Frontend & Cognitive Forensics Design System
 
-The frontend was built from scratch with React 19 + TypeScript + Vite, adhering to strict digital forensic usability requirements:
+The frontend was engineered from scratch with **React 19 + TypeScript + Vite**, adhering to strict digital forensic usability requirements and low-fatigue cognitive design principles:
 
-- **Enterprise Slate & Blue Design System:** Designed for 12-hour police shift work with a clean, professional, low-fatigue interface:
-  - Application Background: Soft Slate (`#F4F7FB`)
-  - Card Surface: Pure White (`#FFFFFF`) with `1px solid #E2E8F0` borders
-  - Header & Body Surface: Faint Off-White (`#F8FAFC`)
-  - Typography: Deep Slate (`#0F172A` headings, `#334155` body, `#64748B` captions)
-  - Primary Accent: Royal Blue (`#2563EB`) for active states and key CTAs
-  - Sidebar: Warm Pastel Almond (`#F4EDE4`) with refined warm borders (`#E2D7C8`) and high-contrast typography
-  - Status Colors: Emerald (`#10B981`), Rose (`#EF4444`), Amber (`#F59E0B`), Purple (`#8B5CF6`)
-- **Custom Interactive Canvas Graph Engine:** 60 FPS rendering supporting smooth zoom, pan, and interactive node drag-and-drop.
-- **Sugiyama Hierarchical DAG Layout:** Automatically sorts nodes into horizontal layers (Victim $\to$ Layer 1 $\to$ Layer 2 $\to$ Drainage) preventing tangled "hairball" visual graphs.
-- **Temporal Playback Engine:** Officers can drag a chronological time slider to watch the crime unfold minute-by-minute across the banking network.
-- **Bilingual Support:** One-click instant switching between English and Hindi for court notices and investigation summaries.
+### 8.1 The Warm Almond, Slate & Cobalt Enterprise Design System
+Designed specifically for high-stress, 12-hour police shift work, the interface rejects high-glare neon aesthetics in favor of a tactile, institutional aesthetic:
+- **Application Surface:** Soft cream and warm almond backdrop (`#FAF6F0` / `#F4EDE4`).
+- **Card Containers:** Pure White (`#FFFFFF`) with warm structural borders (`#D5C7B5` / `#E2D7C8`).
+- **Typography:** High-contrast slate hierarchy (`#0F172A` headings, `#334155` body text, `#64748B` metadata).
+- **Primary Operational Accent:** Royal Cobalt (`#2563EB`) for active states, key CTAs, and victim tracing pins.
+- **Evidentiary Status Colors:** Emerald (`#10B981`) for recoverable funds, Rose (`#EF4444`) for critical cashouts, Amber (`#F59E0B`) for high-velocity aggregators, and Indigo (`#6366F1`) for syndicate loops.
+
+### 8.2 Load Data Bento Layout: 4 Uniform-Sized Cards & Nav Telemetry
+The Ingestion screen organizes forensic data handling into **four perfectly equal-dimensioned cards** that maintain strict geometric stability regardless of state changes:
+1. **Active Ingestion / File Upload (Top Slot):** Features zero-flicker drag-and-drop file ingestion, dynamic schema mapping verification, and real-time streaming SHA-256 progress.
+2. **Case Configuration:** File metadata, target victim selector, and hop threshold limits.
+3. **Graph Diagnostics:** Active node counts, edge distributions, and memory footprint.
+4. **High Suspect Accounts (Bottom-Right Slot):** Houses an internally scrollable table (`overflow-y: auto`) of top-flagged mule accounts with risk indices, preserving exact card height and width.
+5. **Navigation Bar Ingestion Telemetry:** Active dataset status, file name, and record counts are integrated directly into the persistent top navigation bar, eliminating redundant search bar clutter.
+
+### 8.3 Adaptive 25-Node Graph Topology & Vertical Single-Spine Flow
+To eliminate the cognitive overload and unreadable "hairballs" produced by standard graph layouts on large datasets, Vajra's canvas implements an **Adaptive Complexity Threshold**:
+- **Graphs $\le 25$ Nodes:** Rendered using the standard Sugiyama hierarchical DAG layout with full branch visibility.
+- **Graphs $> 25$ Nodes:** Automatically transitions into a **Vertical Single-Spine Topology**:
+  - Displays the **Victim Complainant** at the top vertical apex.
+  - Displays the primary **Terminal Cashout** at the bottom vertical base.
+  - Extraneous multi-hop branches are initially collapsed, presenting a clear, direct, and unencumbered fund trail.
+
+### 8.4 Expand-on-Demand via Right-Edge Trigger & 6x Layer Spacing
+Investigators expand downstream investigations on their own terms:
+- **Right-Edge (+) Expansion Trigger:** Every node contains an interactive `(+)` button anchored to its right boundary.
+- **Discrete Vertical Layer Expansion:** Clicking expands all immediate downstream counter-parties horizontally to the right into the next discrete vertical column layer.
+- **6x Layer Separation:** Vertical layer spacing is extended to **~600px (6x standard spacing)**, providing ample breathing room for node metadata and preventing edge collisions.
+- **Center-to-Center Edge Geometry:** Inter-layer edges connect strictly from the vertical center-right of the upstream node to the vertical center-left of the downstream node using smooth cubic bezier splines.
+
+### 8.5 Node Importance & Border Stroke Hierarchy
+Visual importance is immediately communicated through defined border strokes:
+- **3.5px Glowing Emerald Border (`#059669` / `#10B981`):** Actionable accounts holding recoverable positive balances (priority lien targets).
+- **3.0px Royal Blue Border (`#2563EB`):** Victim complainant origin account.
+- **2.8px Dashed Teal Border (`#0D9488`):** Identified members of circular syndicate rings.
+- **2.5px Dashed Crimson Border (`#DC2626`):** Terminal cashout points (ATMs, Crypto OTCs, POS).
+- **2.2px Amber Border (`#D97706`):** High-volume layering aggregators.
+- **1.2px Slate Border (`#94A3B8`):** Intermediary pass-through mules.
+- **Dynamic Flow Metrics:** Replaces repetitive IFSC strings with live counters: `⚡ X In · Y Out Flows`.
+
+### 8.6 Ergonomic Trackpad Pinch-to-Zoom
+Canvas zoom sensitivity features an exponential dampening curve (`Math.exp(-deltaY * 0.0015)`). This delivers smooth, micro-controlled zoom levels across both macOS precision glass trackpads and Windows Precision touchpads, eliminating sudden disorientation during demonstrations.
+
+### 8.7 Vajra-Netra (वज्र-नेत्र) AI Forensic Copilot
+Vajra incorporates a dedicated, sovereign AI Forensic Copilot accessible via a persistent floating action pill at the bottom-right of the screen:
+
+```
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │                    VAJRA-NETRA AI FORENSIC ARCHITECTURE                     │
+  └──────────────────────────────────────┬──────────────────────────────────────┘
+                                         │ User Query / Prompt
+                                         ▼
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │                  MULTI-LAYER ANTI-INJECTION GUARDRAIL                       │
+  │  • Regex & Semantic Jailbreak Interceptor (Blocks DAN, Developer Mode)     │
+  │  • Code / SQL Injection Sanitizer (Blocks DROP TABLE, UNION SELECT, Script) │
+  │  • Domain Anomaly Scope Filter (Rejects recipes, creative writing, games)   │
+  └──────────────────┬───────────────────────────────────────┬──────────────────┘
+                     │ (If Malicious / Out of Scope)         │ (If Legitimate Forensic)
+                     ▼                                       ▼
+        [ INTERCEPT & WARN USER ]              [ EXTRACT LIVE DUCKDB FACTS ]
+                                               • Total Case Accounts & Transactions
+                                               • Victim & High-Mule Balance Facts
+                                                             │
+                                                             ▼
+                                               [ LOCAL OLLAMA INFERENCE ]
+                                               • Host: http://localhost:11434
+                                               • Model: llama3.2 (Offline)
+                                                             │
+                                                             ▼ (If Ollama Offline)
+                                               [ ZERO-HALLUCINATION FALLBACK ]
+                                               • Statutory BNSS 106/107 Notices
+                                               • Verified Money Trail Summaries
+```
+
+1. **Local Ollama Inference (`llama3.2`):** Runs 100% locally on localhost without outbound cloud calls, preserving bank account data confidentiality.
+2. **Multi-Layer Anti-Injection Guardrail:**
+   - Detects and neutralizes prompt-injection attacks ("ignore all previous instructions", "act as DAN", "system override", "dump system prompt").
+   - Intercepts malicious SQL, shell, or code payloads.
+   - Rejects non-investigative queries outside cyber financial crime, money laundering, and statutory banking notices.
+3. **Statutory BNSS 106 & 107 Freeze Order Drafter:**
+   - Formulates formal freeze orders under **Section 106 (Document Production)** and **Section 107 (Attachment & Seizure of Stolen Cyber Proceeds)** of BNSS, 2023.
+   - Pre-fills verified suspect accounts, target bank nodal compliance divisions, and penal warnings under Section 223 BNS.
+4. **Clean Enterprise UI:** 560px modal featuring quick suggestion pills, one-click copy buttons, and an uncluttered layout matching the warm almond and cobalt palette.
 
 ---
 
@@ -536,6 +611,7 @@ Vajra/
 │       │   ├── features.py             # Vectorized behavioral & FIFO pass-through feature extraction engine
 │       │   └── shap_explainer.py       # TreeSHAP game-theoretic explainability engine & court evidentiary synthesizer
 │       ├── ai/
+│       │   ├── chatbot.py              # Anti-Injection Guardrail & Local Ollama AI Copilot (Vajra-Netra)
 │       │   ├── narr_classifier.py      # Character n-gram TF-IDF narration classifier & injection shield
 │       │   └── anti_hallucination.py   # AST-level database verification engine
 │       └── reports/
@@ -557,15 +633,16 @@ Vajra/
 │   ├── package.json                    # Frontend dependencies (React 19, Lucide, Vite)
 │   ├── src/
 │   │   ├── main.tsx                    # React application bootstrap
-│   │   ├── App.tsx                     # Main layout coordinator and tab state router
-│   │   ├── index.css                   # Enterprise Slate & Blue design tokens and CSS variables
+│   │   ├── App.tsx                     # Main layout coordinator, tab state router, and Vajra-Netra copilot mount
+│   │   ├── index.css                   # Warm almond, white card, slate, and royal cobalt design system
 │   │   ├── types.ts                    # Strict TypeScript interfaces matching backend schemas
 │   │   └── components/
+│   │       ├── AIChatModal.tsx         # Vajra-Netra 560px AI forensic copilot modal
 │   │       ├── Header.tsx              # Vajra shield logo, global search, and telemetry status
 │   │       ├── Sidebar.tsx             # Primary navigation with atmospheric background
 │   │       ├── InvestigateTab.tsx      # Target account input, hops slider, trace controls
-│   │       ├── GraphCanvas.tsx         # Fullscreen OSINT network visualizer (canvas, clustering)
-│   │       ├── LoadDataTab.tsx         # Forensic study creation & dataset ingestion
+│   │       ├── GraphCanvas.tsx         # Adaptive 25-node vertical canvas with (+) layeric expansion
+│   │       ├── LoadDataTab.tsx         # 4-box uniform bento ingestion grid
 │   │       ├── AccountsTab.tsx         # Searchable account directory with risk scores & TreeSHAP
 │   │       ├── SyndicatesTab.tsx       # Clustered mule ring explorer
 │   │       ├── LegalReportsTab.tsx     # Court notice preview, Hindi toggle, and print/export

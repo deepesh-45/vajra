@@ -5,10 +5,11 @@
 |---|---|
 | Event | Void Hacks() 8.0 — Theme: Abhedya (Cyber Security & Digital Forensics) |
 | In association with | Indore Police Commissionerate |
-| Version | 1.0 (build-ready) |
-| Date | 01 October 2026 |
+| Project Name | Vajra (वज्र) |
+| Version | 2.0 (Pure Unsupervised AI + TreeSHAP) |
+| Date | 02 October 2026 |
 | Execution window | 36 hours |
-| Dataset scale | 2,000,000 transactions · ~25,000 accounts (1,500 injected mules, 23,500 regular) |
+| Dataset scale | 2,000,000 transactions · ~25,000 accounts |
 | Status | Approved for implementation |
 
 > **How to read this document.** Sections 1–5 explain *why* and *for whom*. Sections 6–14 define *what* and *how* (requirements, architecture, stack, data, algorithms, AI). Section 15 is the UI specification. Sections 16–22 cover outputs, security, testing, fallbacks and the **hour-by-hour build guide**. Every requirement has an ID (e.g. `FR-B3`) so the team can track it.
@@ -48,7 +49,7 @@
 
 Financial cyber-fraud syndicates (digital arrest, fake task, Ponzi bot, loan-app fraud) move stolen money through **multi-tier mule account networks** within minutes. Investigators receive multi-bank exports of millions of rows and lose the critical window in which funds can still be frozen.
 
-**Abhedya-Chakra** is a locally deployed analytics workbench that, given a bulk transaction export:
+**Vajra** is a locally deployed analytics workbench that, given a bulk transaction export:
 
 1. Ingests and indexes **2M+ rows in ≤ 60 s** on a 16 GB laptop.
 2. Scores every account on a **0–100 Mule Risk Index** using explainable graph/behaviour rules plus a self-adapting ML layer.
@@ -420,10 +421,9 @@ Priority: **P0** = must for demo, **P1** = should, **P2** = stretch.
 | Columnar interchange | Apache Arrow / Parquet | CSV | — | |
 | Graph traversal | NumPy CSR arrays (+ Numba `@njit` for BFS) | `python-igraph` | SciPy sparse + `networkx` (subgraphs only) | Numba optional; pure NumPy BFS is the fallback |
 | Cycle / SCC | `igraph` / `scipy.sparse.csgraph.connected_components` | `networkx` on suspect subgraph | — | |
-| Feature SQL | DuckDB window functions | Polars `rolling` | pandas on per-account groups (slow) | |
-| ML (tabular) | **LightGBM** | XGBoost | scikit-learn `HistGradientBoosting` | |
-| Embeddings | Spectral/SVD embedding of adjacency (fast, deterministic) | node2vec | PyTorch Geometric GraphSAGE | Start with SVD; GNN only if time |
-| Explainability | LightGBM `pred_contrib` (SHAP) | Permutation importance | Rule-contribution table | |
+| Feature SQL | DuckDB window functions | Polars `rolling` | pandas on per-account groups (slow) | < 0.10s 15-D extraction |
+| ML (Unsupervised) | **Isolation Forest** (150 trees, sub-sampling) | Local Outlier Factor | scikit-learn `OneClassSVM` | Zero labels needed; 0.17s CPU fit |
+| Explainability | **TreeSHAP** (`shap.TreeExplainer`) | Exact Shapley values | Section 106 BNSS text generator | Lundberg Nature MI 2020 |
 | Narration classifier | TF-IDF + Logistic Regression (scikit-learn) | fastText | Regex dictionary | Also injection detector |
 | Local LLM | **llama.cpp** / `llama-cpp-python` with Qwen2.5-7B-Instruct Q4_K_M (GGUF) | Ollama (same model) | Qwen2.5-3B Q4 or Llama-3.2-3B | CPU-only; ~5 GB RAM |
 | LLM output control | GBNF grammar / JSON schema | Regex-validated JSON | **Template-only mode (no LLM)** | Template mode must always work |
@@ -617,28 +617,21 @@ On load, compute score distributions and propose cutoffs: elbow of sorted scores
 
 | # | Model | Purpose | Trained when | Runtime | Fallback |
 |---|---|---|---|---|---|
-| M1 | Mule classifier (LightGBM + spectral embeddings) | Find slower/partial mules, refine rule score | Pretrain offline on synthetic; **self-train at load** on pseudo-labels | Seconds on CPU | Rules only (`w_ml=0`) |
-| M2 | Narration classifier (TF-IDF+LR) | Classify narration → enum; detect injection-like text | Offline on synthetic + curated phrases | Milliseconds | Regex dictionary |
-| M3 | Case Officer LLM (Qwen2.5-7B Q4, optionally LoRA-tuned) | Fluent narrative in legal tone from verified claims | Offline fine-tune (optional) | Local llama.cpp | **Deterministic templates** |
-| M4 (opt.) | GNN (GraphSAGE) | Extra structural signal | Offline | Optional | Spectral embedding |
+| M1 | Unsupervised Isolation Forest (150 trees) | Pure zero-label anomaly isolation on 15-D behavioral space | Fits dynamically at data ingestion | 0.17s on CPU | Rule-based scoring (`w_ml=0`) |
+| M2 | TreeSHAP Explainability Engine | Computes exact additive Shapley attributions $\sum \phi_i = f(x) - \mathbb{E}[f(x)]$ | Evaluates on demand per suspect account | < 15 ms on CPU | Rule-contribution breakdown |
+| M3 | Statutory Court Evidence Synthesizer | Generates court-admissible factual evidence under Sec 106 BNSS / Sec 91 CrPC | On demand with TreeSHAP | < 1 ms | Deterministic static text |
+| M4 | Narration Classifier (TF-IDF+LR) | Sub-word char n-gram classifier & prompt-injection shield | Pretrained offline | Milliseconds | Regex dictionary |
 
-### 12.2 M1 — Self-adapting mule detector (step by step)
+### 12.2 M1 — Pure Unsupervised Isolation Forest Architecture
+1. **Zero Ground-Truth Reality:** Real banking ledgers contain no ground-truth fraud labels. Supervised and pseudo-supervised models cause severe confirmation bias and fail judicial scrutiny.
+2. **Feature Extraction:** Direct 15-dimensional SQL vectorization across accounts via DuckDB (< 0.10s).
+3. **iTree Construction:** 150 Isolation Trees with recursive axis-aligned random splits and sub-sampling ($\psi = 256$).
+4. **Calibrated Anomaly Scoring:** Evaluates expected path length $\mathbb{E}[h(x)]$ against BST average search depth $c(n)$, calibrating to $[0.0, 1.0]$.
+5. **Percentile Ranking:** Identifies accounts in top 95th percentile ($p \ge 95\%$) as structural outliers.
 
-1. **Pretrain** on synthetic data (Section 13) with ratio/timing/degree features only (no raw IDs/amounts) so it generalises. Save `m1_base.txt`.
-2. **On new data load:** compute features; compute `rule_score`.
-3. **Pseudo-labels:**
-   - Positives: `rule_score ≥ P_hi` (e.g. top 1.5% and `PTR_15m ≥ 0.9` and `chain coherent`).
-   - Negatives: `rule_score ≤ P_lo` and typical-behaviour accounts (bottom 70%).
-   - Everything else = unlabeled (excluded from fit, scored by model).
-4. **Fine-tune** `m1_base` on pseudo-labels (LightGBM `init_model`), with class weights and **PU correction** (prior ≈ 5%); 5-fold **by-account** CV to produce out-of-fold predictions (prevents the model just memorising its own rule hits).
-5. **Score all accounts** → `ml_prob`; blend (11.4).
-6. **Audit:** show agreement matrix (rules vs ML), top disagreements, feature importance. Disagreements are *useful* (new finds) and *risky* (pseudo-label bias) — the UI exposes both.
-7. **Switch:** `ml.enabled`, `ml.weight`, `ml.mode: base|self_train` in config; one toggle in Diagnostics.
-
-**Leakage rules:** split by account; never train on any victim/blind-test hints; features exclude IDs and absolute amounts; seeds fixed.
-
-### 12.3 M1 evaluation (labels exist only on synthetic data)
-Precision, recall, F1, PR-AUC, precision@K (K = 1,500), calibration curve, per-typology recall (fast pass-through, slow-drip, cycle, fan-in only), robustness under **perturbation tests** (±jitter timing, split amounts, rename narrations, rotate IPs) to simulate adversaries.
+### 12.3 M2 & M3 — TreeSHAP Attribution & Legal Evidence Generation
+1. **Exact Shapley Axioms:** Lundberg's TreeSHAP guarantees Efficiency, Symmetry, Dummy Player, and Additivity axioms, providing uncorrupted feature attribution without autoencoder "error smearing."
+2. **Court Evidence Synthesis:** Automatically maps positive Shapley drivers to statutory evidentiary statements for Section 106 BNSS / Section 91 CrPC notices.
 
 ### 12.4 M2 — Narration classifier
 Classes: `NORMAL_BANK_CODE`, `BENIGN_TEXT`, `SCAM_MARKER` (task, commission, investment, KYC, refund, "digital arrest" phrasing etc.), `CRYPTO_P2P`, `WALLET`, `ATM_CASH`, `OFFSHORE_GATEWAY`, `INJECTION_ATTEMPT`, `UNKNOWN`. Features: char n-gram TF-IDF. Used for (a) scoring features, (b) sanitising text before any LLM sees it. Dictionary regex backup is shipped and used if the model file is missing.
@@ -733,6 +726,8 @@ Account-level 60/20/20 split by *ring* (all accounts of a ring in the same split
 | `GET  /api/reports/{id}/evidence-pack` | ZIP: reports, evidence rows CSV, hashes | |
 | `POST /api/config/calibrate` | Recompute thresholds; returns diagnostics | |
 | `GET  /api/bench` | Live performance metrics | |
+| `POST /api/ai/chat` `{message, selected_account?}` | Vajra-Netra AI Copilot (Ollama local + Anti-Injection Guardrail + Deterministic Fallback) | < 200 ms fallback |
+| `GET  /api/ai/status` | Vajra-Netra daemon status, model info, active guardrails | |
 
 **Trace response (abridged):**
 ```json
@@ -805,35 +800,37 @@ Header shows dataset name, row count, hash prefix and an **Offline** badge (`Shi
 
 ### 15.4 Screens
 
-**S0 — Load Data (first run).** Large drop zone / file picker; recent datasets; progress card with phases (Reading → Normalising → Indexing → Scoring) and live metrics (rows/s, elapsed, RAM). On completion: summary tiles + "Open Overview".
+**S0 — Load Data (4-Box Equal Bento Layout).** Features four equal-dimensioned cards that maintain geometric stability without dynamic stretching:
+1. **Upload / Ingestion Card (Top Slot):** Drag-and-drop file picker, dynamic schema verification, and real-time streaming SHA-256 integrity hashing.
+2. **Case Setup Card:** Target victim selector, hop threshold slider, and temporal bounding.
+3. **Graph Diagnostics Card:** Total entities, edge distribution, and active RAM footprint.
+4. **High Suspect Accounts Card (Bottom-Right Slot):** High-velocity flagged accounts table with internal scrolling (`overflow-y: auto`) without expanding card bounds.
+*Global Navigation Telemetry:* Active dataset name, record count, and SHA-256 hash prefix are permanently integrated into the top navigation bar.
 
 **S1 — Overview.** Four metric tiles (Transactions, Accounts, Flagged accounts, Syndicates). Risk-tier bar chart; top 10 syndicates table (size, volume, banks, victims); data-quality summary; benchmark strip (ingest time, trace latency).
 
-**S2 — Investigate (primary screen).**
+**S2 — Investigate (Adaptive Canvas & Single-Spine Flow).**
 ```
 ┌ Victim account [123456789012 ] [Trace ▸] Hops [4▾]  Mode [FIFO▾]     [Case Diary] [Freeze Notice] ┐
 ├───────────────────────────────────────────────────────┬────────────────────────────────────────────┤
 │                                                       │ Summary                                    │
-│                 GRAPH CANVAS                          │  Siphoned ₹45,00,000 · Held ₹21,00,000     │
-│   ◆ Victim → ● L1 → ■ L2 → ▲ L3                      │  Cash-out ₹24,00,000 · Coverage 46.7%       │
+│             ADAPTIVE GRAPH CANVAS                     │  Siphoned ₹45,00,000 · Held ₹21,00,000     │
+│   (≤25 nodes: Sugiyama DAG; >25 nodes: Single Spine)  │  Cash-out ₹24,00,000 · Coverage 46.7%       │
 │                                                       │ ───────────────────────────────────────── │
-│   (zoom, pan, fit, legend, layer filters)             │ Recommended to freeze (6)                  │
+│   ◆ Victim (Top) ──> ● L1 ──> ■ L2 ──> ▲ L3 (Bottom) │ Recommended to freeze (6)                  │
 │                                                       │  1 HDFC ••••9012  ₹12,00,000 [select]      │
-│                                                       │  …                                         │
-│                                                       │ Selected account                           │
-│                                                       │  Risk 92 Critical · Role: Distributor       │
-│                                                       │  Why flagged: • 94% forwarded in 6 min …   │
+│   [+] Right-edge button: Expands layer horizontally   │  …                                         │
+│   6x Layer Spacing (~600px)                           │ Selected account                           │
+│   Center-to-Center Cubic Bezier Edge Connections      │  Risk 92 Critical · Role: Distributor       │
+│   Border Strokes: 3.5px Emerald (Lien Target)         │  Why flagged: • 94% forwarded in 6 min …   │
 ├───────────────────────────────────────────────────────┴────────────────────────────────────────────┤
 │ ▶  ───●───────────────────────────────  Day 3 · 14:32   Speed 1× ▾   [Isolate ring] [Export]      │
 └─────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
-- Right panel tabs: **Summary · Freeze list · Account · Evidence**.
-- **Layer legend** (always visible) with filter checkboxes.
-- **Timeline:** slider with minute resolution; shows a thin histogram of transaction volume behind the slider; play/pause; speed 1×/10×/60×/600×; edges that occur after the cursor are hidden, those before are visible, the active minute is highlighted.
-- **Click node** → right panel Account tab; **double-click** → focus + expand neighbours; **"Isolate ring"** button → shows only the syndicate (and enables Export).
-- Empty state: "Enter a victim account number to trace the money trail." with an example.
-- Loading state: skeleton + timing text ("Traced in 84 ms").
-- Error state: inline banner with plain explanation and retry.
+- **Adaptive 25-Node Threshold:** Small graphs ($\le 25$ nodes) render all branches. Complex graphs ($> 25$ nodes) collapse to a clean single vertical spine with victim at top and cashout at bottom.
+- **Expand-on-Demand:** Clicking the `(+)` trigger on the right edge of any node reveals downstream connections into the next vertical column layer.
+- **Trackpad Pinch-to-Zoom:** Recalibrated exponential dampening (`Math.exp(-deltaY * 0.0015)`) for smooth micro-zooming on both macOS and Windows.
+- **Visual Node Hierarchy:** Dynamic flow metrics (`⚡ X In · Y Out Flows`) and importance border strokes (3.5px emerald lien target, 3.0px royal blue victim, 2.8px dashed teal cluster, 2.5px dashed red cashout).
 
 **S3 — Accounts.** Searchable, sortable table (Account, Bank, Risk, Tier, Role, In/Out totals, Syndicate). Row opens the Account drawer: timeline chart, counterparties table, rails/IP/device breakdown, "Why flagged" card, officer actions (Confirm / Not suspect / Needs review).
 
@@ -845,8 +842,15 @@ Header shows dataset name, row count, hash prefix and an **Offline** badge (`Shi
 
 **S7 — Settings.** Thresholds and weights (read from config, editable with reset), mask account numbers toggle, language, officer profile (name, rank, PS) used on notices.
 
+**S8 — Vajra-Netra AI Forensic Copilot Modal.**
+- Persistent floating action pill at bottom-right of viewport.
+- 560px modal with warm almond (`#FAF6F0`), clean card white (`#FFFFFF`), and cobalt blue (`#2563EB`) enterprise styling.
+- Local Ollama LLM integration (`llama3.2`) with grounded DuckDB case data.
+- Multi-layer Anti-Injection Guardrail defending against prompt injection, jailbreaks, code execution, and off-scope queries.
+- Zero-hallucination deterministic fallback engine drafting instant statutory notices under Sections 106 & 107 BNSS, 2023.
+
 ### 15.5 Components (shared library)
-`AppShell`, `NavItem`, `MetricTile`, `DataTable` (virtualised), `Badge` (tier colours + icon), `Drawer`, `Tabs`, `Button` (primary/secondary/ghost), `Input`, `Select`, `Slider`, `Toast`, `EmptyState`, `Skeleton`, `GraphCanvas`, `TimelineBar`, `ReasonList`, `VerificationPanel`, `PrintPage`.
+`AppShell`, `NavItem`, `MetricTile`, `DataTable` (virtualised), `Badge` (tier colours + icon), `Drawer`, `Tabs`, `Button` (primary/secondary/ghost), `Input`, `Select`, `Slider`, `Toast`, `EmptyState`, `Skeleton`, `GraphCanvas`, `TimelineBar`, `ReasonList`, `VerificationPanel`, `PrintPage`, `AIChatModal`.
 Rules: one primary button per view; destructive/irreversible actions need confirmation; all tables have sticky headers and keyboard navigation.
 
 ### 15.6 Graph rendering strategy (performance)

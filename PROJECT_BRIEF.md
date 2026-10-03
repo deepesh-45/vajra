@@ -47,8 +47,11 @@ Vajra is intentionally designed without external cloud calls, commercial AI APIs
 │ 4. STATUTORY DOCUMENT ENGINE & AST ANTI-HALLUCINATION GUARDRAIL             │
 │    Section 106 BNSS Requisition · Case Diary (EN/HI) · Zero Hallucination    │
 ├──────────────────────────────────────────────────────────────────────────────┤
-│ 5. COGNITIVE FORENSICS WORKBENCH (React 19 + TypeScript + Vite)             │
-│    Sugiyama DAG Flow · Temporal Time Slider · Warm Pastel Almond Executive UI│
+│ 5. VAJRA-NETRA AI FORENSIC COPILOT & ANTI-INJECTION GUARDRAIL               │
+│    Local Ollama (llama3.2) · Anti-Injection Shield · BNSS 106/107 Drafter    │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ 6. COGNITIVE FORENSICS WORKBENCH (React 19 + TypeScript + Vite)             │
+│    Adaptive 25-Node Vertical Canvas · Bento Grid · Warm Almond Executive UI │
 └──────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -79,10 +82,16 @@ Vajra is intentionally designed without external cloud calls, commercial AI APIs
    - An automated Abstract Syntax Tree (AST) guardrail inspects every generated document before display, cross-referencing all mentioned account numbers, IFSC codes, UTR numbers, and monetary figures against the DuckDB database.
    - Verified compliance status: **100% factually verified**, 0% unverified entities.
 
-5. **Human-Centered Forensic Frontend**:
-   - Custom 60 FPS HTML5 Canvas engine implementing Sugiyama hierarchical layout, organizing multi-hop chains into clear visual stages (Victim $\to$ L1 Collector $\to$ L2 Distributor $\to$ L3 Cash-Out) to eliminate confusing "hairball" graphs.
-   - Chronological scrubbing slider allows investigators to watch funds propagate minute-by-minute.
-   - Executive UI: Warm Pastel Almond sidebar (`#F4EDE4`) with an Enterprise Slate & Blue palette designed for 12-hour police shift work.
+5. **Vajra-Netra AI Forensic Copilot & Anti-Injection Guardrail**:
+   - Deploys a local AI copilot running via Ollama (`llama3.2`) with grounded real-time DuckDB graph facts.
+   - Equipped with a multi-layer anti-injection guardrail that blocks prompt injections, jailbreaks, code execution, and off-topic queries.
+   - Automatically formulates legally compliant Section 106 & 107 BNSS freeze requisitions and money trail summaries with a zero-hallucination deterministic fallback engine.
+
+6. **Human-Centered Forensic Frontend & Adaptive Canvas**:
+   - Adaptive 25-node topology: automatically transitions dense graphs into an intuitive vertical single-spine flow (Victim on top $\to$ Cashout on bottom) with on-demand right-edge `(+)` layeric horizontal expansion.
+   - Load Data screen featuring four equal-dimensioned bento cards and persistent navigation bar telemetry.
+   - Recalibrated non-linear trackpad pinch-to-zoom curve for macOS and Windows, plus importance border strokes (3.5px emerald lien targets).
+   - Executive UI: Warm Pastel Almond theme (`#FAF6F0`/`#F4EDE4`) with Royal Cobalt accents (`#2563EB`) designed for low-fatigue 12-hour police shift work.
 
 ---
 

@@ -726,6 +726,8 @@ Account-level 60/20/20 split by *ring* (all accounts of a ring in the same split
 | `GET  /api/reports/{id}/evidence-pack` | ZIP: reports, evidence rows CSV, hashes | |
 | `POST /api/config/calibrate` | Recompute thresholds; returns diagnostics | |
 | `GET  /api/bench` | Live performance metrics | |
+| `POST /api/ai/chat` `{message, selected_account?}` | Vajra-Netra AI Copilot (Ollama local + Anti-Injection Guardrail + Deterministic Fallback) | < 200 ms fallback |
+| `GET  /api/ai/status` | Vajra-Netra daemon status, model info, active guardrails | |
 
 **Trace response (abridged):**
 ```json
@@ -798,35 +800,37 @@ Header shows dataset name, row count, hash prefix and an **Offline** badge (`Shi
 
 ### 15.4 Screens
 
-**S0 — Load Data (first run).** Large drop zone / file picker; recent datasets; progress card with phases (Reading → Normalising → Indexing → Scoring) and live metrics (rows/s, elapsed, RAM). On completion: summary tiles + "Open Overview".
+**S0 — Load Data (4-Box Equal Bento Layout).** Features four equal-dimensioned cards that maintain geometric stability without dynamic stretching:
+1. **Upload / Ingestion Card (Top Slot):** Drag-and-drop file picker, dynamic schema verification, and real-time streaming SHA-256 integrity hashing.
+2. **Case Setup Card:** Target victim selector, hop threshold slider, and temporal bounding.
+3. **Graph Diagnostics Card:** Total entities, edge distribution, and active RAM footprint.
+4. **High Suspect Accounts Card (Bottom-Right Slot):** High-velocity flagged accounts table with internal scrolling (`overflow-y: auto`) without expanding card bounds.
+*Global Navigation Telemetry:* Active dataset name, record count, and SHA-256 hash prefix are permanently integrated into the top navigation bar.
 
 **S1 — Overview.** Four metric tiles (Transactions, Accounts, Flagged accounts, Syndicates). Risk-tier bar chart; top 10 syndicates table (size, volume, banks, victims); data-quality summary; benchmark strip (ingest time, trace latency).
 
-**S2 — Investigate (primary screen).**
+**S2 — Investigate (Adaptive Canvas & Single-Spine Flow).**
 ```
 ┌ Victim account [123456789012 ] [Trace ▸] Hops [4▾]  Mode [FIFO▾]     [Case Diary] [Freeze Notice] ┐
 ├───────────────────────────────────────────────────────┬────────────────────────────────────────────┤
 │                                                       │ Summary                                    │
-│                 GRAPH CANVAS                          │  Siphoned ₹45,00,000 · Held ₹21,00,000     │
-│   ◆ Victim → ● L1 → ■ L2 → ▲ L3                      │  Cash-out ₹24,00,000 · Coverage 46.7%       │
+│             ADAPTIVE GRAPH CANVAS                     │  Siphoned ₹45,00,000 · Held ₹21,00,000     │
+│   (≤25 nodes: Sugiyama DAG; >25 nodes: Single Spine)  │  Cash-out ₹24,00,000 · Coverage 46.7%       │
 │                                                       │ ───────────────────────────────────────── │
-│   (zoom, pan, fit, legend, layer filters)             │ Recommended to freeze (6)                  │
+│   ◆ Victim (Top) ──> ● L1 ──> ■ L2 ──> ▲ L3 (Bottom) │ Recommended to freeze (6)                  │
 │                                                       │  1 HDFC ••••9012  ₹12,00,000 [select]      │
-│                                                       │  …                                         │
-│                                                       │ Selected account                           │
-│                                                       │  Risk 92 Critical · Role: Distributor       │
-│                                                       │  Why flagged: • 94% forwarded in 6 min …   │
+│   [+] Right-edge button: Expands layer horizontally   │  …                                         │
+│   6x Layer Spacing (~600px)                           │ Selected account                           │
+│   Center-to-Center Cubic Bezier Edge Connections      │  Risk 92 Critical · Role: Distributor       │
+│   Border Strokes: 3.5px Emerald (Lien Target)         │  Why flagged: • 94% forwarded in 6 min …   │
 ├───────────────────────────────────────────────────────┴────────────────────────────────────────────┤
 │ ▶  ───●───────────────────────────────  Day 3 · 14:32   Speed 1× ▾   [Isolate ring] [Export]      │
 └─────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
-- Right panel tabs: **Summary · Freeze list · Account · Evidence**.
-- **Layer legend** (always visible) with filter checkboxes.
-- **Timeline:** slider with minute resolution; shows a thin histogram of transaction volume behind the slider; play/pause; speed 1×/10×/60×/600×; edges that occur after the cursor are hidden, those before are visible, the active minute is highlighted.
-- **Click node** → right panel Account tab; **double-click** → focus + expand neighbours; **"Isolate ring"** button → shows only the syndicate (and enables Export).
-- Empty state: "Enter a victim account number to trace the money trail." with an example.
-- Loading state: skeleton + timing text ("Traced in 84 ms").
-- Error state: inline banner with plain explanation and retry.
+- **Adaptive 25-Node Threshold:** Small graphs ($\le 25$ nodes) render all branches. Complex graphs ($> 25$ nodes) collapse to a clean single vertical spine with victim at top and cashout at bottom.
+- **Expand-on-Demand:** Clicking the `(+)` trigger on the right edge of any node reveals downstream connections into the next vertical column layer.
+- **Trackpad Pinch-to-Zoom:** Recalibrated exponential dampening (`Math.exp(-deltaY * 0.0015)`) for smooth micro-zooming on both macOS and Windows.
+- **Visual Node Hierarchy:** Dynamic flow metrics (`⚡ X In · Y Out Flows`) and importance border strokes (3.5px emerald lien target, 3.0px royal blue victim, 2.8px dashed teal cluster, 2.5px dashed red cashout).
 
 **S3 — Accounts.** Searchable, sortable table (Account, Bank, Risk, Tier, Role, In/Out totals, Syndicate). Row opens the Account drawer: timeline chart, counterparties table, rails/IP/device breakdown, "Why flagged" card, officer actions (Confirm / Not suspect / Needs review).
 
@@ -838,8 +842,15 @@ Header shows dataset name, row count, hash prefix and an **Offline** badge (`Shi
 
 **S7 — Settings.** Thresholds and weights (read from config, editable with reset), mask account numbers toggle, language, officer profile (name, rank, PS) used on notices.
 
+**S8 — Vajra-Netra AI Forensic Copilot Modal.**
+- Persistent floating action pill at bottom-right of viewport.
+- 560px modal with warm almond (`#FAF6F0`), clean card white (`#FFFFFF`), and cobalt blue (`#2563EB`) enterprise styling.
+- Local Ollama LLM integration (`llama3.2`) with grounded DuckDB case data.
+- Multi-layer Anti-Injection Guardrail defending against prompt injection, jailbreaks, code execution, and off-scope queries.
+- Zero-hallucination deterministic fallback engine drafting instant statutory notices under Sections 106 & 107 BNSS, 2023.
+
 ### 15.5 Components (shared library)
-`AppShell`, `NavItem`, `MetricTile`, `DataTable` (virtualised), `Badge` (tier colours + icon), `Drawer`, `Tabs`, `Button` (primary/secondary/ghost), `Input`, `Select`, `Slider`, `Toast`, `EmptyState`, `Skeleton`, `GraphCanvas`, `TimelineBar`, `ReasonList`, `VerificationPanel`, `PrintPage`.
+`AppShell`, `NavItem`, `MetricTile`, `DataTable` (virtualised), `Badge` (tier colours + icon), `Drawer`, `Tabs`, `Button` (primary/secondary/ghost), `Input`, `Select`, `Slider`, `Toast`, `EmptyState`, `Skeleton`, `GraphCanvas`, `TimelineBar`, `ReasonList`, `VerificationPanel`, `PrintPage`, `AIChatModal`.
 Rules: one primary button per view; destructive/irreversible actions need confirmation; all tables have sticky headers and keyboard navigation.
 
 ### 15.6 Graph rendering strategy (performance)

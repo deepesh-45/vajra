@@ -56,22 +56,22 @@ Vajra solves this with an in-memory, C-accelerated **Compressed Sparse Row (CSR)
                                                ▼
                        [ In-Memory C-Accelerated CSR Graph Engine ]
                                                │
-                      ┌────────────────────────┴────────────────────────┐
-                      ▼                                                 ▼
-             [ DUAL-TRACK AI / ML ]                          [ FORENSIC REPORTING ]
-        • Rule Engine (Velocity, Dwell, Fan)            • BNSS Sec 94/106 Freeze Orders
-        • Bounded LightGBM (±20 pts)                     • BNSS Sec 111 Case Diary
-        • Adversarial Narration NLP                       • BSA Sec 63 Hash Certificate
-        • TreeSHAP Attribution                            • Bilingual (English & हिन्दी)
-        • Chain Coherence + Ring BFS                      • AST Anti-Hallucination Guard
-                      │                                                 │
-                      └────────────────────────┬────────────────────────┘
+                      ┌────────────────────────┼────────────────────────┐
+                      ▼                        ▼                        ▼
+             [ DUAL-TRACK ML ]      [ VAJRA-NETRA AI COPILOT ]   [ FORENSIC REPORTING ]
+        • Rule Engine (0-100)       • Local Ollama (llama3.2)    • BNSS Sec 106/107 Orders
+        • Bounded LightGBM (±20)    • Anti-Injection Guardrail   • BNSS Sec 111 Case Diary
+        • TreeSHAP Attribution      • Live DB Fact Grounding     • BSA Sec 63 Hash Cert
+        • Adversarial NLP Defense   • Deterministic Fallback     • Bilingual (EN / HI)
+                      │                        │                        │
+                      └────────────────────────┼────────────────────────┘
                                                │
                                                ▼
                                    [ VAJRA WEB WORKBENCH ]
-                           • Sugiyama Hierarchical DAG Canvas
+                           • Adaptive 25-Node Vertical Canvas
+                           • Expand-on-Demand Layeric Hierarchy
+                           • 4-Box Uniform Ingestion Grid
                            • Minute-by-Minute Temporal Playback
-                           • 1-Click Freeze Order Export
 ```
 
 ---
@@ -99,7 +99,62 @@ Unlike legacy AML platforms that rely on flawed pseudo-labels or black-box super
 
 ---
 
-## 5. Synthetic Datasets & Load Testing Suite
+## 5. Vajra-Netra (वज्र-नेत्र) AI Forensic Copilot & Anti-Injection Guardrail
+
+Vajra integrates **Vajra-Netra**, a sovereign, air-gapped AI Forensic Copilot deployed locally on commodity forensic workstations:
+
+1. **Local Ollama Integration with Deterministic Fallback**:
+   - Queries a local Ollama daemon (`http://localhost:11434`, model `llama3.2`) with zero external internet transmission.
+   - When Ollama is offline or uninstalled, an automated **zero-hallucination deterministic fallback engine** immediately takes over, generating verified graph summaries and statutory legal orders.
+2. **Multi-Layer Anti-Injection & Anomaly Guardrail**:
+   - **Jailbreak Defense**: Neutralizes prompt injection attempts ("ignore prior instructions", "DAN", developer mode, system overrides, instruction dumps).
+   - **Payload Defense**: Intercepts and blocks SQL and code execution vectors (`DROP TABLE`, `UNION SELECT`, `<script>`, python runtime calls).
+   - **Domain Scope Enforcement**: Automatically rejects non-forensic, anomalous prompts (recipes, creative writing, homework, general chit-chat) to preserve evidentiary integrity.
+3. **Statutory Bank Notice Generation (BNSS 2023 / CrPC)**:
+   - Formulates instant, legally compliant debit-freeze requisitions under **Section 106 (Document Production)** and **Section 107 (Attachment & Seizure of Stolen Cyber Proceeds)** of the **Bharatiya Nagarik Suraksha Sanhita (BNSS), 2023** (formerly Sec. 91 & 102 Cr.P.C.).
+   - Pre-fills verified account numbers, target bank nodal divisions (SBI, Axis, HDFC, ICICI, etc.), and 24-hour compliance warnings under Section 223 BNS.
+4. **Clean Enterprise Copilot Interface**:
+   - 560px wide floating modal styled in warm almond (`#FAF6F0`), clean card white (`#FFFFFF`), warm borders (`#D5C7B5`), and royal cobalt (`#2563EB`).
+   - Equipped with quick suggestion pills, one-click copy buttons, and real-time DuckDB case fact grounding.
+
+---
+
+## 6. Adaptive Vertical Graph Topology & Dynamic Layeric Expansion
+
+To overcome the visual clutter and unreadable "hairballs" of traditional graph visualizers during large multi-hop traces, Vajra introduces an **Adaptive Topology Engine**:
+
+1. **Adaptive 25-Node Threshold**:
+   - **Standard Graphs ($\le 25$ nodes):** Renders using the Sugiyama layout with natural horizontal spread.
+   - **Complex Graphs ($> 25$ nodes):** Automatically activates the **Vertical Single-Spine Topology**, displaying the primary victim at the top and the cashout exit at the bottom, hiding extraneous branches until commanded.
+2. **Expand-on-Demand via Right-Edge Trigger**:
+   - Every node features a prominent `(+)` trigger anchored to its right boundary.
+   - Clicking expands downstream flows horizontally to the right into the next discrete vertical column layer, keeping clutter strictly in the investigator's control.
+3. **Layeric Progression & Center-to-Center Edge Geometry**:
+   - All newly revealed nodes strictly occupy the next vertical layer (spaced at 6x distance / ~600px).
+   - Multi-layer edges connect strictly from the vertical center-right of the source to the vertical center-left of the destination with smooth cubic bezier curves.
+4. **Ergonomic Trackpad Sensitivity**:
+   - Dual-calibrated for macOS and Windows precision trackpads with an exponential dampening curve (`Math.exp(-deltaY * 0.0015)`), eliminating erratic zoom jumps during pinch gestures.
+5. **Node Importance & Border Stroke Hierarchy**:
+   - **3.5px Glowing Emerald Border**: Immediate recoverable positive balance lien targets.
+   - **3.0px Royal Blue Border**: Victim complainant origin.
+   - **2.8px Dashed Teal Border**: Syndicate cluster members.
+   - **2.5px Dashed Crimson Border**: Terminal cash-out exit nodes.
+   - **2.2px Amber Border**: High-volume aggregator nodes.
+   - **1.2px Slate Border**: Intermediary pass-through mules.
+   - Replaced redundant IFSC text with live flow metrics: `⚡ X In · Y Out Flows`.
+
+---
+
+## 7. Uniform Bento Ingestion Grid & Global Nav Telemetry
+
+- **4 Equal-Sized Bento Cards**: Load Data screen features four equal-dimensioned cards that maintain strict grid geometry regardless of active selections.
+- **Top Slot Upload Box**: Intuitive drag-and-drop file ingestion box prominently positioned in the top card.
+- **High Suspect Accounts**: Positioned in the bottom-right card with smooth internal scrolling (`overflow-y: auto`) without expanding the card boundary.
+- **Header Bar Telemetry**: File status, active dataset name, and record counts relocated directly into the top navigation bar.
+
+---
+
+## 8. Synthetic Datasets & Load Testing Suite
 
 All synthetic test datasets are organized under [`synthetic_data/`](synthetic_data/):
 
@@ -115,7 +170,7 @@ See [`synthetic_data/README.md`](synthetic_data/README.md) for full scenario doc
 
 ---
 
-## 6. Quickstart Guide
+## 9. Quickstart Guide
 
 ### Prerequisites
 - Python 3.10+
@@ -125,8 +180,8 @@ See [`synthetic_data/README.md`](synthetic_data/README.md) for full scenario doc
 ### 1-Command Startup
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/Vajra.git
-cd Vajra
+git clone https://github.com/Void-Hacks-8-0-2/paradox.git
+cd paradox
 
 # Launch the full air-gapped workbench
 ./run.sh
@@ -149,9 +204,7 @@ uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
 
 ---
 
----
-
-## 7. Operation Vajra (वज्र) Mule Risk Engine
+## 10. Operation Vajra (वज्र) Mule Risk Engine
 
 Vajra implements a deterministic, court-admissible money-mule detection engine adhering to the forensic principle:  
 **Authoritative Rules (0–100) + Bounded LightGBM (±20) trained on confident hits + Exact TreeSHAP Attribution + Second-Pass Ring Bridge Points (+8) + Automatic Fallback Gate**.
@@ -336,7 +389,7 @@ make test
 
 ---
 
-## 8. Verification & Test Suite
+## 11. Verification & Test Suite
 
 ```bash
 # Run the 11 mandatory forensic unit & integration tests
@@ -345,7 +398,7 @@ pytest tests/test_engine.py -v
 
 ---
 
-## 8. Repository Organization
+## 12. Repository Organization
 
 ```
 Vajra/
@@ -353,10 +406,19 @@ Vajra/
 ├── README.md                           # GitHub Presentation & Quickstart
 ├── config/                             # Centralized settings, IFSC directory, and schema mappings
 ├── backend/app/                        # FastAPI server, CSR graph engine, models, and legal generators
+│   ├── ai/
+│   │   ├── chatbot.py                  # Vajra-Netra Local AI Copilot & Anti-Injection Guardrail
+│   │   └── anti_hallucination.py       # AST-level database verification engine
+│   └── ...
 ├── frontend/                           # React 19 + TypeScript + Vite Enterprise Slate & Blue interface
+│   ├── src/components/
+│   │   ├── AIChatModal.tsx             # Vajra-Netra 560px AI forensic copilot modal
+│   │   ├── GraphCanvas.tsx             # 25-node adaptive vertical hierarchy & right-expansion canvas
+│   │   ├── LoadDataTab.tsx             # 4-box equal bento ingestion grid
+│   │   └── ...
 ├── synthetic_data/                     # 5 standalone test scenarios & documentation
 ├── research_papers/                    # 5 peer-reviewed scientific papers fortifying Vajra
-├── docs/                               # PRD, Hackathon Build Plan, ML/DL extension specs
+├── docs/                               # PRD, Hackathon Build Plan, ML/DL extension specs, Progress log
 ├── data/                               # DuckDB database (vajra.duckdb), Parquet cache, raw exports
 ├── bench/                              # Stress tests, synthetic runners, and ML training scripts
 ├── run.sh                              # Single-command bootstrap script
