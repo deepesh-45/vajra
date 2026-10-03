@@ -656,11 +656,11 @@ Vajra/
 │   ├── scenario_4_mega_capacity...csv  # 4,513 rows: 511 nodes / 1,650 flows PRD stress boundary test
 │   └── sample_custom_export.csv        # Non-standard column header alias mapping demonstration
 ├── research_papers/                    # Academic foundations fortifying Vajra's architecture
-│   ├── GAMLNet_a_graph_based_...pdf    # GAMLNet graph framework for AML detection
-│   ├── s41598-025-23901-3.pdf          # Nature Scientific Reports (2025) on circular laundering
-│   ├── 2306.16424v3.pdf                # Positive-Unlabeled learning in financial networks
-│   ├── 2411.05815v2.pdf                # Inductive Graph Neural Networks on transaction streams
-│   └── 2503.10058v1.pdf                # Temporal graph anomaly detection benchmarks
+│   ├── GAMLNet_a_graph_based_framework_for_the_detection_of_money_laundering.pdf # Graph framework for AML detection
+│   ├── Realistic_Synthetic_Financial_Transactions_for_Anti_Money_Laundering.pdf # IBM/EPFL realistic synthetic AML generation
+│   ├── Graph_Neural_Networks_for_Financial_Fraud_Detection_Review.pdf # Graph Neural Networks for fraud detection review
+│   ├── Deep_Learning_Approaches_for_AML_Mobile_Transactions.pdf # IEEE Mobile AML detection framework and benchmarks
+│   └── Wavelet_Temporal_Graph_Transformer_AML_Nature.pdf # Nature Scientific Reports on circular laundering & graph transformers
 ├── docs/
 │   ├── PRD.md                          # Official Product Requirements Document
 │   ├── hackathon_build_plan.md         # Original 36-hour technical execution roadmap

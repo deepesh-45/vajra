@@ -154,7 +154,7 @@ All benchmarks were evaluated on a local machine against the **Indore Police Com
 | **Cloud Dependency** | 100% Offline | **100% Air-Gapped** | **Fully Air-Gapped** |
 
 ### Automated Test Suite Execution
-Running `bench/comprehensive_test.py` and `bench/test_synthetic_scenarios.py` validates all subsystems:
+Running `bench/benchmark_full_pipeline.py` and `bench/test_synthetic_scenarios.py` validates all subsystems:
 - ✅ Health check & offline verification
 - ✅ Dynamic CSV ingestion with SHA-256 custody tracking
 - ✅ Multi-hop blind victim query test across unseen accounts
@@ -281,5 +281,5 @@ chmod +x run.sh
 
 ### Run the Comprehensive System Test Suite:
 ```bash
-./.venv/bin/python bench/comprehensive_test.py
+./.venv/bin/python bench/benchmark_full_pipeline.py
 ```

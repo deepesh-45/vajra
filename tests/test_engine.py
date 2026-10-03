@@ -5,6 +5,11 @@ Tests Deterministic Ledgers, Invariance, Monotonicity, FIFO Matching, Gate Fallb
 
 import json
 import os
+import sys
+from pathlib import Path
+
+# Add project root to sys.path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import duckdb
 import numpy as np
@@ -20,9 +25,15 @@ from engine.ml import ML_FEATURES
 
 @pytest.fixture(scope="module")
 def duckdb_con():
-    """Provides a read-write DuckDB connection."""
+    """Provides a DuckDB connection, or skips if server holds exclusive lock."""
     db_path = "data/duckdb/vajra.duckdb"
-    con = duckdb.connect(db_path)
+    try:
+        con = duckdb.connect(db_path)
+    except duckdb.IOException:
+        try:
+            con = duckdb.connect(db_path, read_only=True)
+        except duckdb.IOException:
+            pytest.skip("DuckDB file lock currently held by running dev server.")
     yield con
     con.close()
 

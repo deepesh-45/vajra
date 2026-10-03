@@ -13,7 +13,7 @@ import datetime
 import hashlib
 from typing import Dict, Any, List, Optional
 
-from backend.app.ai.verifier import anti_hallucination_verifier
+from backend.app.ai.anti_hallucination import anti_hallucination_verifier
 from backend.app.core.config import config
 from backend.app.reports.legal_pack import legal_pack
 from backend.app.reports.ollama_writer import draft_notice_with_ollama

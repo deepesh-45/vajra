@@ -7,9 +7,8 @@ import json
 import csv
 from pathlib import Path
 
-# Create a sample 20-row CSV with non-standard column headers
-sample_file = "data/raw/sample_custom_export.csv"
-Path("data/raw").mkdir(parents=True, exist_ok=True)
+# Use sample custom export CSV with non-standard column headers
+sample_file = "synthetic_data/sample_custom_export.csv"
 
 with open(sample_file, "w", newline="", encoding="utf-8") as f:
     writer = csv.writer(f)

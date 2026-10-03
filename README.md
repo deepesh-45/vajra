@@ -404,25 +404,100 @@ pytest tests/test_engine.py -v
 Vajra/
 ├── DOCUMENTATION.md                    # The Master Architectural & Mathematical Manifesto (Brahmastra)
 ├── README.md                           # GitHub Presentation & Quickstart
+├── PROJECT_BRIEF.md                    # Executive 2-page brief & operational summary
+├── Makefile                            # Build, run, and test lifecycle commands
+├── run.sh                              # Single-command bootstrap script
+├── requirements.txt                    # Pinned Python dependencies
+├── config.yaml                         # Root ML Fusion Engine scoring weights & limits
 ├── config/                             # Centralized settings, IFSC directory, and schema mappings
+│   ├── config.yaml                     # Application server & ingestion defaults
+│   ├── banks.yaml                      # Indian banking institutional directory & IFSC codes
+│   ├── legal_pack.yaml                 # Statutory provision legal pack (BNSS/BSA/PMLA)
+│   ├── legal_profile.yaml              # Jurisdictional profiles (Indore, Bombay, Delhi)
+│   └── schema_map.yaml                 # Multi-bank statement column header alias mapping
 ├── backend/app/                        # FastAPI server, CSR graph engine, models, and legal generators
 │   ├── ai/
-│   │   ├── chatbot.py                  # Vajra-Netra Local AI Copilot & Anti-Injection Guardrail
-│   │   └── anti_hallucination.py       # AST-level database verification engine
-│   └── ...
+│   │   ├── chatbot.py                  # Vajra-Netra Live-DB Grounded Copilot & Guardrail
+│   │   ├── anti_hallucination.py       # AST-level database verification engine
+│   │   └── narr_classifier.py         # Character n-gram TF-IDF & injection defense
+│   ├── core/
+│   │   ├── config.py                   # YAML settings & profile loader
+│   │   └── telemetry.py                # Process RAM & hardware usage monitor
+│   ├── detect/
+│   │   ├── features.py                 # Vectorized DuckDB behavioral feature extraction
+│   │   ├── rules.py                    # Multi-component deterministic rule scoring engine
+│   │   ├── shap_explainer.py           # TreeSHAP feature attribution & plain-English reasons
+│   │   └── isolation_detector.py       # Unsupervised Isolation Forest outlier detector
+│   ├── graph/
+│   │   └── csr.py                      # Compressed Sparse Row in-memory C-accelerated graph
+│   ├── ingest/
+│   │   └── loader.py                   # Zero-copy DuckDB streaming CSV normalization
+│   └── reports/
+│       ├── legal_generator.py          # Section 94, 106, 111 BNSS case diary & notice generator
+│       ├── legal_pack.py               # Human-reviewed legal pack loader
+│       └── ollama_writer.py            # Local Ollama court narrative drafting
+├── engine/                             # Core forensic fusion & explainability engine
+│   ├── calibrate.py                    # Probability calibrator
+│   ├── chain.py                        # Time-respecting money chain traversal
+│   ├── explain.py                      # Plain-English court narrative generator
+│   ├── fallback.py                     # Fallback gate & Population Stability Index (PSI)
+│   ├── features.py                     # Algorithmic FIFO pass-through feature extractor
+│   ├── fusion.py                       # Rules + LightGBM + Ring point fusion pipeline
+│   ├── ledger.py                       # Audit ledger builder & role assigner
+│   ├── ml.py                           # Monotonically constrained LightGBM classifier
+│   ├── pseudo_labels.py                # High-precision seed label generator
+│   ├── rules.py                        # Rule evaluation & scoring
+│   └── shap_reasons.py                 # TreeSHAP reason extraction
 ├── frontend/                           # React 19 + TypeScript + Vite Enterprise Slate & Blue interface
 │   ├── src/components/
 │   │   ├── AIChatModal.tsx             # Vajra-Netra 560px AI forensic copilot modal
 │   │   ├── GraphCanvas.tsx             # 25-node adaptive vertical hierarchy & right-expansion canvas
 │   │   ├── LoadDataTab.tsx             # 4-box equal bento ingestion grid
+│   │   ├── AccountsTab.tsx             # Suspect account table & risk ledger
+│   │   ├── SyndicatesTab.tsx           # Multi-family mule cluster explorer
+│   │   ├── InvestigateTab.tsx          # Single-account deep-dive forensic inspector
+│   │   ├── LegalReportsTab.tsx         # Statutory notice & case diary generator
+│   │   ├── BenchmarkTab.tsx            # Real-time hardware & latency benchmarks
 │   │   └── ...
+├── bench/                              # Standalone benchmarks and stress-test runners
+│   ├── benchmark_ingestion.py          # 2M transaction DuckDB streaming ingest benchmark
+│   ├── benchmark_detection.py          # Feature extraction & rule scoring benchmark
+│   ├── benchmark_graph_trace.py        # Sub-millisecond 4-hop money trail traversal test
+│   ├── benchmark_legal_generator.py    # Zero-hallucination statutory notice generation test
+│   ├── benchmark_full_pipeline.py      # Comprehensive end-to-end system stress test
+│   ├── test_synthetic_scenarios.py     # IEEE, IBM Watson, and Nature 2025 synthetic test suite
+│   ├── test_csv_upload.py              # Dynamic multi-bank statement upload verification
+│   ├── train_isolation_forest.py       # Isolation Forest model training script
+│   ├── dataset_eda_summary.py          # Fast exploratory data analysis summary
+│   └── generate_synthetic_cases.py     # Academic laundering scenario generator
 ├── synthetic_data/                     # 5 standalone test scenarios & documentation
-├── research_papers/                    # 5 peer-reviewed scientific papers fortifying Vajra
-├── docs/                               # PRD, Hackathon Build Plan, ML/DL extension specs, Progress log
+│   ├── README.md                       # Comprehensive scenario testing catalog
+│   ├── scenario_1_fast_smurfing.csv    # Rapid micro-structuring under ₹50,000 (IEEE Mobile AML)
+│   ├── scenario_2_investment_scam.csv  # Multi-victim investment aggregation (IBM Watson AML)
+│   ├── scenario_3_cyclic_ring.csv      # Circular loop churn and laundering (Nature 2025)
+│   ├── scenario_4_mega_capacity_stress_test_500nodes.csv # 511 nodes / 1,650 flows PRD stress boundary test
+│   └── sample_custom_export.csv        # Non-standard column header alias mapping demonstration
+├── research_papers/                    # Academic foundations fortifying Vajra
+│   ├── GAMLNet_a_graph_based_framework_for_the_detection_of_money_laundering.pdf
+│   ├── Realistic_Synthetic_Financial_Transactions_for_Anti_Money_Laundering.pdf
+│   ├── Graph_Neural_Networks_for_Financial_Fraud_Detection_Review.pdf
+│   ├── Deep_Learning_Approaches_for_AML_Mobile_Transactions.pdf
+│   └── Wavelet_Temporal_Graph_Transformer_AML_Nature.pdf
+├── docs/                               # Canonical specifications & engineering records
+│   ├── PRD.md                          # Product Requirements Document
+│   ├── hackathon_build_plan.md         # Original 36-hour technical execution roadmap
+│   ├── ml_dl_extension_plan.md         # Detailed ML/DL mathematical & architectural specification
+│   ├── progress.md                     # Engineering progress & milestone logs
+│   └── problem_statement.pdf           # Original problem statement specification
 ├── data/                               # DuckDB database (vajra.duckdb), Parquet cache, raw exports
-├── bench/                              # Stress tests, synthetic runners, and ML training scripts
-├── run.sh                              # Single-command bootstrap script
-└── Makefile                            # Build, run, and test lifecycle commands
+│   └── raw/
+│       └── VoidHacks8_MuleAccount_2M_Transactions.csv # 2M primary competition dataset
+├── eval/                               # Benchmark comparison harness & report
+│   ├── run_eval.py                     # Rules vs Hybrid vs Isolation Forest benchmark
+│   └── report.md                       # Quantitative benchmark report
+├── tests/                              # Verification test suite
+│   └── test_engine.py                  # 11 mandatory engineering unit & integration tests
+└── ml/models/                          # Pre-trained models (Isolation Forest, LightGBM)
 ```
 
 ---

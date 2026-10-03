@@ -19,19 +19,19 @@ test:
 	PYTHONPATH=. .venv/bin/pytest tests/test_engine.py -v
 
 ingest:
-	.venv/bin/python bench/quick_ingest_test.py
+	.venv/bin/python bench/benchmark_ingestion.py
 
 detect:
-	.venv/bin/python bench/quick_detect_test.py
+	.venv/bin/python bench/benchmark_detection.py
 
 train:
 	.venv/bin/python bench/train_isolation_forest.py
 
 trace:
-	.venv/bin/python bench/quick_trace_test.py
+	.venv/bin/python bench/benchmark_graph_trace.py
 
 legal:
-	.venv/bin/python bench/quick_legal_test.py
+	.venv/bin/python bench/benchmark_legal_generator.py
 
 build:
 	cd frontend && npm run build
