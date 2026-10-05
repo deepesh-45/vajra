@@ -1,4 +1,4 @@
-# 36-Hour Hackathon Build Plan — Operation “Abhedya-Chakra”
+# 36-Hour Hackathon Build Plan — Operation “Vajra”
 
 This plan is optimized around the jury weighting in the problem statement: Blind Victim Query **40%**, Detection Precision/Recall **30%**, Court-Ready Output **20%**, and Architecture/Engineering **10%**.
 
@@ -91,7 +91,7 @@ Don't introduce Kafka, Spark, Kubernetes, Neo4j, etc. unless benchmarking proves
 ## Hour 2–3: Repository setup
 
 ```text
-abhedya-chakra/
+vajra/
 │
 ├── backend/
 │   ├── ingestion/
@@ -431,7 +431,7 @@ Now build the visual interface around the working backend.
 
 ```text
 ┌───────────────────────────────────────────────┐
-│ ABHEDYA-CHAKRA             SYSTEM ONLINE      │
+│ VAJRA                      SYSTEM ONLINE      │
 ├───────────────────────────────────────────────┤
 │ Victim Account [____________] [TRACE]         │
 │                                               │
@@ -775,7 +775,7 @@ Your demo should take approximately **3–5 minutes**.
 
 **1. Load dataset**
 
-> “Abhedya-Chakra locally processes the 2-million-record banking dataset.”
+> “Vajra locally processes the 2-million-record banking dataset.”
 
 **2. Enter victim account**
 

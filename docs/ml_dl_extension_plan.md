@@ -1,6 +1,6 @@
-# ML/DL Extension — Operation “Abhedya-Chakra”
+# ML/DL Extension — Operation “Vajra”
 
-> **Companion document to:** `Abhedya_Chakra_36_Hour_Hackathon_Build_Plan.md`
+> **Companion document to:** `hackathon_build_plan.md`
 >
 > This document extends the original 36-hour plan with an ML/graph-learning layer. It does **not** replace the deterministic forensic pipeline. The ML layer is an additional scoring and verification component.
 
